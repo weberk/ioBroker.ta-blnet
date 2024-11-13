@@ -1,0 +1,108 @@
+{
+    "common": {
+        "name": "uvr16xx_bl-net",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "uk": "Початкова версія",
+                "zh-cn": "首次出版"
+            }
+        },
+        "titleLang": {
+            "en": "TA UVR16xx & BL-NET",
+            "de": "TA UVR16xx & BL-NET",
+            "ru": "ТА UVR16xx и BL-NET",
+            "pt": "TA UVR16xx e BL-NET",
+            "nl": "TA UVR16xx & BL-NET",
+            "fr": "TA UVR16xx et BL-NET",
+            "it": "TA UVR16xx e BL-NET",
+            "es": "TA UVR16xx y BL-NET",
+            "pl": "TA UVR16xx i BL-NET",
+            "uk": "TA UVR16xx & BL-NET",
+            "zh-cn": "TA UVR16xx 和 BL-NET"
+        },
+        "desc": {
+            "en": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative.",
+            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVR16xx-Controllers von Technische Alternative.",
+            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVR16xx от Technische Alternative.",
+            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVR16xx da Technische Alternative.",
+            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVR16xx-controller van Technische Alternative.",
+            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVR16xx de Technische Alternative.",
+            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVR16xx di Technische Alternative.",
+            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVR16xx de Technische Alternative.",
+            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVR16xx firmy Technische Alternative.",
+            "uk": "Адаптер ioBroker для читання входів і виходів контролера UVR16xx від Technische Alternative.",
+            "zh-cn": "ioBroker 适配器，用于读取 Technische Alternative 的 UVR16xx 控制器的输入和输出。"
+        },
+        "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
+        "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "uvr16xx_bl-net.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx_bl-net/main/admin/uvr16xx_bl-net.png",
+        "readme": "https://github.com/weberk/ioBroker.uvr16xx_bl-net/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "climate-control",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "materialize"
+        },
+        "supportCustoms": true,
+        "eraseOnUpload": true,
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": "7.0.23"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42"
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
+}

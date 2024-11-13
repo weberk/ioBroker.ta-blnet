@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UVR1611</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        .tables-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 45%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 4px;
+            text-align: left;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        th {
+            background-color: #ffe5e5;
+            color: #333;
+        }
+
+        td {
+            background-color: #e7f3f3;
+            color: #555;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        p {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 97vh; /* Höhe des Containers auf 50% der Fensterhöhe beschränken */
+            max-height: 2200px; /* Optional: Maximalhöhe */
+        }
+
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important; /* Füllt die Höhe des Containers */
+        }
+        pre {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            max-height: 200px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>UVR1611</h1>
+        <div class="tables-container">
+            <div>
+                <h2>Eingänge</h2>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Nr.</th>
+                            <th>Name</th>
+                            <th>Wert</th>
+                            <th>Einheit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(entry, index) in parsedCurrentInputs" :key="index">
+                            <td>{{ entry.id }}</td>
+                            <td>{{ entry.name }}</td>
+                            <td>{{ entry.wert }}</td>
+                            <td>{{ entry.einheit }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>Ausgänge</h2>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Nr.</th>
+                            <th>Name</th>
+                            <th>Wert</th>
+                            <th>Einheit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(entry, index) in parsedCurrentOutputs" :key="index">
+                            <td>{{ entry.id }}</td>
+                            <td>{{ entry.name }}</td>
+                            <td>{{ entry.wert }}</td>
+                            <td>{{ entry.einheit }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p>Zuletzt aktualisiert: {{ timestamp }}</p>
+        <div id="chart-container">
+            <canvas id="temperatureChart"></canvas>
+        </div>
+
+        <!-- <p>Log:</p> -->
+        <!-- <pre>{{ log }}</pre> -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                parsedInputs: [],
+                parsedOutputs: [],
+                parsedCurrentInputs: [],
+                parsedCurrentOutputs: [],
+                timestamp: '',
+                log: '',
+                labels: [],
+                currentTime: null,
+                temperatureChart: null
+            },
+            created() {
+                this.currentTime = new Date();
+                this.fetchData();
+                setInterval(this.fetchData, 600000);
+            },
+            methods: {
+                fetchData() {
+                    console.log("Starte den Datenabruf...");
+
+                    // Lege den Zeitstempel nur einmal fest
+                    const now = new Date();
+                    this.fetchTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    this.labels.push(this.fetchTime); // Füge den Zeitstempel zu den Labels hinzu
+
+                    this.fetchInputs()
+                        .then(() => {
+                            console.log("fetchInputs abgeschlossen. Warte 30 Sekunden...");
+
+                            // Führe eine 30-sekündige Pause ein, bevor fetchOutputs aufgerufen wird
+                            return new Promise(resolve => setTimeout(() => {
+                                console.log("30 Sekunden sind vorbei, rufe fetchOutputs auf...");
+                                resolve();
+                            }, 30000));  // 30 Sekunden warten
+                        })
+                        .then(() => {
+                            return this.fetchOutputs();
+                        })
+                        .then(() => {
+                            console.log("fetchOutputs abgeschlossen. Aktualisiere das Diagramm...");
+                            this.timestamp = new Date().toLocaleString(); // Aktualisiere den Anzeige-Zeitstempel
+                            this.updateChart(); // Aktualisiere das Diagramm
+                        })
+                        .catch(error => {
+                            console.error("Fehler beim Abrufen der Daten:", error);
+                        });
+                },
+
+                fetchInputs() {
+                    return fetch('http://192.168.2.77/580500.htm')
+                        .then(response => response.text())
+                        .then(html => {
+                            console.log("Eingänge abgerufen.");
+                            this.processInputs(html);
+                        });
+                },
+
+                fetchOutputs() {
+                    return fetch('http://192.168.2.77/580600.htm')
+                        .then(response => response.text())
+                        .then(html => {
+                            console.log("Ausgänge abgerufen.");
+                            this.processOutputs(html);
+                        });
+                },
+
+                processInputs(html) {
+                    let formattedHtml = this.formatHtml(html);
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(formattedHtml, 'text/html');
+                    let rows = doc.querySelectorAll('div.ze.cen div.c');
+                    let extractedValues = [];
+
+                    rows.forEach(row => {
+                        let text = row.innerText.trim();
+                        console.log("Verarbeite Eingang: " + text);
+
+                        // Angepasster regulärer Ausdruck
+                        const regex = /(\d+):\s*([A-Za-z0-9\.\-\s]+)\s+(AUS|EIN|[\d,]+)\s*(°C|l\/h)?/g;
+
+                        let matches;
+                        while ((matches = regex.exec(text)) !== null) {
+                            let id = matches[1].trim();  // Nummer des Eingangs
+                            let name = matches[2].trim(); // Name des Eingangs
+                            let wert = matches[3].trim(); // Wert des Eingangs (z.B. Temperatur, "AUS", "EIN")
+                            let einheit = matches[4] ? matches[4].trim() : ''; // Optional: Einheit (z.B. °C, l/h)
+
+                            // Wenn der Wert "AUS" oder "EIN" ist, setze die Einheit auf "AUTO"
+                            if (wert === "AUS" || wert === "EIN") {
+                                einheit = "AUTO";
+                            } else {
+                                // Ersetze Komma durch Punkt für numerische Werte
+                                wert = wert.replace(',', '.');
+                            }
+
+                            extractedValues.push({
+                                id: id,
+                                quelle: 'UVR1611',
+                                name: name,
+                                wert: wert,
+                                einheit: einheit,
+                                typ: 'Eingang',
+                                timestamp: this.fetchTime
+                            });
+                        }
+                    });
+
+                    this.parsedInputs = this.parsedInputs.concat(extractedValues);
+                    this.parsedCurrentInputs = extractedValues;
+                },
+
+                processOutputs(html) {
+                    let formattedHtml = this.formatHtml(html);
+                    let parser = new DOMParser();
+                    let doc = parser.parseFromString(formattedHtml, 'text/html');
+                    let rows = doc.querySelectorAll('div.ze.cen div.c');
+                    let extractedValues = [];
+
+                    rows.forEach((row) => {
+                        let text = row.innerText.trim();
+                        text = text.replace(/PAR\?<=/g, '').trim();
+                        console.log ("Verarbeite Ausgang: " + text);
+
+                        const regex = /(\d+):\s*([A-Za-z0-9\.\-_\s]+)\s+(AUTO|HAND)(?:\/(EIN|AUS))?\s*‹›\s*(.*?)(?=\s*\d+(?! ):|$|\s*$)/g;
+                        let matches;
+
+                        while ((matches = regex.exec(text)) !== null) {
+                            let id = matches[1].trim();
+                            let name = matches[2].trim();
+                            let mode = matches[3].trim();
+                            let wert = matches[4] ? matches[4].trim() : '';
+                            let postFix = matches[5].trim();
+
+                            console.log (`Rohwerte des Matches: ID=${id}, Name=${name}, Modus=${mode}, Wert=${wert}`);
+
+                            let currentOutput = {
+                                id: id,
+                                quelle: 'UVR1611',
+                                name: name,
+                                wert: wert === 'AUS' ? 'AUS' : 'EIN',
+                                einheit: mode,
+                                typ: 'Ausgang',
+                                timestamp: this.fetchTime // Verwende den gleichen Zeitstempel wie bei den Eingängen
+                            };
+
+                            if (postFix.includes('Drehzahlst.')) {
+                                const drehzahlRegex = /Drehzahlst\.\s*:\s*([\d,]+)/;
+                                let drehzahlMatches = drehzahlRegex.exec(postFix);
+                                if (drehzahlMatches) {
+                                    let drehzahl = drehzahlMatches[1].trim();
+                                    currentOutput.wert = drehzahl;
+                                    currentOutput.einheit = 'Drehzahlst.';
+                                    console.log (`Aktualisierte Drehzahl für ${currentOutput.name}: ${drehzahl}`);
+                                }
+                            }
+                            extractedValues.push(currentOutput);
+                        }
+
+                        if (text.includes("Analogausgang")) {
+                            const analogRegex = /(\d+):\s*Analogausgang\s+([\d,.]+)\s*:\s*([\d,.]+)\s*V\s+(AUTO|HAND)\s*‹›/;
+                            let analogMatches = analogRegex.exec(text);
+
+                            if (analogMatches !== null) {
+                                let id = analogMatches[1].trim();
+                                let wert = analogMatches[2].trim();
+                                let spannung = analogMatches[3].trim().replace(',', '.');
+                                let mode = analogMatches[4].trim();
+
+                                console.log(`Rohwerte Analogausgang: ID=${id}, Wert=${wert}, Spannung=${spannung}, Modus=${mode}`);
+
+                                let analogOutput = {
+                                    id: id,
+                                    quelle: 'UVR1611',
+                                    name: 'Analogausgang',
+                                    wert: spannung,
+                                    einheit: 'V',
+                                    typ: 'Ausgang',
+                                    timestamp: this.fetchTime // Verwende den gleichen Zeitstempel wie bei den Eingängen
+                                };
+
+                                extractedValues.push(analogOutput);
+                            }
+                        }
+                    });
+                    this.parsedOutputs = this.parsedOutputs.concat(extractedValues);
+                    this.parsedCurrentOutputs = extractedValues;
+                },
+
+                formatHtml(html) {
+                    return html.replace(/<\/[^>]+>/g, (match) => match + '\n');
+                },
+
+                updateChart() {
+                    const ctx = document.getElementById('temperatureChart').getContext('2d');
+
+                    if (this.temperatureChart) {
+                        // 1. Alte Farben und Sichtbarkeitsstatus speichern
+                        const existingDatasets = this.temperatureChart.data.datasets;
+                        const existingColors = existingDatasets.map(dataset => dataset.borderColor);
+
+                        // Chart.js interne Methode zum Abrufen des Sichtbarkeitsstatus
+                        const visibilityStatus = existingDatasets.map((_, index) => this.temperatureChart.isDatasetVisible(index));
+
+                        // 2. Neue Datasets erstellen
+                        const newDatasets = this.createDatasets();
+
+                        // 3. Farben und Sichtbarkeitsstatus der neuen Datasets beibehalten
+                        newDatasets.forEach((dataset, index) => {
+                            if (existingColors[index]) {
+                                dataset.borderColor = existingColors[index];  // Alte Farben beibehalten
+                            }
+                            if (visibilityStatus[index] !== undefined) {
+                                dataset.hidden = !visibilityStatus[index];  // Sichtbarkeit beibehalten (Umkehrung des visibilityStatus)
+                            }
+                        });
+
+                        // 4. Datasets und Labels aktualisieren
+                        this.temperatureChart.data.datasets = newDatasets;
+                        this.temperatureChart.data.labels = this.labels;
+
+                        // 5. Chart aktualisieren
+                        this.temperatureChart.update();
+
+                    } else {
+                        // Wenn der Chart nicht existiert, wie gewohnt erstellen
+                        this.temperatureChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: this.labels,
+                                datasets: this.createDatasets()
+                            },
+                            options: {
+                                responsive: true,  // Chart reagiert auf Fenstergröße
+                                maintainAspectRatio: false,  // Höhe wird nicht durch das Seitenverhältnis festgelegt
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Zeit (5 Minuten Intervalle)'
+                                        },
+                                        ticks: {
+                                            autoSkip: true,
+                                            maxTicksLimit: 12
+                                        }
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Temperaturen (°C)'
+                                        },
+                                        min: -15,
+                                        max: 65,
+                                        position: 'left',
+                                    },
+                                    y2: {
+                                        title: {
+                                            display: true,
+                                            text: 'Durchfluss (l/h)'
+                                        },
+                                        min: 0,
+                                        max: 400,
+                                        position: 'right',
+                                        grid: {
+                                            drawOnChartArea: false
+                                        }
+                                    },
+                                    y3: {
+                                        title: {
+                                            display: true,
+                                            text: 'Volt/Drehzahlstufe'
+                                        },
+                                        min: 0,
+                                        max: 230,
+                                        position: 'right',
+                                        grid: {
+                                            drawOnChartArea: false
+                                        },
+                                        ticks: {
+                                            callback: function(value) {
+                                                if (value <= 30) {
+                                                    return `${value} Drehzahlst.`;
+                                                }
+                                                return `${value} V`;
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            label: (tooltipItem) => {
+                                                const dataset = this.temperatureChart.data.datasets[tooltipItem.datasetIndex];
+                                                const value = dataset.data[tooltipItem.dataIndex];
+                                                if (dataset.label.includes('AUS/EIN')) {
+                                                    return value === 0 ? `${dataset.label}: AUS` : `${dataset.label}: EIN`;
+                                                }
+                                                return `${dataset.label}: ${value}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                ,
+
+                createDatasets() {
+                    let datasets = [];
+
+                    // Log Ausgabe für parsedInputs und parsedOutputs Länge
+                    console.log("parsedInputs Länge:", this.parsedInputs.length);
+                    console.log("parsedOutputs Länge:", this.parsedOutputs.length);
+
+                    // Temperatur-Datensätze erstellen, nur für Einheiten mit °C
+                    // Initialisiere ein Objekt, um Temperaturwerte nach Namen zu gruppieren
+                    let temperatureDataByName = {};
+
+                    // Filtere nach Temperatureingaben ('°C') und gruppiere Werte nach Name
+                    this.parsedInputs.filter(input => input.einheit === '°C').forEach(input => {
+                        // Wenn der Name noch nicht existiert, initialisiere ein leeres Array
+                        if (!temperatureDataByName[input.name]) {
+                            temperatureDataByName[input.name] = [];
+                        }
+                        // Füge den Temperaturwert für diesen Namen hinzu
+                        temperatureDataByName[input.name].push(parseFloat(input.wert.replace(',', '.')));
+                    });
+
+                    // Jetzt erstellen wir für jede Temperaturquelle ein Dataset
+                    Object.keys(temperatureDataByName).forEach(name => {
+                        let values = temperatureDataByName[name]; // Die gesammelten Temperaturwerte für diesen Namen
+
+                        console.log(`Temperatur-Dataset für ${name} (°C):`, values);
+
+                        datasets.push({
+                            label: `${name} (°C)`,
+                            data: values,
+                            borderColor: this.getRandomColor(),
+                            fill: false,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        });
+                    });
+
+                    // Digitaleingänge (AUS/EIN) mit der Einheit "AUTO" behandeln
+                    // Initialisiere ein Objekt, um AUS/EIN-Werte nach Namen zu gruppieren
+                    let digitalDataByName = {};
+
+                    // Filtere nach Digitaleingaben (Einheit "AUTO") und gruppiere Werte nach Name
+                    this.parsedInputs.filter(input => input.einheit === 'AUTO').forEach(input => {
+                        // Wenn der Name noch nicht existiert, initialisiere ein leeres Array
+                        if (!digitalDataByName[input.name]) {
+                            digitalDataByName[input.name] = [];
+                        }
+                        // Konvertiere den Wert (AUS = 0, EIN = 3) und füge ihn für diesen Namen hinzu
+                        digitalDataByName[input.name].push(input.wert === 'AUS' ? 0 : 3);
+                    });
+
+                    // Jetzt erstellen wir für jede Digitaleingabe ein Dataset
+                    Object.keys(digitalDataByName).forEach(name => {
+                        let values = digitalDataByName[name]; // Die gesammelten Werte für diesen Namen
+
+                        console.log(`AUS/EIN-Dataset für ${name}:`, values);
+
+                        datasets.push({
+                            label: `${name} (AUS/EIN)`,
+                            data: values,
+                            borderColor: this.getRandomColor(),
+                            fill: false,
+                            borderWidth: 2,
+                            stepped: true, // Stufige Darstellung
+                            yAxisID: 'y'
+                        });
+                    });
+
+                    // Durchfluss-Datensätze erstellen
+                    let flowData = [];
+
+                    // Filtere nach Durchflussdaten (Einheit "l/h") und sammle die Werte
+                    this.parsedInputs.filter(input => input.einheit === 'l/h').forEach(input => {
+                        // Konvertiere den Wert und füge ihn dem FlowData-Array hinzu
+                        flowData.push(parseFloat(input.wert.replace(',', '.')));
+                    });
+
+                    console.log('Durchflussdaten:', flowData);
+
+                    datasets.push({
+                        label: `Durchfl.Sol. (l/h)`,
+                        data: flowData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: false,
+                        borderWidth: 2,
+                        yAxisID: 'y2' // Setze y2 für eine sekundäre Achse
+                    });
+
+                    // Ausgänge mit Einheit "AUTO" (AUS/EIN)
+                    // Ausgangs-Datensätze erstellen
+                    // Initialisiere Objekte zur Gruppierung nach Namen
+                    let outputDataByName = {};
+
+                    // Filtere nach Ausgängen mit der Einheit "AUTO" und gruppiere Werte nach Name
+                    this.parsedOutputs.filter(output => output.einheit === 'AUTO').forEach(output => {
+                        if (!outputDataByName[output.name]) {
+                            outputDataByName[output.name] = [];
+                        }
+                        // Konvertiere den Wert (AUS = 0, EIN = 3) und füge ihn für diesen Namen hinzu
+                        console.log(`AUS/EIN-Wert für Ausgang ${output.name}: ${output.wert}`);
+                        outputDataByName[output.name].push(output.wert === 'AUS' ? 0 : 3);
+                    });
+
+                    // Jetzt erstellen wir für jede Digitaleingabe ein Dataset
+                    Object.keys(outputDataByName).forEach(name => {
+                        let values = outputDataByName[name];
+
+                        console.log(`AUS/EIN-Dataset für Ausgang ${name}:`, values);
+
+                        datasets.push({
+                            label: `${name} (AUS/EIN)`,
+                            data: values,
+                            borderColor: this.getRandomColor(),
+                            fill: false,
+                            borderWidth: 2,
+                            stepped: true,
+                            yAxisID: 'y'
+                        });
+                    });
+
+                    // Für andere Einheiten wie "Drehzahlst." und "V" ähnlich vorgehen
+
+                    // Drehzahlstufen-Datensätze erstellen
+                    let speedDataByName = {};
+                    this.parsedOutputs.filter(o => o.einheit === 'Drehzahlst.').forEach(output => {
+                        if (!speedDataByName[output.name]) {
+                            speedDataByName[output.name] = [];
+                        }
+                        speedDataByName[output.name].push(parseFloat(output.wert.replace(',', '.')));
+                    });
+
+                    Object.keys(speedDataByName).forEach(name => {
+                        let values = speedDataByName[name];
+
+                        console.log(`Drehzahlstufen-Dataset für ${name}:`, values);
+
+                        datasets.push({
+                            label: `${name} (Drehzahlstufe)`,
+                            data: values,
+                            borderColor: this.getRandomColor(),
+                            fill: false,
+                            borderWidth: 2,
+                            yAxisID: 'y3'
+                        });
+                    });
+
+                    // Volt-Datensätze erstellen
+                    let voltDataByName = {};
+                    this.parsedOutputs.filter(o => o.einheit === 'V').forEach(output => {
+                        if (!voltDataByName[output.name]) {
+                            voltDataByName[output.name] = [];
+                        }
+                        voltDataByName[output.name].push(parseFloat(output.wert.replace(',', '.')));
+                    });
+
+                    Object.keys(voltDataByName).forEach(name => {
+                        let values = voltDataByName[name];
+
+                        console.log(`Volt-Dataset für ${name}:`, values);
+
+                        datasets.push({
+                            label: `${name} (Volt)`,
+                            data: values,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: false,
+                            borderWidth: 2,
+                            yAxisID: 'y3'
+                        });
+                    });
+
+                    console.log('Finale datasets Länge:', datasets.length);
+                    return datasets;
+                }
+                ,
+
+                getRandomColor() {
+                    const letters = '0123456789ABCDEF';
+                    let color = '#';
+                    for (let i = 0; i < 6; i++) {
+                        color += letters[Math.floor(Math.random() * 16)];
+                    }
+                    return color;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
