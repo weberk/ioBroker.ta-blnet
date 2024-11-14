@@ -46,20 +46,20 @@ class Uvr16xxBlNet extends utils.Adapter {
         Here a simple template for a boolean variable named "testVariable"
         Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
         */
-        await this.setObjectNotExistsAsync("testVariable", {
-            type: "state",
-            common: {
-                name: "testVariable",
-                type: "boolean",
-                role: "indicator",
-                read: true,
-                write: true,
-            },
-            native: {},
-        });
+        // await this.setObjectNotExistsAsync("testVariable", {
+        //     type: "state",
+        //     common: {
+        //         name: "testVariable",
+        //         type: "boolean",
+        //         role: "indicator",
+        //         read: true,
+        //         write: true,
+        //     },
+        //     native: {},
+        // });
 
         // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-        this.subscribeStates("testVariable");
+        // this.subscribeStates("testVariable");
         // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
         // this.subscribeStates("lights.*");
         // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
@@ -70,28 +70,159 @@ class Uvr16xxBlNet extends utils.Adapter {
             you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
         */
         // the variable testVariable is set to true as command (ack=false)
-        await this.setStateAsync("testVariable", true);
+        // await this.setStateAsync("testVariable", true);
 
         // same thing, but the value is flagged "ack"
         // ack should be always set to true if the value is received from or acknowledged from the target system
-        await this.setStateAsync("testVariable", {
-            val: true,
-            ack: true
-        });
+        // await this.setStateAsync("testVariable", {
+        //     val: true,
+        //     ack: true
+        // });
 
         // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        await this.setStateAsync("testVariable", {
-            val: true,
-            ack: true,
-            expire: 30
-        });
-
+        // await this.setStateAsync("testVariable", {
+        //     val: true,
+        //     ack: true,
+        //     expire: 30
+        // });
         // examples for the checkPassword/checkGroup functions
-        let result = await this.checkPasswordAsync("admin", "iobroker");
-        this.log.info("check user admin pw iobroker: " + result);
+        // let result = await this.checkPasswordAsync("admin", "iobroker");
+        // this.log.info("check user admin pw iobroker: " + result);
 
-        result = await this.checkGroupAsync("admin", "admin");
-        this.log.info("check group user admin group admin: " + result);
+        // result = await this.checkGroupAsync("admin", "admin");
+        // this.log.info("check group user admin group admin: " + result);
+
+        // Declare outputs
+        const outputs = {
+            "A1": "OFF", // 72 (Byte 1, Bit 0)
+            "A2": "ON", // 72 (Byte 1, Bit 1)
+            "A3": "OFF", // 72 (Byte 1, Bit 2)
+            "A4": "ON", // 72 (Byte 1, Bit 3)
+            "A5": "OFF", // 72 (Byte 1, Bit 4)
+            "A6": "ON", // 72 (Byte 1, Bit 5)
+            "A7": "ON", // 72 (Byte 1, Bit 6)
+            "A8": "OFF", // 72 (Byte 1, Bit 7)
+            "A9": "OFF", // 04 (Byte 2, Bit 0)
+            "A10": "OFF", // 04 (Byte 2, Bit 1)
+            "A11": "ON", // 04 (Byte 2, Bit 2)
+            "A12": "OFF", // 04 (Byte 2, Bit 3)
+            "A13": "OFF" // 04 (Byte 2, Bit 4)
+        };
+
+        for (const [key, value] of Object.entries(outputs)) {
+            await this.setObjectNotExistsAsync(`outputs.${key}`, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "string",
+                    role: "indicator",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare speed levels
+        const speedLevels = {
+            "DzA1": 0, // 00
+            "DzA2": 30, // 1e
+            "DzA6": 14, // 0e
+            "DzA7": 158 // 9e
+        };
+
+        for (const [key, value] of Object.entries(speedLevels)) {
+            await this.setObjectNotExistsAsync(`speed_levels.${key}`, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare temperatures
+        const temperatures = {
+            "T1": 6.2, // 3e 20 -> 003e  (T.Kollektor °C)
+            "T2": 67.6, // a4 22 -> 02a4  (Puffer1oben °C)
+            "T3": 36.1, // 69 21 -> 0169  (Puffer2unten °C)
+            "T4": 34.1, // 55 22 -> 0155  (T.Warmwasser °C)
+            "T5": 24.7, // f7 20 -> 00f7  (Solar-RL.pri °C)
+            "T6": 41.3, // 9d 21 -> 019d  (Solar-VL.sek °C)
+            "T7": 25.4, // fe 20 -> 00fe  (Solar-VL.pri °C)
+            "T8": 67.1, // 9f 22 -> 029f  (Puffer1oben2 °C)
+            "T9": 51.1, // ff 21 -> 01ff  (Puffer1mitte °C)
+            "T10": 36.7, // 6f 21 -> 016f  (T.Kessel-RL °C)
+            "T11": 53.3, // 15 22 -> 0215  (T.Zirku.RL °C)
+            "T12": 7.9, // 4f 20 -> 004f  (T.Außenwand °C) ab 01.07.24 durch WP-Installation zu Digitaleing.1
+            "T13": 43.5, // b3 21 -> 01b3  (T.Heizkr.VL1 °C)
+            "T14": 69.1, // b3 22 -> 02b3  (T.Kessel-VL °C)
+            "T15": 0, // 00 00 -> 0000  (nicht benutzt)  ab 01.07.24 durch WP-Installation zu Digitaleing.1
+            "T16": 0 // 00 30 -> 0000  (Durchfl.Sol. l/h)  *4
+        };
+
+        for (const [key, value] of Object.entries(temperatures)) {
+            await this.setObjectNotExistsAsync(`temperatures.${key}`, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value.temperature",
+                    unit: "°C",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare thermal energy counters status
+        const thermalEnergyCountersStatus = {
+            "wmz1": "active", // 01 (Bit 0)
+            "wmz2": "inactive" // 01 (Bit 1)
+        };
+
+        for (const [key, value] of Object.entries(thermalEnergyCountersStatus)) {
+            await this.setObjectNotExistsAsync(`thermal_energy_counters_status.${key}`, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "string",
+                    role: "indicator",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare thermal energy counters
+        const thermalEnergyCounters = {
+            "momentanleistung1": 0, // 00 00 00 00  evtl 1/2560
+            "kWh1": 61214, // ef 1e   evtl. 1/10
+            "MWh1": 13568, // 35 00   evtl. 1/10
+            "momentanleistung2": 576768, // 58 02 00 00  evtl 1/2560
+            "kWh2": 771, // 03 03   evtl. 1/10
+            "MWh2": 2620 // 0a 3c   evtl. 1/10
+        };
+
+        for (const [key, value] of Object.entries(thermalEnergyCounters)) {
+            await this.setObjectNotExistsAsync(`thermal_energy_counters.${key}`, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
 
         // Start polling
         this.startPolling();
@@ -128,9 +259,47 @@ class Uvr16xxBlNet extends utils.Adapter {
         // Implement the logic to fetch state values from the IoT device over Ethernet
         // Return an object with key-value pairs representing the state values
         return {
-            "state1": true,
-            "state2": 42,
-            // Add more states as needed
+            "outputs.A1": "OFF",
+            "outputs.A2": "ON",
+            "outputs.A3": "OFF",
+            "outputs.A4": "ON",
+            "outputs.A5": "OFF",
+            "outputs.A6": "ON",
+            "outputs.A7": "ON",
+            "outputs.A8": "OFF",
+            "outputs.A9": "OFF",
+            "outputs.A10": "OFF",
+            "outputs.A11": "ON",
+            "outputs.A12": "OFF",
+            "outputs.A13": "OFF",
+            "speed_levels.DzA1": 0,
+            "speed_levels.DzA2": 30,
+            "speed_levels.DzA6": 14,
+            "speed_levels.DzA7": 158,
+            "temperatures.T1": 6.2,
+            "temperatures.T2": 67.6,
+            "temperatures.T3": 36.1,
+            "temperatures.T4": 34.1,
+            "temperatures.T5": 24.7,
+            "temperatures.T6": 41.3,
+            "temperatures.T7": 25.4,
+            "temperatures.T8": 67.1,
+            "temperatures.T9": 51.1,
+            "temperatures.T10": 36.7,
+            "temperatures.T11": 53.3,
+            "temperatures.T12": 7.9,
+            "temperatures.T13": 43.5,
+            "temperatures.T14": 69.1,
+            "temperatures.T15": 0,
+            "temperatures.T16": 0,
+            "thermal_energy_counters_status.wmz1": "active",
+            "thermal_energy_counters_status.wmz2": "inactive",
+            "thermal_energy_counters.momentanleistung1": 0,
+            "thermal_energy_counters.kWh1": 61214,
+            "thermal_energy_counters.MWh1": 13568,
+            "thermal_energy_counters.momentanleistung2": 576768,
+            "thermal_energy_counters.kWh2": 771,
+            "thermal_energy_counters.MWh2": 2620
         };
     }
 
