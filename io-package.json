@@ -31,17 +31,17 @@
             "zh-cn": "TA UVR16xx 和 BL-NET"
         },
         "desc": {
-            "en": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative.",
-            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVR16xx-Controllers von Technische Alternative.",
-            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVR16xx от Technische Alternative.",
-            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVR16xx da Technische Alternative.",
-            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVR16xx-controller van Technische Alternative.",
-            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVR16xx de Technische Alternative.",
-            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVR16xx di Technische Alternative.",
-            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVR16xx de Technische Alternative.",
-            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVR16xx firmy Technische Alternative.",
-            "uk": "Адаптер ioBroker для читання входів і виходів контролера UVR16xx від Technische Alternative.",
-            "zh-cn": "ioBroker 适配器，用于读取 Technische Alternative 的 UVR16xx 控制器的输入和输出。"
+            "en": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.",
+            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVR16xx-Controllers von Technische Alternative über BL-NET.",
+            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVR16xx от Technische Alternative с использованием BL-NET.",
+            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVR16xx da Technische Alternative usando BL-NET.",
+            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVR16xx-controller van Technische Alternative met behulp van BL-NET.",
+            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVR16xx de Technische Alternative via BL-NET.",
+            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVR16xx di Technische Alternative tramite BL-NET.",
+            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVR16xx de Technische Alternative utilizando BL-NET.",
+            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVR16xx firmy Technische Alternative za pomocą BL-NET.",
+            "uk": "Адаптер ioBroker для читання входів і виходів контролера UVR16xx від Technische Alternative за допомогою BL-NET.",
+            "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 UVR16xx 控制器的输入和输出的 ioBroker 适配器。"
         },
         "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
         "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],

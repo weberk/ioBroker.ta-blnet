@@ -1,7 +1,7 @@
 {
   "name": "iobroker.uvr16xx_bl-net",
   "version": "0.0.1",
-  "description": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative.",
+  "description": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.",
   "author": {
     "name": "Klaus Weber",
     "email": "klausatweberesprit@gmail.com"

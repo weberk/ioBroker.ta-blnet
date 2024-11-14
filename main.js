@@ -28,7 +28,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Is called when databases are connected and adapter received configuration.
+     * Is called, when databases are connected and adapter received configuration.
      */
     async onReady() {
         // Initialize your adapter here
@@ -42,10 +42,10 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config option2: " + this.config.option2);
 
         /*
-		For every state in the system there has to be also an object of type state
-		Here a simple template for a boolean variable named "testVariable"
-		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-		*/
+        For every state in the system there has to be also an object of type state
+        Here a simple template for a boolean variable named "testVariable"
+        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
+        */
         await this.setObjectNotExistsAsync("testVariable", {
             type: "state",
             common: {
@@ -66,18 +66,25 @@ class Uvr16xxBlNet extends utils.Adapter {
         // this.subscribeStates("*");
 
         /*
-			setState examples
-			you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-		*/
+            setState examples
+            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
+        */
         // the variable testVariable is set to true as command (ack=false)
         await this.setStateAsync("testVariable", true);
 
         // same thing, but the value is flagged "ack"
         // ack should be always set to true if the value is received from or acknowledged from the target system
-        await this.setStateAsync("testVariable", { val: true, ack: true });
+        await this.setStateAsync("testVariable", {
+            val: true,
+            ack: true
+        });
 
         // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        await this.setStateAsync("testVariable", { val: true, ack: true, expire: 30 });
+        await this.setStateAsync("testVariable", {
+            val: true,
+            ack: true,
+            expire: 30
+        });
 
         // examples for the checkPassword/checkGroup functions
         let result = await this.checkPasswordAsync("admin", "iobroker");
@@ -85,6 +92,46 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         result = await this.checkGroupAsync("admin", "admin");
         this.log.info("check group user admin group admin: " + result);
+
+        // Start polling
+        this.startPolling();
+    }
+
+    /**
+     * Polling function to fetch state values from the IoT device
+     */
+    startPolling() {
+        this.pollingInterval = setInterval(async () => {
+            try {
+                // Fetch state values from the IoT device
+                const stateValues = await this.fetchStateValuesFromDevice();
+
+                // Update the states in ioBroker
+                for (const [key, value] of Object.entries(stateValues)) {
+                    await this.setStateAsync(key, {
+                        val: value,
+                        ack: true
+                    });
+                }
+
+                this.log.info("Polled state values from the IoT device");
+            } catch (error) {
+                this.log.error("Error polling state values: " + error);
+            }
+        }, 5000); // Poll every 5 seconds
+    }
+
+    /**
+     * Fetch state values from the IoT device
+     */
+    async fetchStateValuesFromDevice() {
+        // Implement the logic to fetch state values from the IoT device over Ethernet
+        // Return an object with key-value pairs representing the state values
+        return {
+            "state1": true,
+            "state2": 42,
+            // Add more states as needed
+        };
     }
 
     /**
@@ -93,6 +140,10 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     onUnload(callback) {
         try {
+            // Clear the polling interval
+            if (this.pollingInterval) {
+                clearInterval(this.pollingInterval);
+            }
             // Here you must clear all timeouts or intervals that may still be active
             // clearTimeout(timeout1);
             // clearTimeout(timeout2);
