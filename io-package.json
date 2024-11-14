@@ -2,6 +2,7 @@
     "common": {
         "name": "uvr16xx_bl-net",
         "version": "0.0.1",
+        "messagebox": true,
         "news": {
             "0.0.1": {
                 "en": "initial release",
@@ -78,8 +79,9 @@
         ]
     },
     "native": {
-        "option1": true,
-        "option2": "42"
+        "ip_address": "192.168.2.77",
+        "port": 40000,
+        "poll_interval": 30
     },
     "objects": [],
     "instanceObjects": [

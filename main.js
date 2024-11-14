@@ -39,8 +39,9 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // The adapters config (in the instance object everything under the attribute "native") is accessible via
         // this.config:
-        this.log.info("config option1: " + this.config.option1);
-        this.log.info("config option2: " + this.config.option2);
+        this.log.info("config ip_address: " + this.config.ip_address);
+        this.log.info("config port: " + this.config.port);
+        this.log.info("config poll_interval: " + this.config.poll_interval);
 
         /*
         For every state in the system there has to be also an object of type state
@@ -315,9 +316,25 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     readBlock(data, length) {
         if (data.length >= length) {
-            return data.slice(0, length);
+            const block = data.slice(0, length);
+            this.logHexDump(block);
+            return block;
         }
         return null;
+    }
+
+    /**
+     * Log a hex dump of the data
+     */
+    logHexDump(data) {
+        let hexString = '';
+        for (let i = 0; i < data.length; i++) {
+            hexString += data[i].toString(16).padStart(2, '0') + ' ';
+            if ((i + 1) % 16 === 0) {
+                hexString += '\n';
+            }
+        }
+        this.log.debug(`Hex dump:\n${hexString}`);
     }
 
     /**
@@ -468,6 +485,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     //         }
     //     }
     // }
+
 }
 
 if (require.main !== module) {
