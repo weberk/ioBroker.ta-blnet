@@ -7,6 +7,7 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 const utils = require("@iobroker/adapter-core");
+const net = require('net');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
@@ -237,6 +238,9 @@ class Uvr16xxBlNet extends utils.Adapter {
                 // Fetch state values from the IoT device
                 const stateValues = await this.fetchStateValuesFromDevice();
 
+                // Update the connection state to true
+                await this.setStateAsync("info.connection", true, true);
+
                 // Update the states in ioBroker
                 for (const [key, value] of Object.entries(stateValues)) {
                     await this.setStateAsync(key, {
@@ -247,6 +251,9 @@ class Uvr16xxBlNet extends utils.Adapter {
 
                 this.log.info("Polled state values from the IoT device");
             } catch (error) {
+                // Update the connection state to false
+                await this.setStateAsync("info.connection", false, true);
+
                 this.log.error("Error polling state values: " + error);
             }
         }, 5000); // Poll every 5 seconds
@@ -256,51 +263,138 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Fetch state values from the IoT device
      */
     async fetchStateValuesFromDevice() {
-        // Implement the logic to fetch state values from the IoT device over Ethernet
-        // Return an object with key-value pairs representing the state values
-        return {
-            "outputs.A1": "OFF",
-            "outputs.A2": "ON",
-            "outputs.A3": "OFF",
-            "outputs.A4": "ON",
-            "outputs.A5": "OFF",
-            "outputs.A6": "ON",
-            "outputs.A7": "ON",
-            "outputs.A8": "OFF",
-            "outputs.A9": "OFF",
-            "outputs.A10": "OFF",
-            "outputs.A11": "ON",
-            "outputs.A12": "OFF",
-            "outputs.A13": "OFF",
-            "speed_levels.DzA1": 0,
-            "speed_levels.DzA2": 30,
-            "speed_levels.DzA6": 14,
-            "speed_levels.DzA7": 158,
-            "temperatures.T1": 6.2,
-            "temperatures.T2": 67.6,
-            "temperatures.T3": 36.1,
-            "temperatures.T4": 34.1,
-            "temperatures.T5": 24.7,
-            "temperatures.T6": 41.3,
-            "temperatures.T7": 25.4,
-            "temperatures.T8": 67.1,
-            "temperatures.T9": 51.1,
-            "temperatures.T10": 36.7,
-            "temperatures.T11": 53.3,
-            "temperatures.T12": 7.9,
-            "temperatures.T13": 43.5,
-            "temperatures.T14": 69.1,
-            "temperatures.T15": 0,
-            "temperatures.T16": 0,
-            "thermal_energy_counters_status.wmz1": "active",
-            "thermal_energy_counters_status.wmz2": "inactive",
-            "thermal_energy_counters.momentanleistung1": 0,
-            "thermal_energy_counters.kWh1": 61214,
-            "thermal_energy_counters.MWh1": 13568,
-            "thermal_energy_counters.momentanleistung2": 576768,
-            "thermal_energy_counters.kWh2": 771,
-            "thermal_energy_counters.MWh2": 2620
-        };
+        return new Promise((resolve, reject) => {
+            const stateValues = {};
+
+            const client = new net.Socket();
+            const ipAddress = this.config.ip_address; // Assuming you have the IP address in the config
+            const port = parseInt(this.config.port); // Assuming you have the port in the config
+            const pollInterval = parseInt(this.config.poll_interval) * 1000; // Poll interval in milliseconds
+
+            client.connect(port, ipAddress, () => {
+                const cmd = Buffer.from([-85]); // Command byte
+                client.write(cmd);
+            });
+
+            client.on('data', (data) => {
+                if (data[0] === -85) {
+                    // Process the response data
+                    const response = this.readBlock(data, 57);
+                    if (response) {
+                        // Parse the response and update stateValues
+                        const uvrRecord = this.parseUvrRecord(response);
+                        if (uvrRecord) {
+                            Object.assign(stateValues, uvrRecord);
+                        }
+
+                        client.destroy(); // Close the connection
+                        resolve(stateValues);
+                    } else {
+                        client.destroy(); // Close the connection
+                        reject(new Error("Invalid response from device"));
+                    }
+                } else {
+                    client.destroy(); // Close the connection
+                    reject(new Error("Unexpected response from device"));
+                }
+            });
+
+            client.on('error', (err) => {
+                client.destroy(); // Close the connection
+                reject(err);
+            });
+
+            client.on('close', () => {
+                // Connection closed
+            });
+        });
+    }
+
+    /**
+     * Read a block of data from the response
+     */
+    readBlock(data, length) {
+        if (data.length >= length) {
+            return data.slice(0, length);
+        }
+        return null;
+    }
+
+    /**
+     * Parse the UVR record from the response
+     */
+    parseUvrRecord(response) {
+        const uvrRecord = {};
+
+        // Example parsing logic based on UvrRecord.java
+        // Outputs
+        const output = this.byte2short(response[33], response[34]);
+        uvrRecord["outputs.A1"] = (output & 0x01) ? "ON" : "OFF";
+        uvrRecord["outputs.A2"] = (output & 0x02) ? "ON" : "OFF";
+        uvrRecord["outputs.A3"] = (output & 0x04) ? "ON" : "OFF";
+        uvrRecord["outputs.A4"] = (output & 0x08) ? "ON" : "OFF";
+        uvrRecord["outputs.A5"] = (output & 0x10) ? "ON" : "OFF";
+        uvrRecord["outputs.A6"] = (output & 0x20) ? "ON" : "OFF";
+        uvrRecord["outputs.A7"] = (output & 0x40) ? "ON" : "OFF";
+        uvrRecord["outputs.A8"] = (output & 0x80) ? "ON" : "OFF";
+        uvrRecord["outputs.A9"] = (output & 0x100) ? "ON" : "OFF";
+        uvrRecord["outputs.A10"] = (output & 0x200) ? "ON" : "OFF";
+        uvrRecord["outputs.A11"] = (output & 0x400) ? "ON" : "OFF";
+        uvrRecord["outputs.A12"] = (output & 0x800) ? "ON" : "OFF";
+        uvrRecord["outputs.A13"] = (output & 0x1000) ? "ON" : "OFF";
+
+        // Speed levels
+        uvrRecord["speed_levels.DzA1"] = response[35];
+        uvrRecord["speed_levels.DzA2"] = response[36];
+        uvrRecord["speed_levels.DzA6"] = response[37];
+        uvrRecord["speed_levels.DzA7"] = response[38];
+
+        // Temperatures
+        for (let i = 0; i < 16; i++) {
+            uvrRecord[`temperatures.T${i + 1}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]) / 10.0;
+        }
+
+        // Thermal energy counters status
+        const wmz = response[39];
+        uvrRecord["thermal_energy_counters_status.wmz1"] = (wmz & 0x1) ? "active" : "inactive";
+        uvrRecord["thermal_energy_counters_status.wmz2"] = (wmz & 0x2) ? "active" : "inactive";
+
+        // Thermal energy counters
+        if (wmz & 0x1) {
+            uvrRecord["thermal_energy_counters.momentanleistung1"] = this.byte2int(response[40], response[41], response[42], response[43]);
+            uvrRecord["thermal_energy_counters.kWh1"] = this.byte2short(response[44], response[45]);
+            uvrRecord["thermal_energy_counters.MWh1"] = this.byte2short(response[46], response[47]);
+        } else {
+            uvrRecord["thermal_energy_counters.momentanleistung1"] = 0;
+            uvrRecord["thermal_energy_counters.kWh1"] = 0;
+            uvrRecord["thermal_energy_counters.MWh1"] = 0;
+        }
+
+        if (wmz & 0x2) {
+            uvrRecord["thermal_energy_counters.momentanleistung2"] = this.byte2int(response[48], response[49], response[50], response[51]);
+            uvrRecord["thermal_energy_counters.kWh2"] = this.byte2short(response[52], response[53]);
+            uvrRecord["thermal_energy_counters.MWh2"] = this.byte2short(response[54], response[55]);
+        } else {
+            uvrRecord["thermal_energy_counters.momentanleistung2"] = 0;
+            uvrRecord["thermal_energy_counters.kWh2"] = 0;
+            uvrRecord["thermal_energy_counters.MWh2"] = 0;
+        }
+
+        return uvrRecord;
+    }
+
+    /**
+     * Convert two bytes to a short
+     */
+    byte2short(lo, hi) {
+        return (hi << 8) | (lo & 0xFF);
+    }
+
+    /**
+     * Convert four bytes to an int
+     */
+    byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
+        return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
     }
 
     /**
