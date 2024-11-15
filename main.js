@@ -5,6 +5,7 @@
  */
 
 // The adapter-core module gives you access to the core ioBroker functions
+
 const utils = require("@iobroker/adapter-core");
 // The net module is used to create TCP clients and servers
 const net = require('net');
@@ -54,7 +55,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Performs a test read from the device to determine temperature units.
+     * Performs a test read from the device to determine input units.
      * @returns {Promise<{success: boolean, units: Object}>} - The result of the test read with success status and units.
      */
     async testRead() {
@@ -62,15 +63,15 @@ class Uvr16xxBlNet extends utils.Adapter {
             const stateValues = await this.fetchStateValuesFromDevice();
             const units = {};
 
-            // Determine units based on bits 4-6 of the high byte for temperatures
-            for (const [key, value] of Object.entries(stateValues.temperatures)) {
+            // Determine units based on bits 4-6 of the high byte for inputs
+            for (const [key, value] of Object.entries(stateValues.inputs)) {
                 if (typeof value === 'number') {
                     const highByte = value >> 8;
                     const unitBits = highByte & 0x70;
                     const unit = this.determineUnit(unitBits);
                     units[key] = unit;
                 } else {
-                    this.log.error(`Invalid temperature value for ${key}: ${JSON.stringify(value)}`);
+                    this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
                 }
             }
 
@@ -170,33 +171,33 @@ class Uvr16xxBlNet extends utils.Adapter {
             });
         }
 
-        // Declare temperatures
-        const temperatures = {
-            "S01": 6.2, // Collector temperature in °C
-            "S02": 67.6, // Buffer 1 top temperature in °C
-            "S03": 36.1, // Buffer 2 bottom temperature in °C
-            "S04": 34.1, // Hot water temperature in °C
-            "S05": 24.7, // Solar return primary temperature in °C
-            "S06": 41.3, // Solar flow secondary temperature in °C
-            "S07": 25.4, // Solar flow primary temperature in °C
-            "S08": 67.1, // Buffer 1 top 2 temperature in °C
-            "S09": 51.1, // Buffer 1 middle temperature in °C
-            "S10": 36.7, // Boiler return temperature in °C
-            "S11": 53.3, // Circulation return temperature in °C
-            "S12": 7.9, // Outer wall temperature in °C
-            "S13": 43.5, // Heating circuit 1 flow temperature in °C
-            "S14": 69.1, // Boiler flow temperature in °C
+        // Declare inputs
+        const inputs = {
+            "S01": 6.2, // Collector input in °C
+            "S02": 67.6, // Buffer 1 top input in °C
+            "S03": 36.1, // Buffer 2 bottom input in °C
+            "S04": 34.1, // Hot water input in °C
+            "S05": 24.7, // Solar return primary input in °C
+            "S06": 41.3, // Solar flow secondary input in °C
+            "S07": 25.4, // Solar flow primary input in °C
+            "S08": 67.1, // Buffer 1 top 2 input in °C
+            "S09": 51.1, // Buffer 1 middle input in °C
+            "S10": 36.7, // Boiler return input in °C
+            "S11": 53.3, // Circulation return input in °C
+            "S12": 7.9, // Outer wall input in °C
+            "S13": 43.5, // Heating circuit 1 flow input in °C
+            "S14": 69.1, // Boiler flow input in °C
             "S15": 0, // Not used
             "S16": 0 // Solar flow rate in l/h
         };
 
-        for (const [key, value] of Object.entries(temperatures)) {
-            await this.setObjectNotExistsAsync(`temperatures.${key}`, {
+        for (const [key, value] of Object.entries(inputs)) {
+            await this.setObjectNotExistsAsync(`inputs.${key}`, {
                 type: "state",
                 common: {
                     name: key,
                     type: "number",
-                    role: "value.temperature",
+                    role: "value",
                     unit: units[key], // Set unit based on test read
                     read: true,
                     write: false,
@@ -272,21 +273,21 @@ class Uvr16xxBlNet extends utils.Adapter {
                             const stateKey = `${key}.${subKey}`;
                             let finalValue = subValue;
 
-                            // Process temperature values: filter bits 4-6 and handle sign bit
-                            if (key === 'temperatures') {
+                            // Process input values: filter bits 4-6 and handle sign bit
+                            if (key === 'inputs') {
                                 if (typeof subValue === 'number') {
                                     const highByte = subValue >> 8;
                                     const lowByte = subValue & 0xFF;
                                     const signBit = highByte & 0x80;
                                     const unitBits = highByte & 0x70;
-                                    let temperature = this.byte2short(lowByte, highByte & 0x0F);
+                                    let input = this.byte2short(lowByte, highByte & 0x0F);
                                     if (signBit) {
-                                        temperature = -temperature;
+                                        input = -input;
                                     }
                                     if (unitBits === 0x20) { // °C
-                                        finalValue = temperature / 10.0; // Assuming temperature is in tenths of degrees
+                                        finalValue = input / 10.0; // Assuming input is in tenths of degrees
                                     } else {
-                                        finalValue = temperature;
+                                        finalValue = input;
                                     }
                                     this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
                                 } else {
@@ -328,11 +329,11 @@ class Uvr16xxBlNet extends utils.Adapter {
             const client = new net.Socket();
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = parseInt(this.config.port); // Port from the config
-            const AKTUELLEDATENLESEN = 0xAB; // Command byte to read current data
+            const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
 
             // Connect to the device
             client.connect(port, ipAddress, () => {
-                const cmd = Buffer.from([AKTUELLEDATENLESEN]); // Command byte
+                const cmd = Buffer.from([READ_CURRENT_DATA]); // Command byte
                 client.write(cmd);
             });
 
@@ -407,20 +408,94 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Parse the UVR record from the response
-     */
-    /**
      * Parses the UVR record from the given response.
      * 
      * @param {Uint8Array} response - The response data to parse.
      * @returns {Object} The parsed UVR record.
      * @property {Object} outputs - The outputs status.
      * @property {Object} speed_levels - The speed levels.
-     * @property {Object} temperatures - The temperatures.
+     * @property {Object} inputs - The inputs.
      * @property {Object} thermal_energy_counters_status - The status of thermal energy counters.
      * @property {Object} thermal_energy_counters - The thermal energy counters.
      */
-    parseUvrRecord(response) {}
+    parseUvrRecord(response) {
+        const uvrRecord = {
+            outputs: {},
+            speed_levels: {},
+            inputs: {},
+            thermal_energy_counters_status: {},
+            thermal_energy_counters: {}
+        };
+
+        // Example parsing logic based on UvrRecord.java
+        // Outputs
+        const output = this.byte2short(response[33], response[34]);
+        uvrRecord.outputs["A01"] = (output & 0x01) ? "ON" : "OFF";
+        uvrRecord.outputs["A02"] = (output & 0x02) ? "ON" : "OFF";
+        uvrRecord.outputs["A03"] = (output & 0x04) ? "ON" : "OFF";
+        uvrRecord.outputs["A04"] = (output & 0x08) ? "ON" : "OFF";
+        uvrRecord.outputs["A05"] = (output & 0x10) ? "ON" : "OFF";
+        uvrRecord.outputs["A06"] = (output & 0x20) ? "ON" : "OFF";
+        uvrRecord.outputs["A07"] = (output & 0x40) ? "ON" : "OFF";
+        uvrRecord.outputs["A08"] = (output & 0x80) ? "ON" : "OFF";
+        uvrRecord.outputs["A09"] = (output & 0x100) ? "ON" : "OFF";
+        uvrRecord.outputs["A10"] = (output & 0x200) ? "ON" : "OFF";
+        uvrRecord.outputs["A11"] = (output & 0x400) ? "ON" : "OFF";
+        uvrRecord.outputs["A12"] = (output & 0x800) ? "ON" : "OFF";
+        uvrRecord.outputs["A13"] = (output & 0x1000) ? "ON" : "OFF";
+
+        // Log outputs
+        this.log.debug(`Outputs: ${JSON.stringify(uvrRecord.outputs)}`);
+
+        // Speed levels
+        uvrRecord.speed_levels["DzA1"] = response[35];
+        uvrRecord.speed_levels["DzA2"] = response[36];
+        uvrRecord.speed_levels["DzA6"] = response[37];
+        uvrRecord.speed_levels["DzA7"] = response[38];
+
+        // Log speed levels
+        this.log.debug(`Speed levels: ${JSON.stringify(uvrRecord.speed_levels)}`);
+
+        // Inputs
+        for (let i = 0; i < 16; i++) {
+            uvrRecord.inputs[`S${(i + 1).toString().padStart(2, '0')}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
+        }
+
+        // Log inputs
+        this.log.debug(`Inputs: ${JSON.stringify(uvrRecord.inputs)}`);
+
+        // Thermal energy counters status
+        const wmz = response[39];
+        uvrRecord.thermal_energy_counters_status["wmz1"] = (wmz & 0x1) ? "active" : "inactive";
+        uvrRecord.thermal_energy_counters_status["wmz2"] = (wmz & 0x2) ? "active" : "inactive";
+
+        // Log thermal energy counters status
+        this.log.debug(`Thermal energy counters status: ${JSON.stringify(uvrRecord.thermal_energy_counters_status)}`);
+
+        // Thermal energy counters
+        if (wmz & 0x1) {
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = this.byte2int(response[40], response[41], response[42], response[43]);
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[44], response[45]) / 10.0 + // kWh
+                this.byte2short(response[46], response[47]) * 1000.0; // MWh
+        } else {
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
+        }
+
+        if (wmz & 0x2) {
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = this.byte2int(response[48], response[49], response[50], response[51]);
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[52], response[53]) / 10.0 + // kWh
+                this.byte2short(response[54], response[55]) * 1000.0; // MWh
+        } else {
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
+        }
+
+        // Log thermal energy counters
+        this.log.debug(`Thermal energy counters: ${JSON.stringify(uvrRecord.thermal_energy_counters)}`);
+
+        return uvrRecord;
+    }
 
     /**
      * Converts two bytes into a short integer.
@@ -429,7 +504,9 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {number} hi - The high byte.
      * @returns {number} The resulting short integer.
      */
-    byte2short(lo, hi) {}
+    byte2short(lo, hi) {
+        return (hi << 8) | (lo & 0xFF);
+    }
 
     /**
      * Converts four bytes into a 32-bit integer.
@@ -440,7 +517,9 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {number} hi_hi - The most significant byte.
      * @returns {number} The 32-bit integer formed by the four bytes.
      */
-    byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {}
+    byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
+        return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
+    }
 
     /**
      * Cleans up resources when the adapter is unloaded.
@@ -448,12 +527,85 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Function} callback - The callback function to call after cleanup.
      * @throws Will call the callback function in case of an error.
      */
-    onUnload(callback) {}
+    onUnload(callback) {
+        try {
+            // Clear the polling interval
+            if (this.pollingInterval) {
+                clearInterval(this.pollingInterval);
+            }
+            // Here you must clear all timeouts or intervals that may still be active
+            // clearTimeout(timeout1);
+            // clearTimeout(timeout2);
+            // ...
+            // clearInterval(interval1);
+
+            callback();
+        } catch (e) {
+            callback();
+        }
+    }
+
+    // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
+    // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
+    // /**
+    //  * Is called if a subscribed object changes
+    //  * @param {string} id
+    //  * @param {ioBroker.Object | null | undefined} obj
+    //  */
+    // onObjectChange(id, obj) {
+    //     if (obj) {
+    //         // The object was changed
+    //         this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
+    //     } else {
+    //         // The object was deleted
+    //         this.log.info(`object ${id} deleted`);
+    //     }
+    // }
 
     /**
      * Handles changes to subscribed states.
      * @param {string} id - The ID of the state that changed.
      * @param {ioBroker.State | null | undefined} state - The new state value or null if the state was deleted.
      */
-    onStateChange(id, state) {}
+    onStateChange(id, state) {
+        if (state) {
+            // The state was changed
+            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+        } else {
+            // The state was deleted
+            this.log.info(`state ${id} deleted`);
+        }
+    }
+
+
+    // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
+    // /**
+    //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
+    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
+    //  * @param {ioBroker.Message} obj
+    //  */
+    // onMessage(obj) {
+    //     if (typeof obj === "object" && obj.message) {
+    //         if (obj.command === "send") {
+    //             // e.g. send email or pushover or whatever
+    //             this.log.info("send command");
+
+    //             // Send response in callback if required
+    //             if (obj.callback) this.sendTo(obj.from, obj.command, "Message received", obj.callback);
+    //         }
+    //     }
+    // }
+
+}
+
+// Check if the script is being run directly or required as a module
+if (require.main !== module) {
+    // Export the constructor in compact mode for use as a module
+    /**
+     * @param {Partial<utils.AdapterOptions>} [options={}]
+     */
+    module.exports = (options) => new Uvr16xxBlNet(options);
+} else {
+    // Otherwise, start the instance directly when run as a standalone script
+    new Uvr16xxBlNet();
 }
