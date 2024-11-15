@@ -474,7 +474,20 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Thermal energy counters
         if (wmz & 0x1) {
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = this.byte2int(response[40], response[41], response[42], response[43]);
+            const lowLow1 = response[40];
+            const lowHigh1 = response[41];
+            const highLow1 = response[42];
+            const highHigh1 = response[43];
+
+            const hundredths1 = (lowLow1 * 10) / 256;
+            let power1 = (10 * (65536 * highHigh1 + 256 * highLow1 + lowHigh1) + hundredths1) / 100;
+
+            // Check for negative sign bit
+            if (highHigh1 > 32767) {
+                power1 = (10 * ((65536 * highHigh1 + 256 * highLow1 + lowHigh1) - 65536) - hundredths1) / 100;
+            }
+
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = power1;
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[44], response[45]) / 10.0 + // kWh
                 this.byte2short(response[46], response[47]) * 1000.0; // MWh
         } else {
@@ -483,14 +496,26 @@ class Uvr16xxBlNet extends utils.Adapter {
         }
 
         if (wmz & 0x2) {
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = this.byte2int(response[48], response[49], response[50], response[51]);
+            const lowLow2 = response[48];
+            const lowHigh2 = response[49];
+            const highLow2 = response[50];
+            const highHigh2 = response[51];
+
+            const hundredths2 = (lowLow2 * 10) / 256;
+            let power2 = (10 * (65536 * highHigh2 + 256 * highLow2 + lowHigh2) + hundredths2) / 100;
+
+            // Check for negative sign bit
+            if (highHigh2 > 32767) {
+                power2 = (10 * ((65536 * highHigh2 + 256 * highLow2 + lowHigh2) - 65536) - hundredths2) / 100;
+            }
+
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = power2;
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[52], response[53]) / 10.0 + // kWh
                 this.byte2short(response[54], response[55]) * 1000.0; // MWh
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
         }
-
         // Log thermal energy counters
         this.log.debug(`Thermal energy counters: ${JSON.stringify(uvrRecord.thermal_energy_counters)}`);
 
