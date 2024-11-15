@@ -28,85 +28,94 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.on("unload", this.onUnload.bind(this));
     }
 
-    /**
-     * Is called, when databases are connected and adapter received configuration.
-     */
     async onReady() {
-        // Initialize your adapter here
-
-        // Reset the connection indicator during startup
-        this.setState("info.connection", false, true);
-
         // The adapters config (in the instance object everything under the attribute "native") is accessible via
         // this.config:
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
 
-        /*
-        For every state in the system there has to be also an object of type state
-        Here a simple template for a boolean variable named "testVariable"
-        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-        */
-        // await this.setObjectNotExistsAsync("testVariable", {
-        //     type: "state",
-        //     common: {
-        //         name: "testVariable",
-        //         type: "boolean",
-        //         role: "indicator",
-        //         read: true,
-        //         write: true,
-        //     },
-        //     native: {},
-        // });
 
-        // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-        // this.subscribeStates("testVariable");
-        // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-        // this.subscribeStates("lights.*");
-        // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-        // this.subscribeStates("*");
+        // Test-Leseversuch durchführen
+        const testResult = await this.testRead();
 
-        /*
-            setState examples
-            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-        */
-        // the variable testVariable is set to true as command (ack=false)
-        // await this.setStateAsync("testVariable", true);
+        // Status für info.connection setzen
+        await this.setStateAsync("info.connection", testResult.success, true);
 
-        // same thing, but the value is flagged "ack"
-        // ack should be always set to true if the value is received from or acknowledged from the target system
-        // await this.setStateAsync("testVariable", {
-        //     val: true,
-        //     ack: true
-        // });
+        // Objekte deklarieren
+        await this.declareObjects(testResult.units);
 
-        // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        // await this.setStateAsync("testVariable", {
-        //     val: true,
-        //     ack: true,
-        //     expire: 30
-        // });
-        // examples for the checkPassword/checkGroup functions
-        // let result = await this.checkPasswordAsync("admin", "iobroker");
-        // this.log.info("check user admin pw iobroker: " + result);
+        // Start polling
+        this.startPolling();
+    }
 
-        // result = await this.checkGroupAsync("admin", "admin");
-        // this.log.info("check group user admin group admin: " + result);
+    async testRead() {
+        try {
+            const stateValues = await this.fetchStateValuesFromDevice();
+            const units = {};
 
+            // Einheiten basierend auf den Bits 4-6 des Highbytes für Temperaturen bestimmen
+            for (const [key, value] of Object.entries(stateValues.temperatures)) {
+                if (typeof value === 'number') {
+                    const highByte = value >> 8;
+                    const unitBits = highByte & 0x70;
+                    const unit = this.determineUnit(unitBits);
+                    units[key] = unit;
+                } else {
+                    this.log.error(`Invalid temperature value for ${key}: ${JSON.stringify(value)}`);
+                }
+            }
+
+            this.log.info("Test read succeeded.");
+            return {
+                success: true,
+                units
+            };
+        } catch (error) {
+            this.log.error("Test read failed: " + error);
+            return {
+                success: false,
+                units: {}
+            };
+        }
+    }
+
+    /**
+     * Determine the unit based on the unitBits
+     */
+    determineUnit(unitBits) {
+        switch (unitBits) {
+            case 0x00:
+                return "unused";
+            case 0x10:
+                return "digital";
+            case 0x20:
+                return "°C";
+            case 0x30:
+                return "l/h";
+            case 0x60:
+                return "W/m²";
+            case 0x70:
+                return "°C (room sensor)";
+            default:
+                return "unknown";
+        }
+    }
+
+    async declareObjects(units) {
         // Declare outputs
         const outputs = {
             "A01": "OFF", // 72 (Byte 1, Bit 0)
-            "A02": "ON", // 72 (Byte 1, Bit 1)
+            "A02": "OFF", // 72 (Byte 1, Bit 1)
             "A03": "OFF", // 72 (Byte 1, Bit 2)
-            "A04": "ON", // 72 (Byte 1, Bit 3)
+            "A04": "OFF", // 72 (Byte 1, Bit 3)
             "A05": "OFF", // 72 (Byte 1, Bit 4)
-            "A06": "ON", // 72 (Byte 1, Bit 5)
-            "A07": "ON", // 72 (Byte 1, Bit 6)
+            "A06": "OFF", // 72 (Byte 1, Bit 5)
+            "A07": "OFF", // 72 (Byte 1, Bit 6)
             "A08": "OFF", // 72 (Byte 1, Bit 7)
             "A09": "OFF", // 04 (Byte 2, Bit 0)
             "A10": "OFF", // 04 (Byte 2, Bit 1)
-            "A11": "ON", // 04 (Byte 2, Bit 2)
+            "A11": "OFF", // 04 (Byte 2, Bit 2)
             "A12": "OFF", // 04 (Byte 2, Bit 3)
             "A13": "OFF" // 04 (Byte 2, Bit 4)
         };
@@ -174,7 +183,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     name: key,
                     type: "number",
                     role: "value.temperature",
-                    unit: "°C",
+                    unit: units[key], // Einheit basierend auf Test-Leseversuch setzen
                     read: true,
                     write: false,
                 },
@@ -231,30 +240,48 @@ class Uvr16xxBlNet extends utils.Adapter {
                 native: {},
             });
         }
-        // Start polling
-        this.startPolling();
     }
 
     /**
      * Polling function to fetch state values from the IoT device
      */
     startPolling() {
+        const pollInterval = parseInt(this.config.poll_interval) * 1000; // Poll interval in milliseconds
         this.pollingInterval = setInterval(async () => {
             try {
-                // Fetch state values from the IoT device
                 const stateValues = await this.fetchStateValuesFromDevice();
-
-                // Update the connection state to true
                 await this.setStateAsync("info.connection", true, true);
 
-                // Update the states in ioBroker
                 for (const [key, value] of Object.entries(stateValues)) {
                     if (typeof value === 'object' && value !== null) {
                         for (const [subKey, subValue] of Object.entries(value)) {
                             const stateKey = `${key}.${subKey}`;
-                            this.log.debug(`Setting state ${stateKey} to value ${subValue}`);
+                            let finalValue = subValue;
+
+                            // Filter bits 4-6 and handle sign bit for temperatures
+                            if (key === 'temperatures') {
+                                if (typeof subValue === 'number') {
+                                    const highByte = subValue >> 8;
+                                    const lowByte = subValue & 0xFF;
+                                    const signBit = highByte & 0x80;
+                                    const unitBits = highByte & 0x70;
+                                    let temperature = this.byte2short(lowByte, highByte & 0x0F);
+                                    if (signBit) {
+                                        temperature = -temperature;
+                                    }
+                                    if (unitBits === 0x20) { // °C
+                                        finalValue = temperature / 10.0; // Assuming temperature is in tenths of degrees
+                                    } else {
+                                        finalValue = temperature;
+                                    }
+                                    this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
+                                } else {
+                                    this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
+                                }
+                            }
+
                             await this.setStateAsync(stateKey, {
-                                val: subValue,
+                                val: finalValue,
                                 ack: true
                             });
                         }
@@ -268,17 +295,11 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 this.log.info("Polled state values from the IoT device");
             } catch (error) {
-                // Update the connection state to false
                 await this.setStateAsync("info.connection", false, true);
-
                 this.log.error("Error polling state values: " + error);
             }
-        }, 5000); // Poll every 5 seconds
+        }, pollInterval); // Poll every pollInterval milliseconds
     }
-
-    /**
-     * Fetch state values from the IoT device
-     */
     async fetchStateValuesFromDevice() {
         return new Promise((resolve, reject) => {
             const stateValues = {};
@@ -286,7 +307,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             const client = new net.Socket();
             const ipAddress = this.config.ip_address; // Assuming you have the IP address in the config
             const port = parseInt(this.config.port); // Assuming you have the port in the config
-            const pollInterval = parseInt(this.config.poll_interval) * 1000; // Poll interval in milliseconds
 
             client.connect(port, ipAddress, () => {
                 const cmd = Buffer.from([-85]); // Command byte
@@ -294,7 +314,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             });
 
             client.on('data', (data) => {
-                this.logHexDump(data); // Hexdump ins Log schreiben
+                //this.logHexDump(data); // Hexdump ins Log schreiben
                 if (data[0] === 0x80) {
                     // Process the response data
                     const response = this.readBlock(data, 57);
@@ -328,21 +348,15 @@ class Uvr16xxBlNet extends utils.Adapter {
         });
     }
 
-    /**
-     * Read a block of data from the response
-     */
     readBlock(data, length) {
         if (data.length >= length) {
             const block = data.slice(0, length);
-            this.logHexDump(block);
+            //this.logHexDump(block);
             return block;
         }
         return null;
     }
 
-    /**
-     * Log a hex dump of the data
-     */
     logHexDump(data) {
         let hexString = '';
         for (let i = 0; i < data.length; i++) {
@@ -397,7 +411,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Temperatures
         for (let i = 0; i < 16; i++) {
-            uvrRecord.temperatures[`S${(i + 1).toString().padStart(2, '0')}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2] & 0x8F) / 10.0;
+            uvrRecord.temperatures[`S${(i + 1).toString().padStart(2, '0')}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
         }
 
         // Log temperatures
@@ -436,16 +450,10 @@ class Uvr16xxBlNet extends utils.Adapter {
         return uvrRecord;
     }
 
-    /**
-     * Convert two bytes to a short
-     */
     byte2short(lo, hi) {
         return (hi << 8) | (lo & 0xFF);
     }
 
-    /**
-     * Convert four bytes to an int
-     */
     byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
         return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
     }
@@ -503,7 +511,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             this.log.info(`state ${id} deleted`);
         }
     }
-
     // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
     // /**
     //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
