@@ -480,11 +480,11 @@ class Uvr16xxBlNet extends utils.Adapter {
             const highHigh1 = response[43];
 
             const hundredths1 = (lowLow1 * 10) / 256;
-            let power1 = (10 * (65536 * highHigh1 + 256 * highLow1 + lowHigh1) + hundredths1) / 100;
+            let power1 = (10 * this.byte2int(lowHigh1, highLow1, highHigh1, 0) + hundredths1) / 100;
 
             // Check for negative sign bit
             if (highHigh1 > 32767) {
-                power1 = (10 * ((65536 * highHigh1 + 256 * highLow1 + lowHigh1) - 65536) - hundredths1) / 100;
+                power1 = (10 * (this.byte2int(lowHigh1, highLow1, highHigh1, 0) - 65536) - hundredths1) / 100;
             }
 
             uvrRecord.thermal_energy_counters["current_heat_power1"] = power1;
@@ -502,11 +502,11 @@ class Uvr16xxBlNet extends utils.Adapter {
             const highHigh2 = response[51];
 
             const hundredths2 = (lowLow2 * 10) / 256;
-            let power2 = (10 * (65536 * highHigh2 + 256 * highLow2 + lowHigh2) + hundredths2) / 100;
+            let power2 = (10 * this.byte2int(lowHigh2, highLow2, highHigh2, 0) + hundredths2) / 100;
 
             // Check for negative sign bit
             if (highHigh2 > 32767) {
-                power2 = (10 * ((65536 * highHigh2 + 256 * highLow2 + lowHigh2) - 65536) - hundredths2) / 100;
+                power2 = (10 * (this.byte2int(lowHigh2, highLow2, highHigh2, 0) - 65536) - hundredths2) / 100;
             }
 
             uvrRecord.thermal_energy_counters["current_heat_power2"] = power2;
