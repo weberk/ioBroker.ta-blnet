@@ -40,7 +40,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         const testResult = await this.testRead();
 
         // Status für info.connection setzen
-        await this.setStateAsync("info.connection", testResult.success, true);
+        await this.setState("info.connection", testResult.success, true);
 
         // Objekte deklarieren
         await this.declareObjects(testResult.units);
@@ -250,7 +250,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.pollingInterval = setInterval(async () => {
             try {
                 const stateValues = await this.fetchStateValuesFromDevice();
-                await this.setStateAsync("info.connection", true, true);
+                await this.setState("info.connection", true, true);
 
                 for (const [key, value] of Object.entries(stateValues)) {
                     if (typeof value === 'object' && value !== null) {
@@ -295,7 +295,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 this.log.info("Polled state values from the IoT device");
             } catch (error) {
-                await this.setStateAsync("info.connection", false, true);
+                await this.setState("info.connection", false, true);
                 this.log.error("Error polling state values: " + error);
             }
         }, pollInterval); // Poll every pollInterval milliseconds
@@ -307,9 +307,10 @@ class Uvr16xxBlNet extends utils.Adapter {
             const client = new net.Socket();
             const ipAddress = this.config.ip_address; // Assuming you have the IP address in the config
             const port = parseInt(this.config.port); // Assuming you have the port in the config
+            const AKTUELLEDATENLESEN = 0xAB;
 
             client.connect(port, ipAddress, () => {
-                const cmd = Buffer.from([-85]); // Command byte
+                const cmd = Buffer.from([AKTUELLEDATENLESEN]); // Command byte
                 client.write(cmd);
             });
 
