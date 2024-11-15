@@ -5,15 +5,17 @@
  */
 
 // The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
 const utils = require("@iobroker/adapter-core");
+// The net module is used to create TCP clients and servers
 const net = require('net');
 
-// Load your modules here, e.g.:
-// const fs = require("fs");
-
+/**
+ * Adapter class for UVR16xx BL-NET devices.
+ * @extends utils.Adapter
+ */
 class Uvr16xxBlNet extends utils.Adapter {
     /**
+     * Constructor for the adapter instance
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
     constructor(options) {
@@ -21,40 +23,46 @@ class Uvr16xxBlNet extends utils.Adapter {
             ...options,
             name: "uvr16xx_bl-net",
         });
-        this.on("ready", this.onReady.bind(this));
-        this.on("stateChange", this.onStateChange.bind(this));
-        // this.on("objectChange", this.onObjectChange.bind(this));
-        // this.on("message", this.onMessage.bind(this));
-        this.on("unload", this.onUnload.bind(this));
+        this.on("ready", this.onReady.bind(this)); // Bind the onReady method
+        this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
+        // this.on("objectChange", this.onObjectChange.bind(this)); // Uncomment to bind the onObjectChange method
+        // this.on("message", this.onMessage.bind(this)); // Uncomment to bind the onMessage method
+        this.on("unload", this.onUnload.bind(this)); // Bind the onUnload method
     }
 
+    /**
+     * Is called when the adapter is ready
+     */
     async onReady() {
-        // The adapters config (in the instance object everything under the attribute "native") is accessible via
+        // The adapter's config (in the instance object everything under the attribute "native") is accessible via
         // this.config:
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
 
-
-        // Test-Leseversuch durchführen
+        // Perform a test read attempt
         const testResult = await this.testRead();
 
-        // Status für info.connection setzen
+        // Set status for info.connection
         await this.setState("info.connection", testResult.success, true);
 
-        // Objekte deklarieren
+        // Declare objects
         await this.declareObjects(testResult.units);
 
         // Start polling
         this.startPolling();
     }
 
+    /**
+     * Performs a test read from the device to determine temperature units.
+     * @returns {Promise<{success: boolean, units: Object}>} - The result of the test read with success status and units.
+     */
     async testRead() {
         try {
             const stateValues = await this.fetchStateValuesFromDevice();
             const units = {};
 
-            // Einheiten basierend auf den Bits 4-6 des Highbytes für Temperaturen bestimmen
+            // Determine units based on bits 4-6 of the high byte for temperatures
             for (const [key, value] of Object.entries(stateValues.temperatures)) {
                 if (typeof value === 'number') {
                     const highByte = value >> 8;
@@ -82,42 +90,48 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Determine the unit based on the unitBits
+     * @param {number} unitBits - The bits representing the unit
+     * @returns {string} - The determined unit as a string
      */
     determineUnit(unitBits) {
         switch (unitBits) {
             case 0x00:
-                return "unused";
+                return "unused"; // No unit
             case 0x10:
-                return "digital";
+                return "digital"; // Digital unit
             case 0x20:
-                return "°C";
+                return "°C"; // Temperature in Celsius
             case 0x30:
-                return "l/h";
+                return "l/h"; // Flow rate in liters per hour
             case 0x60:
-                return "W/m²";
+                return "W/m²"; // Power per square meter
             case 0x70:
-                return "°C (room sensor)";
+                return "°C (room sensor)"; // Room temperature sensor in Celsius
             default:
-                return "unknown";
+                return "unknown"; // Unknown unit
         }
     }
 
+    /**
+     * Declare objects in ioBroker based on the provided units.
+     * @param {Object} units - The units determined from the test read.
+     */
     async declareObjects(units) {
         // Declare outputs
         const outputs = {
-            "A01": "OFF", // 72 (Byte 1, Bit 0)
-            "A02": "OFF", // 72 (Byte 1, Bit 1)
-            "A03": "OFF", // 72 (Byte 1, Bit 2)
-            "A04": "OFF", // 72 (Byte 1, Bit 3)
-            "A05": "OFF", // 72 (Byte 1, Bit 4)
-            "A06": "OFF", // 72 (Byte 1, Bit 5)
-            "A07": "OFF", // 72 (Byte 1, Bit 6)
-            "A08": "OFF", // 72 (Byte 1, Bit 7)
-            "A09": "OFF", // 04 (Byte 2, Bit 0)
-            "A10": "OFF", // 04 (Byte 2, Bit 1)
-            "A11": "OFF", // 04 (Byte 2, Bit 2)
-            "A12": "OFF", // 04 (Byte 2, Bit 3)
-            "A13": "OFF" // 04 (Byte 2, Bit 4)
+            "A01": "OFF", // Byte 1, Bit 0
+            "A02": "OFF", // Byte 1, Bit 1
+            "A03": "OFF", // Byte 1, Bit 2
+            "A04": "OFF", // Byte 1, Bit 3
+            "A05": "OFF", // Byte 1, Bit 4
+            "A06": "OFF", // Byte 1, Bit 5
+            "A07": "OFF", // Byte 1, Bit 6
+            "A08": "OFF", // Byte 1, Bit 7
+            "A09": "OFF", // Byte 2, Bit 0
+            "A10": "OFF", // Byte 2, Bit 1
+            "A11": "OFF", // Byte 2, Bit 2
+            "A12": "OFF", // Byte 2, Bit 3
+            "A13": "OFF" // Byte 2, Bit 4
         };
 
         for (const [key, value] of Object.entries(outputs)) {
@@ -136,10 +150,10 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Declare speed levels
         const speedLevels = {
-            "DzA1": 0, // 00
-            "DzA2": 30, // 1e
-            "DzA6": 14, // 0e
-            "DzA7": 158 // 9e
+            "DzA1": 0, // Speed level 1
+            "DzA2": 30, // Speed level 2
+            "DzA6": 14, // Speed level 6
+            "DzA7": 158 // Speed level 7
         };
 
         for (const [key, value] of Object.entries(speedLevels)) {
@@ -158,22 +172,22 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Declare temperatures
         const temperatures = {
-            "S01": 6.2, // 3e 20 -> 003e  (T.Kollektor °C)
-            "S02": 67.6, // a4 22 -> 02a4  (Puffer1oben °C)
-            "S03": 36.1, // 69 21 -> 0169  (Puffer2unten °C)
-            "S04": 34.1, // 55 22 -> 0155  (T.Warmwasser °C)
-            "S05": 24.7, // f7 20 -> 00f7  (Solar-RL.pri °C)
-            "S06": 41.3, // 9d 21 -> 019d  (Solar-VL.sek °C)
-            "S07": 25.4, // fe 20 -> 00fe  (Solar-VL.pri °C)
-            "S08": 67.1, // 9f 22 -> 029f  (Puffer1oben2 °C)
-            "S09": 51.1, // ff 21 -> 01ff  (Puffer1mitte °C)
-            "S10": 36.7, // 6f 21 -> 016f  (T.Kessel-RL °C)
-            "S11": 53.3, // 15 22 -> 0215  (T.Zirku.RL °C)
-            "S12": 7.9, // 4f 20 -> 004f  (T.Außenwand °C) ab 01.07.24 durch WP-Installation zu Digitaleing.1
-            "S13": 43.5, // b3 21 -> 01b3  (T.Heizkr.VL1 °C)
-            "S14": 69.1, // b3 22 -> 02b3  (T.Kessel-VL °C)
-            "S15": 0, // 00 00 -> 0000  (nicht benutzt)  ab 01.07.24 durch WP-Installation zu Digitaleing.1
-            "S16": 0 // 00 30 -> 0000  (Durchfl.Sol. l/h)  *4
+            "S01": 6.2, // Collector temperature in °C
+            "S02": 67.6, // Buffer 1 top temperature in °C
+            "S03": 36.1, // Buffer 2 bottom temperature in °C
+            "S04": 34.1, // Hot water temperature in °C
+            "S05": 24.7, // Solar return primary temperature in °C
+            "S06": 41.3, // Solar flow secondary temperature in °C
+            "S07": 25.4, // Solar flow primary temperature in °C
+            "S08": 67.1, // Buffer 1 top 2 temperature in °C
+            "S09": 51.1, // Buffer 1 middle temperature in °C
+            "S10": 36.7, // Boiler return temperature in °C
+            "S11": 53.3, // Circulation return temperature in °C
+            "S12": 7.9, // Outer wall temperature in °C
+            "S13": 43.5, // Heating circuit 1 flow temperature in °C
+            "S14": 69.1, // Boiler flow temperature in °C
+            "S15": 0, // Not used
+            "S16": 0 // Solar flow rate in l/h
         };
 
         for (const [key, value] of Object.entries(temperatures)) {
@@ -183,7 +197,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     name: key,
                     type: "number",
                     role: "value.temperature",
-                    unit: units[key], // Einheit basierend auf Test-Leseversuch setzen
+                    unit: units[key], // Set unit based on test read
                     read: true,
                     write: false,
                 },
@@ -193,8 +207,8 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Declare thermal energy counters status
         const thermalEnergyCountersStatus = {
-            "wmz1": "active", // 01 (Bit 0)
-            "wmz2": "inactive" // 01 (Bit 1)
+            "wmz1": "active", // Thermal energy counter 1 status
+            "wmz2": "inactive" // Thermal energy counter 2 status
         };
 
         for (const [key, value] of Object.entries(thermalEnergyCountersStatus)) {
@@ -213,10 +227,10 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Declare thermal energy counters
         const thermalEnergyCounters = {
-            "current_heat_power1": 0, // kW  evtl 1/2560
-            "total_heat_energy1": 61214, // MWh + kWh * 1/10
-            "current_heat_power2": 576768, // 58 02 00 00  evtl 1/2560
-            "total_heat_energy2": 771, // MWh + kWh * 1/10
+            "current_heat_power1": 0, // Current heat power 1 in kW
+            "total_heat_energy1": 61214, // Total heat energy 1 in kWh
+            "current_heat_power2": 576768, // Current heat power 2 in kW
+            "total_heat_energy2": 771 // Total heat energy 2 in kWh
         };
 
         for (const [key, value] of Object.entries(thermalEnergyCounters)) {
@@ -243,7 +257,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Polling function to fetch state values from the IoT device
+     * Polling function to fetch state values from the IoT device at regular intervals.
      */
     startPolling() {
         const pollInterval = parseInt(this.config.poll_interval) * 1000; // Poll interval in milliseconds
@@ -258,7 +272,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                             const stateKey = `${key}.${subKey}`;
                             let finalValue = subValue;
 
-                            // Filter bits 4-6 and handle sign bit for temperatures
+                            // Process temperature values: filter bits 4-6 and handle sign bit
                             if (key === 'temperatures') {
                                 if (typeof subValue === 'number') {
                                     const highByte = subValue >> 8;
@@ -280,14 +294,16 @@ class Uvr16xxBlNet extends utils.Adapter {
                                 }
                             }
 
-                            await this.setStateAsync(stateKey, {
+                            // Update the state in ioBroker
+                            await this.setState(stateKey, {
                                 val: finalValue,
                                 ack: true
                             });
                         }
                     } else {
                         this.log.debug(`Setting state ${key} to value ${value}`);
-                        await this.setStateAsync(key, {
+                        // Update the state in ioBroker
+                        await this.setState(key, {
                             val: value,
                             ack: true
                         });
@@ -300,22 +316,29 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
         }, pollInterval); // Poll every pollInterval milliseconds
     }
+
+    /**
+     * Fetches state values from the IoT device.
+     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     */
     async fetchStateValuesFromDevice() {
         return new Promise((resolve, reject) => {
             const stateValues = {};
 
             const client = new net.Socket();
-            const ipAddress = this.config.ip_address; // Assuming you have the IP address in the config
-            const port = parseInt(this.config.port); // Assuming you have the port in the config
-            const AKTUELLEDATENLESEN = 0xAB;
+            const ipAddress = this.config.ip_address; // IP address from the config
+            const port = parseInt(this.config.port); // Port from the config
+            const AKTUELLEDATENLESEN = 0xAB; // Command byte to read current data
 
+            // Connect to the device
             client.connect(port, ipAddress, () => {
                 const cmd = Buffer.from([AKTUELLEDATENLESEN]); // Command byte
                 client.write(cmd);
             });
 
+            // Handle incoming data
             client.on('data', (data) => {
-                //this.logHexDump(data); // Hexdump ins Log schreiben
+                // this.logHexDump(data); // Log hex dump of the data
                 if (data[0] === 0x80) {
                     // Process the response data
                     const response = this.readBlock(data, 57);
@@ -338,17 +361,26 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
             });
 
+            // Handle connection errors
             client.on('error', (err) => {
                 client.destroy(); // Close the connection
                 reject(err);
             });
 
+            // Handle connection close
             client.on('close', () => {
                 // Connection closed
             });
         });
     }
 
+    /**
+     * Reads a block of data of the specified length from the given data array.
+     *
+     * @param {Uint8Array} data - The data array to read from.
+     * @param {number} length - The length of the block to read.
+     * @returns {Uint8Array|null} The block of data if the length is sufficient, otherwise null.
+     */
     readBlock(data, length) {
         if (data.length >= length) {
             const block = data.slice(0, length);
@@ -358,6 +390,11 @@ class Uvr16xxBlNet extends utils.Adapter {
         return null;
     }
 
+    /**
+     * Logs a hexadecimal dump of the provided data.
+     *
+     * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
+     */
     logHexDump(data) {
         let hexString = '';
         for (let i = 0; i < data.length; i++) {
@@ -372,173 +409,51 @@ class Uvr16xxBlNet extends utils.Adapter {
     /**
      * Parse the UVR record from the response
      */
-    parseUvrRecord(response) {
-        const uvrRecord = {
-            outputs: {},
-            speed_levels: {},
-            temperatures: {},
-            thermal_energy_counters_status: {},
-            thermal_energy_counters: {}
-        };
-
-        // Example parsing logic based on UvrRecord.java
-        // Outputs
-        const output = this.byte2short(response[33], response[34]);
-        uvrRecord.outputs["A01"] = (output & 0x01) ? "ON" : "OFF";
-        uvrRecord.outputs["A02"] = (output & 0x02) ? "ON" : "OFF";
-        uvrRecord.outputs["A03"] = (output & 0x04) ? "ON" : "OFF";
-        uvrRecord.outputs["A04"] = (output & 0x08) ? "ON" : "OFF";
-        uvrRecord.outputs["A05"] = (output & 0x10) ? "ON" : "OFF";
-        uvrRecord.outputs["A06"] = (output & 0x20) ? "ON" : "OFF";
-        uvrRecord.outputs["A07"] = (output & 0x40) ? "ON" : "OFF";
-        uvrRecord.outputs["A08"] = (output & 0x80) ? "ON" : "OFF";
-        uvrRecord.outputs["A09"] = (output & 0x100) ? "ON" : "OFF";
-        uvrRecord.outputs["A10"] = (output & 0x200) ? "ON" : "OFF";
-        uvrRecord.outputs["A11"] = (output & 0x400) ? "ON" : "OFF";
-        uvrRecord.outputs["A12"] = (output & 0x800) ? "ON" : "OFF";
-        uvrRecord.outputs["A13"] = (output & 0x1000) ? "ON" : "OFF";
-
-        // Log outputs
-        this.log.debug(`Outputs: ${JSON.stringify(uvrRecord.outputs)}`);
-
-        // Speed levels
-        uvrRecord.speed_levels["DzA1"] = response[35];
-        uvrRecord.speed_levels["DzA2"] = response[36];
-        uvrRecord.speed_levels["DzA6"] = response[37];
-        uvrRecord.speed_levels["DzA7"] = response[38];
-
-        // Log speed levels
-        this.log.debug(`Speed levels: ${JSON.stringify(uvrRecord.speed_levels)}`);
-
-        // Temperatures
-        for (let i = 0; i < 16; i++) {
-            uvrRecord.temperatures[`S${(i + 1).toString().padStart(2, '0')}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
-        }
-
-        // Log temperatures
-        this.log.debug(`Temperatures: ${JSON.stringify(uvrRecord.temperatures)}`);
-
-        // Thermal energy counters status
-        const wmz = response[39];
-        uvrRecord.thermal_energy_counters_status["wmz1"] = (wmz & 0x1) ? "active" : "inactive";
-        uvrRecord.thermal_energy_counters_status["wmz2"] = (wmz & 0x2) ? "active" : "inactive";
-
-        // Log thermal energy counters status
-        this.log.debug(`Thermal energy counters status: ${JSON.stringify(uvrRecord.thermal_energy_counters_status)}`);
-
-        // Thermal energy counters
-        if (wmz & 0x1) {
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = this.byte2int(response[40], response[41], response[42], response[43]);
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[44], response[45]) / 10.0 + // kWh
-                this.byte2short(response[46], response[47]) * 1000.0; // MWh
-        } else {
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
-        }
-
-        if (wmz & 0x2) {
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = this.byte2int(response[48], response[49], response[50], response[51]);
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[52], response[53]) / 10.0 + // kWh
-                this.byte2short(response[54], response[55]) * 1000.0; // MWh
-        } else {
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
-        }
-
-        // Log thermal energy counters
-        this.log.debug(`Thermal energy counters: ${JSON.stringify(uvrRecord.thermal_energy_counters)}`);
-
-        return uvrRecord;
-    }
-
-    byte2short(lo, hi) {
-        return (hi << 8) | (lo & 0xFF);
-    }
-
-    byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
-        return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
-    }
+    /**
+     * Parses the UVR record from the given response.
+     * 
+     * @param {Uint8Array} response - The response data to parse.
+     * @returns {Object} The parsed UVR record.
+     * @property {Object} outputs - The outputs status.
+     * @property {Object} speed_levels - The speed levels.
+     * @property {Object} temperatures - The temperatures.
+     * @property {Object} thermal_energy_counters_status - The status of thermal energy counters.
+     * @property {Object} thermal_energy_counters - The thermal energy counters.
+     */
+    parseUvrRecord(response) {}
 
     /**
-     * Is called when adapter shuts down - callback has to be called under any circumstances!
-     * @param {() => void} callback
+     * Converts two bytes into a short integer.
+     *
+     * @param {number} lo - The low byte.
+     * @param {number} hi - The high byte.
+     * @returns {number} The resulting short integer.
      */
-    onUnload(callback) {
-        try {
-            // Clear the polling interval
-            if (this.pollingInterval) {
-                clearInterval(this.pollingInterval);
-            }
-            // Here you must clear all timeouts or intervals that may still be active
-            // clearTimeout(timeout1);
-            // clearTimeout(timeout2);
-            // ...
-            // clearInterval(interval1);
-
-            callback();
-        } catch (e) {
-            callback();
-        }
-    }
-
-    // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
-    // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
-    // /**
-    //  * Is called if a subscribed object changes
-    //  * @param {string} id
-    //  * @param {ioBroker.Object | null | undefined} obj
-    //  */
-    // onObjectChange(id, obj) {
-    //     if (obj) {
-    //         // The object was changed
-    //         this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
-    //     } else {
-    //         // The object was deleted
-    //         this.log.info(`object ${id} deleted`);
-    //     }
-    // }
+    byte2short(lo, hi) {}
 
     /**
-     * Is called if a subscribed state changes
-     * @param {string} id
-     * @param {ioBroker.State | null | undefined} state
+     * Converts four bytes into a 32-bit integer.
+     * 
+     * @param {number} lo_lo - The least significant byte.
+     * @param {number} lo_hi - The second least significant byte.
+     * @param {number} hi_lo - The third least significant byte.
+     * @param {number} hi_hi - The most significant byte.
+     * @returns {number} The 32-bit integer formed by the four bytes.
      */
-    onStateChange(id, state) {
-        if (state) {
-            // The state was changed
-            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-        } else {
-            // The state was deleted
-            this.log.info(`state ${id} deleted`);
-        }
-    }
-    // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
-    // /**
-    //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
-    //  * @param {ioBroker.Message} obj
-    //  */
-    // onMessage(obj) {
-    //     if (typeof obj === "object" && obj.message) {
-    //         if (obj.command === "send") {
-    //             // e.g. send email or pushover or whatever
-    //             this.log.info("send command");
+    byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {}
 
-    //             // Send response in callback if required
-    //             if (obj.callback) this.sendTo(obj.from, obj.command, "Message received", obj.callback);
-    //         }
-    //     }
-    // }
-
-}
-
-if (require.main !== module) {
-    // Export the constructor in compact mode
     /**
-     * @param {Partial<utils.AdapterOptions>} [options={}]
+     * Cleans up resources when the adapter is unloaded.
+     * 
+     * @param {Function} callback - The callback function to call after cleanup.
+     * @throws Will call the callback function in case of an error.
      */
-    module.exports = (options) => new Uvr16xxBlNet(options);
-} else {
-    // otherwise start the instance directly
-    new Uvr16xxBlNet();
+    onUnload(callback) {}
+
+    /**
+     * Handles changes to subscribed states.
+     * @param {string} id - The ID of the state that changed.
+     * @param {ioBroker.State | null | undefined} state - The new state value or null if the state was deleted.
+     */
+    onStateChange(id, state) {}
 }
