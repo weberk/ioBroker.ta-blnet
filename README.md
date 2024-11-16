@@ -122,7 +122,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 
 ## Changelog
 
-v0.0.1
+0.0.1
 initial working version
 
 ### **WORK IN PROGRESS**
