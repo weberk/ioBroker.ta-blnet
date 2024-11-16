@@ -1,4 +1,4 @@
-<script type="text/x-iobroker" data-template-name="uvr16xx_bl-net">
+<script type="text/x-iobroker" data-template-name="uvr16xx-blnet">
     <div class="row">
         <div class="col s2">
             <input type="checkbox" data-field="enabled" data-default="false"/>
@@ -21,7 +21,7 @@
 </script>
 
 <script type="text/javascript">
-    $.get("adapter/uvr16xx_bl-net/words.js", function(script) {
+    $.get("adapter/uvr16xx-blnet/words.js", function(script) {
         let translation = script.substring(script.indexOf('{'), script.length);
         translation = translation.substring(0, translation.lastIndexOf(';'));
         $.extend(systemDictionary, JSON.parse(translation));
@@ -32,7 +32,7 @@
     // - with function in global variable "defaults". Function name is equal with adapter name.
     //   as input function receives object with all information concerning it
     if (typeof defaults !== 'undefined') {
-        defaults["uvr16xx_bl-net"] = function (obj, instanceObj) {
+        defaults["uvr16xx-blnet"] = function (obj, instanceObj) {
             return {
                 enabled:        false,
                 interval:       '5m',

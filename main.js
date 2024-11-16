@@ -22,7 +22,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     constructor(options) {
         super({
             ...options,
-            name: "uvr16xx_bl-net",
+            name: "uvr16xx-blnet",
         });
         this.on("ready", this.onReady.bind(this)); // Bind the onReady method
         this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
@@ -173,22 +173,22 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Declare inputs
         const inputs = {
-            "S01": 6.2, // Collector input in °C
-            "S02": 67.6, // Buffer 1 top input in °C
-            "S03": 36.1, // Buffer 2 bottom input in °C
-            "S04": 34.1, // Hot water input in °C
-            "S05": 24.7, // Solar return primary input in °C
-            "S06": 41.3, // Solar flow secondary input in °C
-            "S07": 25.4, // Solar flow primary input in °C
-            "S08": 67.1, // Buffer 1 top 2 input in °C
-            "S09": 51.1, // Buffer 1 middle input in °C
-            "S10": 36.7, // Boiler return input in °C
-            "S11": 53.3, // Circulation return input in °C
-            "S12": 7.9, // Outer wall input in °C
-            "S13": 43.5, // Heating circuit 1 flow input in °C
-            "S14": 69.1, // Boiler flow input in °C
-            "S15": 0, // Not used
-            "S16": 0 // Solar flow rate in l/h
+            "S01": 6.2, // i.e collector temperature in °C
+            "S02": 67.6, // i.e Buffer 1 top temperature in °C
+            "S03": 36.1, // i.e Buffer 2 bottom temperature in °C
+            "S04": 34.1, // i.e Hot water temperature in °C
+            "S05": 24.7, // i.e Solar return primary temperature in °C
+            "S06": 41.3, // i.e Solar flow secondary temperature in °C
+            "S07": 25.4, // i.e Solar flow primary temperature in °C
+            "S08": 67.1, // i.e Buffer 1 top 2 temperature in °C
+            "S09": 51.1, // i.e Buffer 1 middle temperature in °C
+            "S10": 36.7, // i.e Boiler return temperature in °C
+            "S11": 53.3, // i.e Circulation return temperature in °C
+            "S12": 7.9,  // i.e Outer wall temperature in °C
+            "S13": 43.5, // i.e Heating circuit 1 flow temperature in °C
+            "S14": 69.1, // i.e Boiler flow temperature in °C
+            "S15": 0,    // i.e Not used
+            "S16": 0     // i.e Solar flow rate in l/h
         };
 
         for (const [key, value] of Object.entries(inputs)) {

@@ -1,6 +1,6 @@
 {
     "common": {
-        "name": "uvr16xx_bl-net",
+        "name": "uvr16xx-blnet",
         "version": "0.0.1",
         "messagebox": true,
         "news": {
@@ -51,10 +51,10 @@
             "license": "MIT"
         },
         "platform": "Javascript/Node.js",
-        "icon": "uvr16xx_bl-net.png",
+        "icon": "uvr16xx-blnet.png",
         "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx_bl-net/main/admin/uvr16xx_bl-net.png",
-        "readme": "https://github.com/weberk/ioBroker.uvr16xx_bl-net/blob/main/README.md",
+        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx-blnet/main/admin/uvr16xx-blnet.png",
+        "readme": "https://github.com/weberk/ioBroker.uvr16xx-blnet/blob/main/README.md",
         "loglevel": "info",
         "tier": 3,
         "mode": "daemon",

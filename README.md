@@ -1,16 +1,16 @@
-![Logo](admin/uvr16xx_bl-net.png)
-# ioBroker.uvr16xx_bl-net
+![Logo](admin/uvr16xx-blnet.png)
+# ioBroker.uvr16xx-blnet
 
-[![NPM version](https://img.shields.io/npm/v/iobroker.uvr16xx_bl-net.svg)](https://www.npmjs.com/package/iobroker.uvr16xx_bl-net)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.uvr16xx_bl-net.svg)](https://www.npmjs.com/package/iobroker.uvr16xx_bl-net)
-![Number of Installations](https://iobroker.live/badges/uvr16xx_bl-net-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/uvr16xx_bl-net-stable.svg)
+[![NPM version](https://img.shields.io/npm/v/iobroker.uvr16xx-blnet.svg)](https://www.npmjs.com/package/iobroker.uvr16xx-blnet)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.uvr16xx-blnet.svg)](https://www.npmjs.com/package/iobroker.uvr16xx-blnet)
+![Number of Installations](https://iobroker.live/badges/uvr16xx-blnet-installed.svg)
+![Current version in stable repository](https://iobroker.live/badges/uvr16xx-blnet-stable.svg)
 
-[![NPM](https://nodei.co/npm/iobroker.uvr16xx_bl-net.png?downloads=true)](https://nodei.co/npm/iobroker.uvr16xx_bl-net/)
+[![NPM](https://nodei.co/npm/iobroker.uvr16xx-blnet.png?downloads=true)](https://nodei.co/npm/iobroker.uvr16xx-blnet/)
 
-**Tests:** ![Test and Release](https://github.com/weberk/ioBroker.uvr16xx_bl-net/workflows/Test%20and%20Release/badge.svg)
+**Tests:** ![Test and Release](https://github.com/weberk/ioBroker.uvr16xx-blnet/workflows/Test%20and%20Release/badge.svg)
 
-## uvr16xx_bl-net adapter for ioBroker
+## uvr16xx-blnet adapter for ioBroker
 
 An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative.
 
@@ -25,7 +25,7 @@ You can check other adapters for examples or ask in the developer community. Usi
 ### Getting started
 
 You are almost done, only a few steps left:
-1. Create a new repository on GitHub with the name `ioBroker.uvr16xx_bl-net`
+1. Create a new repository on GitHub with the name `ioBroker.uvr16xx-blnet`
 1. Initialize the current folder as a new git repository:  
     ```bash
     git init -b main
@@ -34,7 +34,7 @@ You are almost done, only a few steps left:
     ```
 1. Link your local repository with the one on GitHub:  
     ```bash
-    git remote add origin https://github.com/weberk/ioBroker.uvr16xx_bl-net
+    git remote add origin https://github.com/weberk/ioBroker.uvr16xx-blnet
     ```
 
 1. Push all files to the GitHub repo:  
