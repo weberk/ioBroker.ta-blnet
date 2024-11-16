@@ -122,12 +122,14 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 
 ## Changelog
 
-0.0.1
-initial working version
 
 ### **WORK IN PROGRESS**
 
 -   (Klaus Weber) initial release
+
+### 0.0.1
+- initial working version
+
 
 ## License
 
