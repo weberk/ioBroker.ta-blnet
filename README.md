@@ -129,7 +129,8 @@ Placeholder for next version:
 
 ### **WORK IN PROGRESS**
 
--   improve build and deploy
+-   improve build and deploy using github workflow (workflow>test-and-release.yml, ioBroker Check and Service Bot)
+-   added compliance with ioBrokers adapter repository (https://github.com/ioBroker/ioBroker.repositories?tab=readme-ov-file#how-to-publish-on-npm)
 
 ### 1.0.1 (2024-11-17)
 
