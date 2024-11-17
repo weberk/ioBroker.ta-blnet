@@ -54,14 +54,19 @@ jobs:
                   iobroker host this
             - name: Stop ioBroker
               run: sudo iobroker stop --allow-root
+            - name: Ensure no JS-Controller is running
+              run: |
+                  sudo pkill -f iobroker.js-controller || true
             - name: Install adapter from GitHub
               run: |
                   sudo iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname) --allow-root
                   sudo iobroker upload uvr16xx-blnet --allow-root
             - name: Start ioBroker
               run: sudo iobroker start --allow-root
-            - name: Stop JS-Controller before tests
-              run: sudo iobroker stop --allow-root
+            - name: Ensure JS-Controller is stopped before tests
+              run: |
+                  sudo iobroker stop --allow-root
+                  sudo pkill -f iobroker.js-controller || true
             - name: Run integration tests
               run: npm run test:integration
             - uses: ioBroker/testing-action-adapter@v1
