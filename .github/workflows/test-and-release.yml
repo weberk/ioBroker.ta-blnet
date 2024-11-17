@@ -23,7 +23,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
-              run: npm install
+              run: npm ci --verbose
             - uses: ioBroker/testing-action-check@v1
               with:
                   node-version: "22.x"
@@ -42,15 +42,20 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
-              run: npm install
-            - name: Install ioBroker
+              run: npm ci --verbose
+            - name: Install ioBroker on Linux and macOS
+              if: runner.os == 'Linux' || runner.os == 'macOS'
               run: |
-                npm install -g iobroker
-                iobroker host this
+                  curl -sL https://iobroker.net/install.sh | bash -
+            - name: Install ioBroker on Windows
+              if: runner.os == 'Windows'
+              run: |
+                  npm install -g iobroker
+                  iobroker host this
             - name: Install adapter from GitHub
               run: |
-                iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
-                iobroker upload uvr16xx-blnet
+                  iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
+                  iobroker upload uvr16xx-blnet
             - uses: ioBroker/testing-action-adapter@v1
               with:
                   node-version: ${{ matrix.node-version }}
@@ -71,7 +76,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
-              run: npm install
+              run: npm ci --verbose
             - uses: ioBroker/testing-action-deploy@v1
               with:
                   node-version: "14.x"
