@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "messagebox": true,
     "news": {
+      "1.0.1": {
+        "en": "improve build and deploy",
+        "de": "aufbau und einsatz verbessern",
+        "ru": "улучшение строительства и развертывания",
+        "pt": "melhorar a construção e implantação",
+        "nl": "de bouw en implementatie verbeteren",
+        "fr": "améliorer la construction et le déploiement",
+        "it": "migliorare la costruzione e la distribuzione",
+        "es": "mejorar la construcción y el despliegue",
+        "pl": "poprawa budowy i rozmieszczenia",
+        "uk": "поліпшення побудови та розгортання",
+        "zh-cn": "改进建设和部署"
+      },
       "1.0.0": {
         "en": "initial release",
         "de": "erstausstrahlung",
