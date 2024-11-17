@@ -13,7 +13,7 @@
 
 ## uvr16xx-blnet adapter for ioBroker
 
-An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative.
+An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.
 ![BL-NET](doc/BL-NET.png)
 You can find the manual of this device here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf 
 
