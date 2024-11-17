@@ -60,6 +60,10 @@ jobs:
                   sudo iobroker upload uvr16xx-blnet --allow-root
             - name: Start ioBroker
               run: sudo iobroker start --allow-root
+            - name: Stop JS-Controller before tests
+              run: sudo iobroker stop --allow-root
+            - name: Run integration tests
+              run: npm run test:integration
             - uses: ioBroker/testing-action-adapter@v1
               with:
                   node-version: ${{ matrix.node-version }}
