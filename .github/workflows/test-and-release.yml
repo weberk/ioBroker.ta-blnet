@@ -46,7 +46,7 @@ jobs:
             - name: Install ioBroker on Linux and macOS
               if: runner.os == 'Linux' || runner.os == 'macOS'
               run: |
-                  curl -sL https://iobroker.net/install.sh | bash -
+                  sudo curl -sL https://iobroker.net/install.sh | bash -
             - name: Install ioBroker on Windows
               if: runner.os == 'Windows'
               run: |
@@ -56,8 +56,8 @@ jobs:
               run: iobroker stop
             - name: Install adapter from GitHub
               run: |
-                  iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
-                  iobroker upload uvr16xx-blnet
+                  sudo iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
+                  sudo iobroker upload uvr16xx-blnet
             - name: Start ioBroker
               run: iobroker start
             - uses: ioBroker/testing-action-adapter@v1
