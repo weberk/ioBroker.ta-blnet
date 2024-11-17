@@ -45,7 +45,7 @@
             "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 UVR16xx 控制器的输入和输出的 ioBroker 适配器。"
         },
         "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
-        "keywords": ["ioBroker", "BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
+        "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
         "licenseInformation": {
             "type": "free",
             "license": "MIT"
