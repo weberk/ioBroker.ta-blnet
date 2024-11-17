@@ -83,7 +83,7 @@ jobs:
               run: npm ci --verbose
             - uses: ioBroker/testing-action-deploy@v1
               with:
-                  node-version: "14.x"
+                  node-version: "18.x"
                   npm-token: ${{ secrets.NPM_TOKEN }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 # # When using Sentry for error reporting, Sentry can be informed about new releases

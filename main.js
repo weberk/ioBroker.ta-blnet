@@ -409,7 +409,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Parses the UVR record from the given response.
-     * 
+     *
      * @param {Uint8Array} response - The response data to parse.
      * @returns {Object} The parsed UVR record.
      * @property {Object} outputs - The outputs status.
@@ -458,7 +458,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Inputs
         for (let i = 0; i < 16; i++) {
-            uvrRecord.inputs[`S${(i + 1).toString().padStart(2, '0')}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
+            uvrRecord.inputs[`S${(i + 1).toString().padStart(2, "0")}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
         }
 
         // Log inputs
@@ -535,7 +535,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Converts four bytes into a 32-bit integer.
-     * 
+     *
      * @param {number} lo_lo - The least significant byte.
      * @param {number} lo_hi - The second least significant byte.
      * @param {number} hi_lo - The third least significant byte.
@@ -548,7 +548,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Cleans up resources when the adapter is unloaded.
-     * 
+     *
      * @param {Function} callback - The callback function to call after cleanup.
      * @throws Will call the callback function in case of an error.
      */
