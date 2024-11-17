@@ -1,4 +1,4 @@
-<img src="admin/uvr16xx-blnet.png" alt="Logo" style="width:50%;" />
+<img src="admin/uvr16xx-blnet.png" alt="Logo" style="width:20%;" />
 
 # ioBroker.uvr16xx-blnet
 
