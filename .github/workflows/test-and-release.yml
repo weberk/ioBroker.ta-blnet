@@ -43,6 +43,13 @@ jobs:
             - uses: actions/checkout@v2
             - name: Install dependencies
               run: npm install
+            - name: Install ioBroker
+              run: |
+                curl -sL https://iobroker.net/install.sh | bash -
+            - name: Install adapter from GitHub
+              run: |
+                iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
+                iobroker upload uvr16xx-blnet
             - uses: ioBroker/testing-action-adapter@v1
               with:
                   node-version: ${{ matrix.node-version }}
