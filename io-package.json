@@ -65,7 +65,7 @@
         "adminUI": {
             "config": "materialize"
         },
-        "supportCustoms": false,
+        "supportCustoms": true,
         "eraseOnUpload": true,
         "dependencies": [
             {
