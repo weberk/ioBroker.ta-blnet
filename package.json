@@ -1,6 +1,6 @@
 {
   "name": "iobroker.uvr16xx-blnet",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.",
   "author": {
     "name": "Klaus Weber",
@@ -86,8 +86,6 @@
     "check": "tsc --noEmit -p tsconfig.check.json",
     "lint": "eslint --ext .js,.jsx .",
     "translate": "translate-adapter",
-    "release": "release-script patch --yes",
-    "release": "release-script minor --yes",
     "release": "release-script major --yes"
   },
   "bugs": {
