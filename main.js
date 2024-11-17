@@ -338,7 +338,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             });
 
             // Handle incoming data
-            client.on('data', (data) => {
+            client.on("data", (data) => {
                 // this.logHexDump(data); // Log hex dump of the data
                 if (data[0] === 0x80) {
                     // Process the response data
@@ -363,13 +363,13 @@ class Uvr16xxBlNet extends utils.Adapter {
             });
 
             // Handle connection errors
-            client.on('error', (err) => {
+            client.on("error", (err) => {
                 client.destroy(); // Close the connection
                 reject(err);
             });
 
             // Handle connection close
-            client.on('close', () => {
+            client.on("close", () => {
                 // Connection closed
             });
         });
@@ -397,11 +397,11 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
      */
     logHexDump(data) {
-        let hexString = '';
+        let hexString = "";
         for (let i = 0; i < data.length; i++) {
-            hexString += data[i].toString(16).padStart(2, '0') + ' ';
+            hexString += data[i].toString(16).padStart(2, "0") + " ";
             if ((i + 1) % 16 === 0) {
-                hexString += '\n';
+                hexString += "\n";
             }
         }
         this.log.debug(`Hex dump:\n${hexString}`);
