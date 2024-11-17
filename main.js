@@ -261,7 +261,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Polling function to fetch state values from the IoT device at regular intervals.
      */
     startPolling() {
-        const pollInterval = parseInt(this.config.poll_interval) * 1000; // Poll interval in milliseconds
+        const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
         this.pollingInterval = setInterval(async () => {
             try {
                 const stateValues = await this.fetchStateValuesFromDevice();
@@ -328,7 +328,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             const client = new net.Socket();
             const ipAddress = this.config.ip_address; // IP address from the config
-            const port = parseInt(this.config.port); // Port from the config
+            const port = this.config.port; // Port from the config
             const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
 
             // Connect to the device
