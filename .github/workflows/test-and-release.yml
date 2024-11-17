@@ -45,7 +45,8 @@ jobs:
               run: npm install
             - name: Install ioBroker
               run: |
-                curl -sL https://iobroker.net/install.sh | bash -
+                npm install -g iobroker
+                iobroker host this
             - name: Install adapter from GitHub
               run: |
                 iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)

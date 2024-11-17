@@ -8,7 +8,7 @@
 
 const utils = require("@iobroker/adapter-core");
 // The net module is used to create TCP clients and servers
-const net = require('net');
+const net = require("net");
 
 /**
  * Adapter class for UVR16xx BL-NET devices.
@@ -65,7 +65,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             // Determine units based on bits 4-6 of the high byte for inputs
             for (const [key, value] of Object.entries(stateValues.inputs)) {
-                if (typeof value === 'number') {
+                if (typeof value === "number") {
                     const highByte = value >> 8;
                     const unitBits = highByte & 0x70;
                     const unit = this.determineUnit(unitBits);
@@ -135,7 +135,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             "A13": "OFF" // Byte 2, Bit 4
         };
 
-        for (const [key, value] of Object.entries(outputs)) {
+        for (const key of Object.keys(outputs)) {
             await this.setObjectNotExistsAsync(`outputs.${key}`, {
                 type: "state",
                 common: {
@@ -157,7 +157,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             "DzA7": 158 // Speed level 7
         };
 
-        for (const [key, value] of Object.entries(speedLevels)) {
+        for (const key of Object.keys(speedLevels)) {
             await this.setObjectNotExistsAsync(`speed_levels.${key}`, {
                 type: "state",
                 common: {
@@ -184,14 +184,14 @@ class Uvr16xxBlNet extends utils.Adapter {
             "S09": 51.1, // i.e Buffer 1 middle temperature in °C
             "S10": 36.7, // i.e Boiler return temperature in °C
             "S11": 53.3, // i.e Circulation return temperature in °C
-            "S12": 7.9,  // i.e Outer wall temperature in °C
+            "S12": 7.9, // i.e Outer wall temperature in °C
             "S13": 43.5, // i.e Heating circuit 1 flow temperature in °C
             "S14": 69.1, // i.e Boiler flow temperature in °C
-            "S15": 0,    // i.e Not used
-            "S16": 0     // i.e Solar flow rate in l/h
+            "S15": 0, // i.e Not used
+            "S16": 0 // i.e Solar flow rate in l/h
         };
 
-        for (const [key, value] of Object.entries(inputs)) {
+        for (const key of Object.keys(inputs)) {
             await this.setObjectNotExistsAsync(`inputs.${key}`, {
                 type: "state",
                 common: {
@@ -212,7 +212,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             "wmz2": "inactive" // Thermal energy counter 2 status
         };
 
-        for (const [key, value] of Object.entries(thermalEnergyCountersStatus)) {
+        for (const key of Object.keys(thermalEnergyCountersStatus)) {
             await this.setObjectNotExistsAsync(`thermal_energy_counters_status.${key}`, {
                 type: "state",
                 common: {
@@ -234,7 +234,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             "total_heat_energy2": 771 // Total heat energy 2 in kWh
         };
 
-        for (const [key, value] of Object.entries(thermalEnergyCounters)) {
+        for (const key of Object.keys(thermalEnergyCounters)) {
             let unit;
             if (key.startsWith("current_heat_power")) {
                 unit = "kW";
@@ -268,14 +268,14 @@ class Uvr16xxBlNet extends utils.Adapter {
                 await this.setState("info.connection", true, true);
 
                 for (const [key, value] of Object.entries(stateValues)) {
-                    if (typeof value === 'object' && value !== null) {
+                    if (typeof value === "object" && value !== null) {
                         for (const [subKey, subValue] of Object.entries(value)) {
                             const stateKey = `${key}.${subKey}`;
                             let finalValue = subValue;
 
                             // Process input values: filter bits 4-6 and handle sign bit
-                            if (key === 'inputs') {
-                                if (typeof subValue === 'number') {
+                            if (key === "inputs") {
+                                if (typeof subValue === "number") {
                                     const highByte = subValue >> 8;
                                     const lowByte = subValue & 0xFF;
                                     const signBit = highByte & 0x80;
