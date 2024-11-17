@@ -53,13 +53,13 @@ jobs:
                   npm install -g iobroker
                   iobroker host this
             - name: Stop ioBroker
-              run: iobroker stop
+              run: sudo iobroker stop --allow-root
             - name: Install adapter from GitHub
               run: |
-                  sudo iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname)
-                  sudo iobroker upload uvr16xx-blnet
+                  sudo iobroker url https://github.com/weberk/ioBroker.uvr16xx-blnet --host $(hostname) --allow-root
+                  sudo iobroker upload uvr16xx-blnet --allow-root
             - name: Start ioBroker
-              run: iobroker start
+              run: sudo iobroker start --allow-root
             - uses: ioBroker/testing-action-adapter@v1
               with:
                   node-version: ${{ matrix.node-version }}
