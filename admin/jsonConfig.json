@@ -7,13 +7,13 @@
     "items": {
         "_options": {
             "type": "panel",
-            "label": "Adapter Settings",
+            "label": "Instance Settings",
             "items": {
                 "ip_address": {
                     "type": "text",
                     "label": "IP Address",
                     "default": "192.168.2.177",
-                    "tooltip": "Enter the IP address of the device",
+                    "help": "Enter the IP address or host name of the device",
                     "xs": 6,
                     "sm": 6,
                     "md": 6,
@@ -24,7 +24,7 @@
                     "type": "number",
                     "label": "Port",
                     "default": 65534,
-                    "tooltip": "Enter the port number",
+                    "help": "Enter the port number",
                     "xs": 6,
                     "sm": 6,
                     "md": 6,
@@ -33,9 +33,9 @@
                 },
                 "poll_interval": {
                     "type": "number",
-                    "label": "Poll Interval (sec)",
+                    "label": "Poll Interval",
                     "default": 30,
-                    "tooltip": "Enter the polling interval in seconds",
+                    "help": "Enter the polling interval in seconds",
                     "xs": 12,
                     "sm": 12,
                     "md": 6,

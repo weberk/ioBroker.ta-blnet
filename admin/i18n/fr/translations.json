@@ -1,0 +1,10 @@
+{
+    "Instance Settings": "Paramètres des instances",
+    "IP Address": "Adresse IP",
+    "Enter the IP address of the device": "Entrez l'adresse IP ou le nom d'hôte de l'appareil",
+    "Port": "Port",
+    "Enter the port number": "Entrez le numéro de port",
+    "Poll Interval": "Intervalle de sondage",
+    "Enter the polling interval in seconds": "Entrez l'intervalle d'interrogation en secondes",
+    "Enter the IP address or host name of the device": "Entrez l'adresse IP ou le nom d'hôte de l'appareil"
+}

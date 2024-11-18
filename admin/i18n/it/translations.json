@@ -1,0 +1,10 @@
+{
+    "Instance Settings": "Impostazioni dell'istanza",
+    "IP Address": "Indirizzo IP",
+    "Enter the IP address of the device": "Immettere l'indirizzo IP o il nome host del dispositivo",
+    "Port": "Porta",
+    "Enter the port number": "Immettere il numero di porta",
+    "Poll Interval": "Intervallo di sondaggio",
+    "Enter the polling interval in seconds": "Immettere l'intervallo di polling in secondi",
+    "Enter the IP address or host name of the device": "Immettere l'indirizzo IP o il nome host del dispositivo"
+}

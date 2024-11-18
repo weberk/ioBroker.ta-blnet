@@ -1,0 +1,10 @@
+{
+    "Instance Settings": "Instantie-instellingen",
+    "IP Address": "IP-adres",
+    "Enter the IP address of the device": "Voer het IP-adres of de hostnaam van het apparaat in",
+    "Port": "Haven",
+    "Enter the port number": "Voer het poortnummer in",
+    "Poll Interval": "Poll-interval",
+    "Enter the polling interval in seconds": "Voer het polling-interval in seconden in",
+    "Enter the IP address or host name of the device": "Voer het IP-adres of de hostnaam van het apparaat in"
+}

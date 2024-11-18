@@ -1,0 +1,9 @@
+{
+    "Instance Settings": "Instance Settings",
+    "IP Address": "IP Address",
+    "Enter the IP address or host name of the device": "Enter the IP address or host name of the device",
+    "Port": "Port",
+    "Enter the port number": "Enter the port number",
+    "Poll Interval": "Poll Interval",
+    "Enter the polling interval in seconds": "Enter the polling interval in seconds"
+}

@@ -1,0 +1,10 @@
+{
+    "Instance Settings": "Настройки экземпляра",
+    "IP Address": "IP-адрес",
+    "Enter the IP address of the device": "Введите IP-адрес или имя хоста устройства.",
+    "Port": "Порт",
+    "Enter the port number": "Введите номер порта",
+    "Poll Interval": "Интервал опроса",
+    "Enter the polling interval in seconds": "Введите интервал опроса в секундах",
+    "Enter the IP address or host name of the device": "Введите IP-адрес или имя хоста устройства."
+}
