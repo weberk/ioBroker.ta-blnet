@@ -23,7 +23,7 @@
                 "port": {
                     "type": "number",
                     "label": "Port",
-                    "default": 65534,
+                    "default": 400000,
                     "help": "Enter the port number",
                     "xs": 6,
                     "sm": 6,
@@ -34,6 +34,7 @@
                 "poll_interval": {
                     "type": "number",
                     "label": "Poll Interval",
+                    "min": 5,
                     "default": 30,
                     "help": "Enter the polling interval in seconds",
                     "xs": 12,
