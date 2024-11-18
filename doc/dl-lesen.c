@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 
   /* IP-Zugriff  - IP-Adresse und Port sind manuell gesetzt!!! */
   if (ip_zugriff && !usb_zugriff)
-  {
+  { 
         sr = start_socket();
         if (sr > 1)
         {

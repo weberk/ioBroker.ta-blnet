@@ -60,6 +60,8 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     async testRead() {
         try {
+            await this.testFunction();
+
             const stateValues = await this.fetchStateValuesFromDevice();
             const units = {};
 
@@ -318,6 +320,56 @@ class Uvr16xxBlNet extends utils.Adapter {
         }, pollInterval); // Poll every pollInterval milliseconds
     }
 
+    async testFunction() {
+        const client = new net.Socket();
+        const ipAddress = this.config.ip_address; // IP address from the config
+        const port = this.config.port; // Port from the config
+        // Definieren der Konstanten
+        const VERSIONSABFRAGE = 0x81;
+        const FWABFRAGE = 0x82;
+        const MODEABFRAGE = 0x21;
+
+        const sendCommand = async (command) => {
+            return new Promise((resolve, reject) => {
+                client.write(Buffer.from([command]), (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    client.once("data", (data) => {
+                        resolve(data);
+                    });
+                });
+            });
+        };
+
+        client.connect(port, ipAddress, async () => {
+            try {
+                let data;
+
+                // Senden der Versionsabfrage
+                data = await sendCommand(VERSIONSABFRAGE);
+                this.log.info("Vom DL erhalten Version: " + data.toString("hex"));
+
+                // Senden der Firmware-Versionsabfrage
+                data = await sendCommand(FWABFRAGE);
+                this.log.info("Vom DL erhalten Version FW: " + data.toString("hex"));
+
+                // Senden der Modus-Abfrage
+                data = await sendCommand(MODEABFRAGE);
+                this.log.info("Vom DL erhalten Modus: " + data.toString("hex"));
+            } catch (error) {
+                this.log.error("Error during communication with device: " + error);
+            } finally {
+                client.end();
+            }
+        });
+
+        client.on("error", (err) => {
+            this.log.error("Connection error: " + err);
+        });
+    }
+
+
     /**
      * Fetches state values from the IoT device.
      * @returns {Promise<Object>} - A promise that resolves with the state values.
@@ -357,6 +409,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                         reject(new Error("Invalid response from device"));
                     }
                 } else {
+                    this.logHexDump(data); // Log hex dump of the data;
                     client.destroy(); // Close the connection
                     reject(new Error("Unexpected response from device"));
                 }
