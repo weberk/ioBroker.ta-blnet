@@ -59,9 +59,14 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @returns {Promise<{success: boolean, units: Object}>} - The result of the test read with success status and units.
      */
     async testRead() {
+        // try to read some metadata on the device
         try {
             await this.testFunction();
+        } catch (error) {
+            this.log.debug("Test function error: " + error);
+        }
 
+        try {
             const stateValues = await this.fetchStateValuesFromDevice();
             const units = {};
 
@@ -326,7 +331,8 @@ class Uvr16xxBlNet extends utils.Adapter {
         const port = this.config.port; // Port from the config
         // Definieren der Konstanten
         const VERSIONSABFRAGE = 0x81;
-        const FWABFRAGE = 0x82;
+        const KOPFSATZLESEN = 0xAA;
+        const FIRMWAREABFRAGE = 0x82;
         const MODEABFRAGE = 0x21;
 
         const sendCommand = async (command) => {
@@ -345,14 +351,115 @@ class Uvr16xxBlNet extends utils.Adapter {
         client.connect(port, ipAddress, async () => {
             try {
                 let data;
+                let uvr_modus;
+                let uvr_typ;
+                let uvr_typ2;
 
                 // Senden der Versionsabfrage
                 data = await sendCommand(VERSIONSABFRAGE);
-                this.log.info("Vom DL erhalten Version: " + data.toString("hex"));
+                this.log.info("Vom DL erhalte Modulkennung: " + data.toString("hex"));
+
+                // Abfragen des UVR-Typs
+                data = await sendCommand(KOPFSATZLESEN);
+                // Guess the uvr_modus based on the length of the data array
+                switch (data.length) {
+                    case 14:
+                        uvr_modus = 0xD1;
+                        break;
+                    case 13:
+                        uvr_modus = 0xA8;
+                        break;
+                    case 21:
+                        uvr_modus = 0xDC;
+                        break;
+                    default:
+                        throw new Error("Unknown data length: " + data.length);
+                }
+                this.log.info("Vom DL erhalter UVR-Modus: " + uvr_modus.toString(16));
+
+                // KopfsatzD1 kopf_D1[1];
+                // KopfsatzA8 kopf_A8[1];
+                // KOPFSATZ_DC kopf_DC[1];
+
+                /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
+                /* Modus 0xD1 - Laenge 14 Byte   - KopfsatzD1 -                    */
+                // typedef struct {
+                //     UCHAR kennung;
+                //     UCHAR version;
+                //     UCHAR zeitstempel[3];
+                //     UCHAR satzlaengeGeraet1;
+                //     UCHAR satzlaengeGeraet2;
+                //     UCHAR startadresse[3];
+                //     UCHAR endadresse[3];
+                //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                // } KopfsatzD1;
+
+                /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
+                /* Modus 0xA8 - Laenge 13 Byte  - KopfsatzA8 -                     */
+                // typedef struct {
+                //     UCHAR kennung;
+                //     UCHAR version;
+                //     UCHAR zeitstempel[3];
+                //     UCHAR satzlaengeGeraet1;
+                //     UCHAR startadresse[3];
+                //     UCHAR endadresse[3];
+                //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                // } KopfsatzA8;
+
+                // Define the offsets based on the C struct definitions
+                const KOPFSATZ_D1_LENGTH = 14;
+                const KOPFSATZ_A8_LENGTH = 13;
+
+                const KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET = 5;
+                const KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET = 6;
+
+                const KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET = 5;
+                //this.logHexDump(data); // Log hex dump of the data;
+
+                if (uvr_modus === 0xD1) {
+                    uvr_typ = data[KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                    uvr_typ2 = data[KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                } else {
+                    uvr_typ = data[KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                }
+
+                if (uvr_modus === 0xDC) {
+                    uvr_typ = 0x76; // CAN-Logging only with UVR1611
+                }
+
+                // Translate uvr_typ to string
+                let uvr_typ_str;
+                switch (uvr_typ) {
+                    case 0x5A:
+                        uvr_typ_str = "UVR61-3";
+                        break;
+                    case 0x76:
+                        uvr_typ_str = "UVR1611";
+                        break;
+                    default:
+                        uvr_typ_str = "Unknown";
+                }
+                this.log.info("Vom DL erhalter UVR-Typ: " + uvr_typ_str);
+
+                // Translate uvr_typ2 to string if it exists
+                let uvr_typ2_str;
+                if (uvr_typ2 !== undefined) {
+                    switch (uvr_typ2) {
+                        case 0x5A:
+                            uvr_typ2_str = "UVR61-3";
+                            break;
+                        case 0x76:
+                            uvr_typ2_str = "UVR1611";
+                            break;
+                        default:
+                            uvr_typ2_str = "Unknown";
+                    }
+                    this.log.info("Vom DL erhalter UVR-Typ2: " + uvr_typ2_str);
+                }
 
                 // Senden der Firmware-Versionsabfrage
-                data = await sendCommand(FWABFRAGE);
-                this.log.info("Vom DL erhalten Version FW: " + data.toString("hex"));
+                data = await sendCommand(FIRMWAREABFRAGE);
+                this.log.info("Vom DL erhalten Firmwareversion: " + data.readUInt8(0) / 100);
 
                 // Senden der Modus-Abfrage
                 data = await sendCommand(MODEABFRAGE);
