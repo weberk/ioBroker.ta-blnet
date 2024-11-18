@@ -1312,7 +1312,7 @@ int kopfsatzlesen(void)
       int retval=0;
       int retry=0;
       int retry_interval=2; 
-	    
+      
       write_erg=write(fd,sendbuf,1);
       if (write_erg == 1)    /* Lesen der Antwort*/
       {
@@ -1340,7 +1340,7 @@ int kopfsatzlesen(void)
             {
               ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-  fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+              fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
 #endif
               switch(uvr_modus)
               {
@@ -1394,162 +1394,184 @@ int kopfsatzlesen(void)
         }
         while( retry < 3 && in_bytes != 0);
       }
-	}
+  }
 
-    if (ip_zugriff)
+  if (ip_zugriff)
+  {
+    if (!ip_first)
     {
-      if (!ip_first)
+      sock = socket(PF_INET, SOCK_STREAM, 0);
+      if (sock == -1)
       {
-        sock = socket(PF_INET, SOCK_STREAM, 0);
-        if (sock == -1)
-        {
-          perror("socket failed()");
-          do_cleanup();
-          return 2;
-        }
-        if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-        {
-          perror("connect failed()");
-          do_cleanup();
-          return 3;
-        }
-      }  /* if (!ip_first) */
-      write_erg=send(sock,sendbuf,1,0);
+        perror("socket failed()");
+        do_cleanup();
+        return 2;
+      }
+      if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
+      {
+        perror("connect failed()");
+        do_cleanup();
+        return 3;
+      }
+    }  /* if (!ip_first) */
+    write_erg = send(sock, sendbuf, 1, 0);
 
-      if (write_erg == 1)    /* Lesen der Antwort */
+    if (write_erg == 1)    /* Lesen der Antwort */
+    {
+      switch (uvr_modus)
       {
-        switch(uvr_modus)
-        {
-          case 0xD1: result = recv(sock,kopf_D1,14,0); break;
-          case 0xA8: result = recv(sock,kopf_A8,13,0); break;
-          case 0xDC: result = recv(sock,kopf_DC,21,0);
-                     if (kopf_DC[0].all_bytes[0] == 0xAA)
-                       return -3;
-                     break;
-        }
+        case 0xD1: result = recv(sock, kopf_D1, 14, 0); break;
+        case 0xA8: result = recv(sock, kopf_A8, 13, 0); break;
+        case 0xDC: result = recv(sock, kopf_DC, 21, 0);
+                   if (kopf_DC[0].all_bytes[0] == 0xAA)
+                     return -3;
+                   break;
       }
     }
-
-    switch(uvr_modus)
-    {
-      case 0xD1: pruefz = berechneKopfpruefziffer_D1( kopf_D1 );
-                 merk_pruefz = kopf_D1[0].pruefsum;
-                 break;
-      case 0xA8: pruefz = berechneKopfpruefziffer_A8( kopf_A8 );
-                 merk_pruefz = kopf_A8[0].pruefsum;
-                 break;
-      case 0xDC:
-        #ifdef DEBUG
-                fprintf(stderr, " CAN-Logging-Test: Anzahl Datenrahmen laut Byte 6: %x\n",kopf_DC[0].all_bytes[5]);
-        #endif
-                pruefz = berechneKopfpruefziffer_DC( kopf_DC );
-                switch(kopf_DC[0].all_bytes[5])
-                {
-                case 1: merk_pruefz = kopf_DC[0].DC_Rahmen1.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen1.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen1.pruefsum);
-                        #endif
-                        break;
-                  case 2: merk_pruefz = kopf_DC[0].DC_Rahmen2.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen2.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen2.pruefsum);
-                        #endif
-                        break;
-                  case 3: merk_pruefz = kopf_DC[0].DC_Rahmen3.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen3.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen3.pruefsum);
-                        #endif
-                        break;
-                  case 4: merk_pruefz = kopf_DC[0].DC_Rahmen4.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen4.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen4.pruefsum);
-                        #endif
-                        break;
-                  case 5: merk_pruefz = kopf_DC[0].DC_Rahmen5.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen5.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen5.pruefsum);
-                        #endif
-                        break;
-                  case 6: merk_pruefz = kopf_DC[0].DC_Rahmen6.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen6.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen6.pruefsum);
-                        #endif
-                        break;
-                  case 7: merk_pruefz = kopf_DC[0].DC_Rahmen7.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen7.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen7.pruefsum);
-                        #endif
-                        break;
-                  case 8: merk_pruefz = kopf_DC[0].DC_Rahmen8.pruefsum;
-                        #ifdef DEBUG
-                        fprintf(stderr,"  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen8.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_DC[0].DC_Rahmen8.pruefsum);
-                        #endif
-                        break;
-                  default: fprintf(stderr,"  CAN-Logging-Test:  Kennung %x\n",kopf_DC[0].all_bytes[0]);
-                }
-        break;
-    }
-
-    durchlauf++;
-   #ifdef DEBUG
-    if ( uvr_modus == 0xD1 )
-      fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_D1[0].pruefsum);
-    if ( uvr_modus == 0xA8 )
-      fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n",durchlauf,pruefz%0x100,kopf_A8[0].pruefsum);
-   #endif
   }
-  while (( (pruefz != merk_pruefz )  && (durchlauf < 10)));
 
-  if (pruefz != merk_pruefz )
-    {
-      fprintf(stderr, " Durchlauf #%i -  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n",durchlauf, pruefz, merk_pruefz);
-      return -1;
-    }
-#ifdef DEBUG
+  switch (uvr_modus)
+  {
+    case 0xD1:
+      pruefz = berechneKopfpruefziffer_D1(kopf_D1);
+      merk_pruefz = kopf_D1[0].pruefsum;
+      break;
+    case 0xA8:
+      pruefz = berechneKopfpruefziffer_A8(kopf_A8);
+      merk_pruefz = kopf_A8[0].pruefsum;
+      break;
+    case 0xDC:
+      #ifdef DEBUG
+        fprintf(stderr, " CAN-Logging-Test: Anzahl Datenrahmen laut Byte 6: %x\n", kopf_DC[0].all_bytes[5]);
+      #endif
+      pruefz = berechneKopfpruefziffer_DC(kopf_DC);
+      switch (kopf_DC[0].all_bytes[5])
+      {
+        case 1:
+          merk_pruefz = kopf_DC[0].DC_Rahmen1.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen1.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen1.pruefsum);
+          #endif
+          break;
+        case 2:
+          merk_pruefz = kopf_DC[0].DC_Rahmen2.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen2.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen2.pruefsum);
+          #endif
+          break;
+        case 3:
+          merk_pruefz = kopf_DC[0].DC_Rahmen3.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen3.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen3.pruefsum);
+          #endif
+          break;
+        case 4:
+          merk_pruefz = kopf_DC[0].DC_Rahmen4.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen4.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen4.pruefsum);
+          #endif
+          break;
+        case 5:
+          merk_pruefz = kopf_DC[0].DC_Rahmen5.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen5.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen5.pruefsum);
+          #endif
+          break;
+        case 6:
+          merk_pruefz = kopf_DC[0].DC_Rahmen6.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen6.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen6.pruefsum);
+          #endif
+          break;
+        case 7:
+          merk_pruefz = kopf_DC[0].DC_Rahmen7.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen7.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen7.pruefsum);
+          #endif
+          break;
+        case 8:
+          merk_pruefz = kopf_DC[0].DC_Rahmen8.pruefsum;
+          #ifdef DEBUG
+            fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d DC_Rahmen8.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_DC[0].DC_Rahmen8.pruefsum);
+          #endif
+          break;
+        default:
+          fprintf(stderr, "  CAN-Logging-Test:  Kennung %x\n", kopf_DC[0].all_bytes[0]);
+      }
+      break;
+  }
+
+  durchlauf++;
+  #ifdef DEBUG
+    if (uvr_modus == 0xD1)
+      fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_D1[0].pruefsum);
+    if (uvr_modus == 0xA8)
+      fprintf(stderr, "  Durchlauf #%d  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n", durchlauf, pruefz % 0x100, kopf_A8[0].pruefsum);
+  #endif
+  }
+  while (((pruefz != merk_pruefz) && (durchlauf < 10)));
+
+  if (pruefz != merk_pruefz)
+  {
+    fprintf(stderr, " Durchlauf #%i -  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n", durchlauf, pruefz, merk_pruefz);
+    return -1;
+  }
+  #ifdef DEBUG
   else
-    fprintf(stderr, "Anzahl Durchlaeufe Pruefziffer Kopfsatz: %i\n",durchlauf);
-#endif
+    fprintf(stderr, "Anzahl Durchlaeufe Pruefziffer Kopfsatz: %i\n", durchlauf);
+  #endif
 
   /* Startadresse der Daten */
-  switch(uvr_modus)
+  switch (uvr_modus)
   {
-    case 0xD1: start_adresse = kopf_D1[0].startadresse;
-                 end_adresse = kopf_D1[0].endadresse;
-               break;
-    case 0xA8: start_adresse = kopf_A8[0].startadresse;
-                 end_adresse = kopf_A8[0].endadresse;
-               break;
-    case 0xDC: switch(kopf_DC[0].all_bytes[5])
-               {
-                  case 1: start_adresse = kopf_DC[0].DC_Rahmen1.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen1.endadresse;
-                          break;
-                  case 2: start_adresse = kopf_DC[0].DC_Rahmen2.startadresse;
-                             end_adresse = kopf_DC[0].DC_Rahmen2.endadresse;
-                          break;
-                  case 3: start_adresse = kopf_DC[0].DC_Rahmen3.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen3.endadresse;
-                          break;
-                  case 4: start_adresse = kopf_DC[0].DC_Rahmen4.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen4.endadresse;
-                          break;
-                  case 5: start_adresse = kopf_DC[0].DC_Rahmen5.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen5.endadresse;
-                          break;
-                  case 6: start_adresse = kopf_DC[0].DC_Rahmen6.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen6.endadresse;
-                          break;
-                  case 7: start_adresse = kopf_DC[0].DC_Rahmen7.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen7.endadresse;
-                          break;
-                  case 8: start_adresse = kopf_DC[0].DC_Rahmen8.startadresse;
-                            end_adresse = kopf_DC[0].DC_Rahmen8.endadresse;
-                          break;
-                }
-                break;
+    case 0xD1:
+      start_adresse = kopf_D1[0].startadresse;
+      end_adresse = kopf_D1[0].endadresse;
+      break;
+    case 0xA8:
+      start_adresse = kopf_A8[0].startadresse;
+      end_adresse = kopf_A8[0].endadresse;
+      break;
+    case 0xDC:
+      switch (kopf_DC[0].all_bytes[5])
+      {
+        case 1:
+          start_adresse = kopf_DC[0].DC_Rahmen1.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen1.endadresse;
+          break;
+        case 2:
+          start_adresse = kopf_DC[0].DC_Rahmen2.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen2.endadresse;
+          break;
+        case 3:
+          start_adresse = kopf_DC[0].DC_Rahmen3.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen3.endadresse;
+          break;
+        case 4:
+          start_adresse = kopf_DC[0].DC_Rahmen4.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen4.endadresse;
+          break;
+        case 5:
+          start_adresse = kopf_DC[0].DC_Rahmen5.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen5.endadresse;
+          break;
+        case 6:
+          start_adresse = kopf_DC[0].DC_Rahmen6.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen6.endadresse;
+          break;
+        case 7:
+          start_adresse = kopf_DC[0].DC_Rahmen7.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen7.endadresse;
+          break;
+        case 8:
+          start_adresse = kopf_DC[0].DC_Rahmen8.startadresse;
+          end_adresse = kopf_DC[0].DC_Rahmen8.endadresse;
+          break;
+      }
+      break;
   }
 
-  switch(uvr_modus)
+  switch (uvr_modus)
   {
     case 0xD1:
       anz_ds = anzahldatensaetze_D1(kopf_D1);
@@ -1557,95 +1579,96 @@ int kopfsatzlesen(void)
     case 0xA8:
       anz_ds = anzahldatensaetze_A8(kopf_A8);
       break;
-        case 0xDC:
+    case 0xDC:
       anz_ds = anzahldatensaetze_DC(kopf_DC);
 #if DEBUG > 3
-          switch(kopf_DC[0].all_bytes[5])
-          {
-            case 1: /* print_endaddr = kopf_DC[0].DC_Rahmen1.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13]);
-                break;
-            case 2: /* print_endaddr = kopf_DC[0].DC_Rahmen2.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14]);
-                break;
-            case 3: /* print_endaddr = kopf_DC[0].DC_Rahmen3.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15]);
-                break;
-            case 4: /* print_endaddr = kopf_DC[0].DC_Rahmen4.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15],
-                kopf_DC[0].all_bytes[16]);
-                break;
-            case 5: /* print_endaddr = kopf_DC[0].DC_Rahmen5.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15],
-                kopf_DC[0].all_bytes[16],kopf_DC[0].all_bytes[17]);
-                break;
-            case 6: /* print_endaddr = kopf_DC[0].DC_Rahmen6.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15],
-                kopf_DC[0].all_bytes[16],kopf_DC[0].all_bytes[17],kopf_DC[0].all_bytes[18]);
-                break;
-            case 7: /* print_endaddr = kopf_DC[0].DC_Rahmen7.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15],
-                kopf_DC[0].all_bytes[16],kopf_DC[0].all_bytes[17],kopf_DC[0].all_bytes[18],kopf_DC[0].all_bytes[19]);
-                break;
-            case 8: /* print_endaddr = kopf_DC[0].DC_Rahmen8.endadresse[0]; */
-                fprintf(stderr,"%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                kopf_DC[0].all_bytes[0],kopf_DC[0].all_bytes[1],kopf_DC[0].all_bytes[2],kopf_DC[0].all_bytes[3],
-                kopf_DC[0].all_bytes[4],kopf_DC[0].all_bytes[5],kopf_DC[0].all_bytes[6],kopf_DC[0].all_bytes[7],
-                kopf_DC[0].all_bytes[8],kopf_DC[0].all_bytes[9],kopf_DC[0].all_bytes[10],kopf_DC[0].all_bytes[11],
-                kopf_DC[0].all_bytes[12],kopf_DC[0].all_bytes[13],kopf_DC[0].all_bytes[14],kopf_DC[0].all_bytes[15],
-                kopf_DC[0].all_bytes[16],kopf_DC[0].all_bytes[17],kopf_DC[0].all_bytes[18],kopf_DC[0].all_bytes[19],kopf_DC[0].all_bytes[20]);
-                break;
-          }
+      switch (kopf_DC[0].all_bytes[5])
+      {
+        case 1: /* print_endaddr = kopf_DC[0].DC_Rahmen1.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13]);
+          break;
+        case 2: /* print_endaddr = kopf_DC[0].DC_Rahmen2.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14]);
+          break;
+        case 3: /* print_endaddr = kopf_DC[0].DC_Rahmen3.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15]);
+          break;
+        case 4: /* print_endaddr = kopf_DC[0].DC_Rahmen4.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15],
+                  kopf_DC[0].all_bytes[16]);
+          break;
+        case 5: /* print_endaddr = kopf_DC[0].DC_Rahmen5.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15],
+                  kopf_DC[0].all_bytes[16], kopf_DC[0].all_bytes[17]);
+          break;
+        case 6: /* print_endaddr = kopf_DC[0].DC_Rahmen6.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15],
+                  kopf_DC[0].all_bytes[16], kopf_DC[0].all_bytes[17], kopf_DC[0].all_bytes[18]);
+          break;
+        case 7: /* print_endaddr = kopf_DC[0].DC_Rahmen7.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15],
+                  kopf_DC[0].all_bytes[16], kopf_DC[0].all_bytes[17], kopf_DC[0].all_bytes[18], kopf_DC[0].all_bytes[19]);
+          break;
+        case 8: /* print_endaddr = kopf_DC[0].DC_Rahmen8.endadresse[0]; */
+          fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+                  kopf_DC[0].all_bytes[0], kopf_DC[0].all_bytes[1], kopf_DC[0].all_bytes[2], kopf_DC[0].all_bytes[3],
+                  kopf_DC[0].all_bytes[4], kopf_DC[0].all_bytes[5], kopf_DC[0].all_bytes[6], kopf_DC[0].all_bytes[7],
+                  kopf_DC[0].all_bytes[8], kopf_DC[0].all_bytes[9], kopf_DC[0].all_bytes[10], kopf_DC[0].all_bytes[11],
+                  kopf_DC[0].all_bytes[12], kopf_DC[0].all_bytes[13], kopf_DC[0].all_bytes[14], kopf_DC[0].all_bytes[15],
+                  kopf_DC[0].all_bytes[16], kopf_DC[0].all_bytes[17], kopf_DC[0].all_bytes[18], kopf_DC[0].all_bytes[19], kopf_DC[0].all_bytes[20]);
+          break;
+      }
 #endif
       break;
   }
 
-#if  DEBUG>5
-  fprintf(stderr, "  Errechnete Pruefsumme: %x\n", berechneKopfpruefziffer(kopf) ); printf(" empfangene Pruefsumme: %x\n",kopf[0].pruefsum);
-  fprintf(stderr, "empfangen von DL/BL:\n Kennung: %X\n",kopf[0].kennung);
-  fprintf(stderr, " Version: %X\n",kopf[0].version);
-  fprintf(stderr, " Zeitstempel (hex): %x %x %x\n",kopf[0].zeitstempel[0],kopf[0].zeitstempel[1],kopf[0].zeitstempel[2]);
-  fprintf(stderr, " Zeitstempel (int): %d %d %d\n",kopf[0].zeitstempel[0],kopf[0].zeitstempel[1],kopf[0].zeitstempel[2]);
+#if DEBUG > 5
+  fprintf(stderr, "  Errechnete Pruefsumme: %x\n", berechneKopfpruefziffer(kopf));
+  printf(" empfangene Pruefsumme: %x\n", kopf[0].pruefsum);
+  fprintf(stderr, "empfangen von DL/BL:\n Kennung: %X\n", kopf[0].kennung);
+  fprintf(stderr, " Version: %X\n", kopf[0].version);
+  fprintf(stderr, " Zeitstempel (hex): %x %x %x\n", kopf[0].zeitstempel[0], kopf[0].zeitstempel[1], kopf[0].zeitstempel[2]);
+  fprintf(stderr, " Zeitstempel (int): %d %d %d\n", kopf[0].zeitstempel[0], kopf[0].zeitstempel[1], kopf[0].zeitstempel[2]);
 
   long secs = (long)(kopf[0].zeitstempel[0]) * 32768 + (long)(kopf[0].zeitstempel[1]) * 256 + (long)(kopf[0].zeitstempel[2]);
   long secsinv = (long)(kopf[0].zeitstempel[0]) + (long)(kopf[0].zeitstempel[1]) * 256 + (long)(kopf[0].zeitstempel[2]) * 32768;
 
-  fprintf(stderr, " Zeitstempel : %ld  %ld\n", secs,secsinv);
+  fprintf(stderr, " Zeitstempel : %ld  %ld\n", secs, secsinv);
 
-  fprintf(stderr, " Satzlaenge: %x\n",kopf[0].satzlaenge);
-  fprintf(stderr, " Startadresse: %x %x %x\n",kopf[0].startadresse[0],kopf[0].startadresse[1],kopf[0].startadresse[2]);
-  fprintf(stderr, " Endadresse: %x %x %x\n",kopf[0].endadresse[0],kopf[0].endadresse[1],kopf[0].endadresse[2]);
+  fprintf(stderr, " Satzlaenge: %x\n", kopf[0].satzlaenge);
+  fprintf(stderr, " Startadresse: %x %x %x\n", kopf[0].startadresse[0], kopf[0].startadresse[1], kopf[0].startadresse[2]);
+  fprintf(stderr, " Endadresse: %x %x %x\n", kopf[0].endadresse[0], kopf[0].endadresse[1], kopf[0].endadresse[2]);
 #endif
 
-  if ( uvr_modus == 0xD1 )
+  if (uvr_modus == 0xD1)
   {
     uvr_typ = kopf_D1[0].satzlaengeGeraet1; /* 0x5A -> UVR61-3; 0x76 -> UVR1611 */
     uvr_typ2 = kopf_D1[0].satzlaengeGeraet2; /* 0x5A -> UVR61-3; 0x76 -> UVR1611 */
@@ -1654,22 +1677,25 @@ int kopfsatzlesen(void)
   {
     uvr_typ = kopf_A8[0].satzlaengeGeraet1; /* 0x5A -> UVR61-3; 0x76 -> UVR1611 */
   }
-  if ( uvr_modus == 0xDC )
+  if (uvr_modus == 0xDC)
   {
-    uvr_typ = 0x76;  /* CAN-Logging nur mit UVR1611 */
+    uvr_typ = 0x76; /* CAN-Logging nur mit UVR1611 */
   }
 
-  switch( anz_ds)
+  switch (anz_ds)
   {
-    case -1: zeitstempel();
-            fprintf(fp_varlogfile,"%s - %s -- Falschen Wert im Low-Byte Endadresse gelesen! Wert: %x\n",sDatum, sZeit,*end_adresse);
-            return -1;
-    case -2: zeitstempel();
-            fprintf(fp_varlogfile,"%s - %s -- Keine Daten vorhanden.\n",sDatum, sZeit);
-            return -1;
-    default: if (uvr_modus != 0xDC)
-                printf(" Anzahl Datensaetze aus Kopfsatz: %i\n",anz_ds);
-             break;
+    case -1:
+      zeitstempel();
+      fprintf(fp_varlogfile, "%s - %s -- Falschen Wert im Low-Byte Endadresse gelesen! Wert: %x\n", sDatum, sZeit, *end_adresse);
+      return -1;
+    case -2:
+      zeitstempel();
+      fprintf(fp_varlogfile, "%s - %s -- Keine Daten vorhanden.\n", sDatum, sZeit);
+      return -1;
+    default:
+      if (uvr_modus != 0xDC)
+        printf(" Anzahl Datensaetze aus Kopfsatz: %i\n", anz_ds);
+      break;
   }
 
   return anz_ds;
@@ -1680,170 +1706,170 @@ void testfunktion(void)
 {
   int result;
   UCHAR sendbuf[1];       /*  sendebuffer fuer die Request-Commandos*/
-//  int sendbuf[1];       /*  sendebuffer fuer die Request-Commandos*/
+  //  int sendbuf[1];       /*  sendebuffer fuer die Request-Commandos*/
   UCHAR empfbuf[256];
 
-  sendbuf[0]=VERSIONSABFRAGE;   /* Senden der Versionsabfrage */
-  write_erg=write(fd,sendbuf,1);
+  sendbuf[0] = VERSIONSABFRAGE;   /* Senden der Versionsabfrage */
+  write_erg = write(fd, sendbuf, 1);
   if (write_erg == 1)    /* Lesen der Antwort*/
-    result=read(fd,empfbuf,1);
-  printf("Vom DL erhalten Version: %x\n",empfbuf[0]);
+    result = read(fd, empfbuf, 1);
+  printf("Vom DL erhalten Version: %x\n", empfbuf[0]);
 
-  sendbuf[0]=FWABFRAGE;    /* Senden der Firmware-Versionsabfrage */
-  write_erg=write(fd,sendbuf,1);
+  sendbuf[0] = FWABFRAGE;    /* Senden der Firmware-Versionsabfrage */
+  write_erg = write(fd, sendbuf, 1);
   if (write_erg == 1)    /* Lesen der Antwort*/
-    result=read(fd,empfbuf,1);
-  printf("Vom DL erhalten Version FW: %x\n",empfbuf[0]);
+    result = read(fd, empfbuf, 1);
+  printf("Vom DL erhalten Version FW: %x\n", empfbuf[0]);
 
-  sendbuf[0]=MODEABFRAGE;    /* Senden der Modus-abfrage */
-  write_erg=write(fd,sendbuf,1);
+  sendbuf[0] = MODEABFRAGE;    /* Senden der Modus-abfrage */
+  write_erg = write(fd, sendbuf, 1);
   if (write_erg == 1)    /* Lesen der Antwort*/
-    result=read(fd,empfbuf,1);
-  printf("Vom DL erhalten Modus: %x\n",empfbuf[0]);
+    result = read(fd, empfbuf, 1);
+  printf("Vom DL erhalten Modus: %x\n", empfbuf[0]);
 }
 
 /* Kopieren der Daten (UVR1611) in die Winsol-Format Struktur */
-int copy_UVR2winsol_1611(u_DS_UVR1611_UVR61_3 *dsatz_uvr1611, DS_Winsol  *dsatz_winsol )
+int copy_UVR2winsol_1611(u_DS_UVR1611_UVR61_3 *dsatz_uvr1611, DS_Winsol *dsatz_winsol)
 {
   BYTES_LONG byteslong_mlstg1, byteslong_mlstg2;
 
-  dsatz_winsol[0].tag = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag ;
-  dsatz_winsol[0].std = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std ;
-  dsatz_winsol[0].min = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min ;
-  dsatz_winsol[0].sek = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek ;
-  dsatz_winsol[0].ausgbyte1 = dsatz_uvr1611[0].DS_UVR1611.ausgbyte1 ;
-  dsatz_winsol[0].ausgbyte2 = dsatz_uvr1611[0].DS_UVR1611.ausgbyte2 ;
-  dsatz_winsol[0].dza[0] = dsatz_uvr1611[0].DS_UVR1611.dza[0] ;
-  dsatz_winsol[0].dza[1] = dsatz_uvr1611[0].DS_UVR1611.dza[1] ;
-  dsatz_winsol[0].dza[2] = dsatz_uvr1611[0].DS_UVR1611.dza[2] ;
-  dsatz_winsol[0].dza[3] = dsatz_uvr1611[0].DS_UVR1611.dza[3] ;
+  dsatz_winsol[0].tag = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag;
+  dsatz_winsol[0].std = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std;
+  dsatz_winsol[0].min = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min;
+  dsatz_winsol[0].sek = dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek;
+  dsatz_winsol[0].ausgbyte1 = dsatz_uvr1611[0].DS_UVR1611.ausgbyte1;
+  dsatz_winsol[0].ausgbyte2 = dsatz_uvr1611[0].DS_UVR1611.ausgbyte2;
+  dsatz_winsol[0].dza[0] = dsatz_uvr1611[0].DS_UVR1611.dza[0];
+  dsatz_winsol[0].dza[1] = dsatz_uvr1611[0].DS_UVR1611.dza[1];
+  dsatz_winsol[0].dza[2] = dsatz_uvr1611[0].DS_UVR1611.dza[2];
+  dsatz_winsol[0].dza[3] = dsatz_uvr1611[0].DS_UVR1611.dza[3];
 
-  int ii=0;
-  for (ii=0;ii<16;ii++)
-    {
-      dsatz_winsol[0].sensT[ii][0] = dsatz_uvr1611[0].DS_UVR1611.sensT[ii][0] ;
-      dsatz_winsol[0].sensT[ii][1] = dsatz_uvr1611[0].DS_UVR1611.sensT[ii][1] ;
-    }
-  dsatz_winsol[0].wmzaehler_reg = dsatz_uvr1611[0].DS_UVR1611.wmzaehler_reg ;
-
-  if ( dsatz_uvr1611[0].DS_UVR1611.mlstg1[3] > 0x7f ) /* negtive Wete */
+  int ii = 0;
+  for (ii = 0; ii < 16; ii++)
   {
-    byteslong_mlstg1.long_word = (10*((65536*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[3]
-    +256*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[2]
-    +(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[1])-65536)
-    -((float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[0]*10)/256);
+    dsatz_winsol[0].sensT[ii][0] = dsatz_uvr1611[0].DS_UVR1611.sensT[ii][0];
+    dsatz_winsol[0].sensT[ii][1] = dsatz_uvr1611[0].DS_UVR1611.sensT[ii][1];
+  }
+  dsatz_winsol[0].wmzaehler_reg = dsatz_uvr1611[0].DS_UVR1611.wmzaehler_reg;
+
+  if (dsatz_uvr1611[0].DS_UVR1611.mlstg1[3] > 0x7f) /* negtive Wete */
+  {
+    byteslong_mlstg1.long_word = (10 * ((65536 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[3]
+                       + 256 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[2]
+                       + (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[1]) - 65536)
+                    - ((float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[0] * 10) / 256);
     byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
   }
   else
-    byteslong_mlstg1.long_word = (10*(65536*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[3]
-    +256*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[2]
-    +(float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[1])
-    +((float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[0]*10)/256);
+    byteslong_mlstg1.long_word = (10 * (65536 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[3]
+                      + 256 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[2]
+                      + (float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[1])
+                    + ((float)dsatz_uvr1611[0].DS_UVR1611.mlstg1[0] * 10) / 256);
 
-  dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte ;
-  dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte ;
-  dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte ;
-  dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte ;
-  dsatz_winsol[0].kwh1[0] = dsatz_uvr1611[0].DS_UVR1611.kwh1[0] ;
-  dsatz_winsol[0].kwh1[1] = dsatz_uvr1611[0].DS_UVR1611.kwh1[1] ;
-  dsatz_winsol[0].mwh1[0] = dsatz_uvr1611[0].DS_UVR1611.mwh1[0] ;
-  dsatz_winsol[0].mwh1[1] = dsatz_uvr1611[0].DS_UVR1611.mwh1[1] ;
+  dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte;
+  dsatz_winsol[0].kwh1[0] = dsatz_uvr1611[0].DS_UVR1611.kwh1[0];
+  dsatz_winsol[0].kwh1[1] = dsatz_uvr1611[0].DS_UVR1611.kwh1[1];
+  dsatz_winsol[0].mwh1[0] = dsatz_uvr1611[0].DS_UVR1611.mwh1[0];
+  dsatz_winsol[0].mwh1[1] = dsatz_uvr1611[0].DS_UVR1611.mwh1[1];
 
-  if ( dsatz_uvr1611[0].DS_UVR1611.mlstg2[3] > 0x7f ) /* negtive Wete */
+  if (dsatz_uvr1611[0].DS_UVR1611.mlstg2[3] > 0x7f) /* negtive Wete */
   {
-    byteslong_mlstg2.long_word = (10*((65536*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[3]
-    +256*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[2]
-    +(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[1])-65536)
-    -((float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[0]*10)/256);
+    byteslong_mlstg2.long_word = (10 * ((65536 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[3]
+                       + 256 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[2]
+                       + (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[1]) - 65536)
+                    - ((float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[0] * 10) / 256);
     byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
   }
   else
-    byteslong_mlstg2.long_word = (10*(65536*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[3]
-    +256*(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[2]
-    +(float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[1])
-    +((float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[0]*10)/256);
+    byteslong_mlstg2.long_word = (10 * (65536 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[3]
+                      + 256 * (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[2]
+                      + (float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[1])
+                    + ((float)dsatz_uvr1611[0].DS_UVR1611.mlstg2[0] * 10) / 256);
 
-  dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte ;
-  dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte ;
-  dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte ;
-  dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte ;
-  dsatz_winsol[0].kwh2[0] = dsatz_uvr1611[0].DS_UVR1611.kwh2[0] ;
-  dsatz_winsol[0].kwh2[1] = dsatz_uvr1611[0].DS_UVR1611.kwh2[1] ;
-  dsatz_winsol[0].mwh2[0] = dsatz_uvr1611[0].DS_UVR1611.mwh2[0] ;
-  dsatz_winsol[0].mwh2[1] = dsatz_uvr1611[0].DS_UVR1611.mwh2[1] ;
+  dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte;
+  dsatz_winsol[0].kwh2[0] = dsatz_uvr1611[0].DS_UVR1611.kwh2[0];
+  dsatz_winsol[0].kwh2[1] = dsatz_uvr1611[0].DS_UVR1611.kwh2[1];
+  dsatz_winsol[0].mwh2[0] = dsatz_uvr1611[0].DS_UVR1611.mwh2[0];
+  dsatz_winsol[0].mwh2[1] = dsatz_uvr1611[0].DS_UVR1611.mwh2[1];
 
   return 1;
 }
 
 /* Kopieren der Daten (UVR1611 - CAN-Logging) in die Winsol-Format Struktur */
-int copy_UVR2winsol_1611_CAN(s_DS_CAN *dsatz_uvr1611, DS_Winsol  *dsatz_winsol )
+int copy_UVR2winsol_1611_CAN(s_DS_CAN *dsatz_uvr1611, DS_Winsol *dsatz_winsol)
 {
   BYTES_LONG byteslong_mlstg1, byteslong_mlstg2;
 
-  dsatz_winsol[0].tag = dsatz_uvr1611[0].datum_zeit.tag ;
-  dsatz_winsol[0].std = dsatz_uvr1611[0].datum_zeit.std ;
-  dsatz_winsol[0].min = dsatz_uvr1611[0].datum_zeit.min ;
-  dsatz_winsol[0].sek = dsatz_uvr1611[0].datum_zeit.sek ;
-  dsatz_winsol[0].ausgbyte1 = dsatz_uvr1611[0].ausgbyte1 ;
-  dsatz_winsol[0].ausgbyte2 = dsatz_uvr1611[0].ausgbyte2 ;
-  dsatz_winsol[0].dza[0] = dsatz_uvr1611[0].dza[0] ;
-  dsatz_winsol[0].dza[1] = dsatz_uvr1611[0].dza[1] ;
-  dsatz_winsol[0].dza[2] = dsatz_uvr1611[0].dza[2] ;
-  dsatz_winsol[0].dza[3] = dsatz_uvr1611[0].dza[3] ;
+  dsatz_winsol[0].tag = dsatz_uvr1611[0].datum_zeit.tag;
+  dsatz_winsol[0].std = dsatz_uvr1611[0].datum_zeit.std;
+  dsatz_winsol[0].min = dsatz_uvr1611[0].datum_zeit.min;
+  dsatz_winsol[0].sek = dsatz_uvr1611[0].datum_zeit.sek;
+  dsatz_winsol[0].ausgbyte1 = dsatz_uvr1611[0].ausgbyte1;
+  dsatz_winsol[0].ausgbyte2 = dsatz_uvr1611[0].ausgbyte2;
+  dsatz_winsol[0].dza[0] = dsatz_uvr1611[0].dza[0];
+  dsatz_winsol[0].dza[1] = dsatz_uvr1611[0].dza[1];
+  dsatz_winsol[0].dza[2] = dsatz_uvr1611[0].dza[2];
+  dsatz_winsol[0].dza[3] = dsatz_uvr1611[0].dza[3];
 
-  int ii=0;
-  for (ii=0;ii<16;ii++)
-    {
-      dsatz_winsol[0].sensT[ii][0] = dsatz_uvr1611[0].sensT[ii][0] ;
-      dsatz_winsol[0].sensT[ii][1] = dsatz_uvr1611[0].sensT[ii][1] ;
-    }
-  dsatz_winsol[0].wmzaehler_reg = dsatz_uvr1611[0].wmzaehler_reg ;
-
-  if ( dsatz_uvr1611[0].mlstg1[3] > 0x7f ) /* negtive Wete */
+  int ii = 0;
+  for (ii = 0; ii < 16; ii++)
   {
-    byteslong_mlstg1.long_word = (10*((65536*(float)dsatz_uvr1611[0].mlstg1[3]
-    +256*(float)dsatz_uvr1611[0].mlstg1[2]
-    +(float)dsatz_uvr1611[0].mlstg1[1])-65536)
-    -((float)dsatz_uvr1611[0].mlstg1[0]*10)/256);
+    dsatz_winsol[0].sensT[ii][0] = dsatz_uvr1611[0].sensT[ii][0];
+    dsatz_winsol[0].sensT[ii][1] = dsatz_uvr1611[0].sensT[ii][1];
+  }
+  dsatz_winsol[0].wmzaehler_reg = dsatz_uvr1611[0].wmzaehler_reg;
+
+  if (dsatz_uvr1611[0].mlstg1[3] > 0x7f) /* negtive Wete */
+  {
+    byteslong_mlstg1.long_word = (10 * ((65536 * (float)dsatz_uvr1611[0].mlstg1[3]
+                       + 256 * (float)dsatz_uvr1611[0].mlstg1[2]
+                       + (float)dsatz_uvr1611[0].mlstg1[1]) - 65536)
+                    - ((float)dsatz_uvr1611[0].mlstg1[0] * 10) / 256);
     byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
   }
   else
-    byteslong_mlstg1.long_word = (10*(65536*(float)dsatz_uvr1611[0].mlstg1[3]
-    +256*(float)dsatz_uvr1611[0].mlstg1[2]
-    +(float)dsatz_uvr1611[0].mlstg1[1])
-    +((float)dsatz_uvr1611[0].mlstg1[0]*10)/256);
+    byteslong_mlstg1.long_word = (10 * (65536 * (float)dsatz_uvr1611[0].mlstg1[3]
+                      + 256 * (float)dsatz_uvr1611[0].mlstg1[2]
+                      + (float)dsatz_uvr1611[0].mlstg1[1])
+                    + ((float)dsatz_uvr1611[0].mlstg1[0] * 10) / 256);
 
-  dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte ;
-  dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte ;
-  dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte ;
-  dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte ;
-  dsatz_winsol[0].kwh1[0] = dsatz_uvr1611[0].kwh1[0] ;
-  dsatz_winsol[0].kwh1[1] = dsatz_uvr1611[0].kwh1[1] ;
-  dsatz_winsol[0].mwh1[0] = dsatz_uvr1611[0].mwh1[0] ;
-  dsatz_winsol[0].mwh1[1] = dsatz_uvr1611[0].mwh1[1] ;
+  dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte;
+  dsatz_winsol[0].kwh1[0] = dsatz_uvr1611[0].kwh1[0];
+  dsatz_winsol[0].kwh1[1] = dsatz_uvr1611[0].kwh1[1];
+  dsatz_winsol[0].mwh1[0] = dsatz_uvr1611[0].mwh1[0];
+  dsatz_winsol[0].mwh1[1] = dsatz_uvr1611[0].mwh1[1];
 
-  if ( dsatz_uvr1611[0].mlstg2[3] > 0x7f ) /* negtive Wete */
+  if (dsatz_uvr1611[0].mlstg2[3] > 0x7f) /* negtive Wete */
   {
-    byteslong_mlstg2.long_word = (10*((65536*(float)dsatz_uvr1611[0].mlstg2[3]
-    +256*(float)dsatz_uvr1611[0].mlstg2[2]
-    +(float)dsatz_uvr1611[0].mlstg2[1])-65536)
-    -((float)dsatz_uvr1611[0].mlstg2[0]*10)/256);
+    byteslong_mlstg2.long_word = (10 * ((65536 * (float)dsatz_uvr1611[0].mlstg2[3]
+                       + 256 * (float)dsatz_uvr1611[0].mlstg2[2]
+                       + (float)dsatz_uvr1611[0].mlstg2[1]) - 65536)
+                    - ((float)dsatz_uvr1611[0].mlstg2[0] * 10) / 256);
     byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
   }
   else
-    byteslong_mlstg2.long_word = (10*(65536*(float)dsatz_uvr1611[0].mlstg2[3]
-    +256*(float)dsatz_uvr1611[0].mlstg2[2]
-    +(float)dsatz_uvr1611[0].mlstg2[1])
-    +((float)dsatz_uvr1611[0].mlstg2[0]*10)/256);
+    byteslong_mlstg2.long_word = (10 * (65536 * (float)dsatz_uvr1611[0].mlstg2[3]
+                      + 256 * (float)dsatz_uvr1611[0].mlstg2[2]
+                      + (float)dsatz_uvr1611[0].mlstg2[1])
+                    + ((float)dsatz_uvr1611[0].mlstg2[0] * 10) / 256);
 
-  dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte ;
-  dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte ;
-  dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte ;
-  dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte ;
-  dsatz_winsol[0].kwh2[0] = dsatz_uvr1611[0].kwh2[0] ;
-  dsatz_winsol[0].kwh2[1] = dsatz_uvr1611[0].kwh2[1] ;
-  dsatz_winsol[0].mwh2[0] = dsatz_uvr1611[0].mwh2[0] ;
-  dsatz_winsol[0].mwh2[1] = dsatz_uvr1611[0].mwh2[1] ;
+  dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte;
+  dsatz_winsol[0].kwh2[0] = dsatz_uvr1611[0].kwh2[0];
+  dsatz_winsol[0].kwh2[1] = dsatz_uvr1611[0].kwh2[1];
+  dsatz_winsol[0].mwh2[0] = dsatz_uvr1611[0].mwh2[0];
+  dsatz_winsol[0].mwh2[1] = dsatz_uvr1611[0].mwh2[1];
 
   return 1;
 }
@@ -1861,11 +1887,11 @@ int copy_UVR2winsol_1611_CANBC(s_DS_CANBC *dsatz_uvr1611_canbc, DS_CANBC  *dsatz
   dsatz_winsol_canbc[0].digbyte2 = dsatz_uvr1611_canbc[0].digbyte2 ;
 
   int ii=0;
-  for (ii=0;ii<12;ii++)
-    {
-      dsatz_winsol_canbc[0].sensT[ii][0] = dsatz_uvr1611_canbc[0].sensT[ii][0] ;
-      dsatz_winsol_canbc[0].sensT[ii][1] = dsatz_uvr1611_canbc[0].sensT[ii][1] ;
-    }
+  for (ii=0; ii<12; ii++)
+  {
+    dsatz_winsol_canbc[0].sensT[ii][0] = dsatz_uvr1611_canbc[0].sensT[ii][0] ;
+    dsatz_winsol_canbc[0].sensT[ii][1] = dsatz_uvr1611_canbc[0].sensT[ii][1] ;
+  }
   dsatz_winsol_canbc[0].wmzaehler_reg = dsatz_uvr1611_canbc[0].wmzaehler_reg ;
 
   if ( dsatz_uvr1611_canbc[0].mlstg1[3] > 0x7f ) /* negtive Wete */
@@ -1952,11 +1978,11 @@ int copy_UVR2winsol_61_3(u_DS_UVR1611_UVR61_3 *dsatz_uvr61_3, DS_Winsol_UVR61_3 
   dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_uvr61_3[0].DS_UVR61_3.ausg_analog;
 
   int ii=0;
-  for (ii=0;ii<6;ii++)
-    {
-      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_uvr61_3[0].DS_UVR61_3.sensT[ii][0] ;
-      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_uvr61_3[0].DS_UVR61_3.sensT[ii][1] ;
-    }
+  for (ii=0; ii<6; ii++)
+  {
+    dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_uvr61_3[0].DS_UVR61_3.sensT[ii][0] ;
+    dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_uvr61_3[0].DS_UVR61_3.sensT[ii][1] ;
+  }
   dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_uvr61_3[0].DS_UVR61_3.wmzaehler_reg ;
   dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_uvr61_3[0].DS_UVR61_3.volstrom[0] ;
   dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_uvr61_3[0].DS_UVR61_3.volstrom[1] ;
@@ -1971,345 +1997,344 @@ int copy_UVR2winsol_61_3(u_DS_UVR1611_UVR61_3 *dsatz_uvr61_3, DS_Winsol_UVR61_3 
   dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_uvr61_3[0].DS_UVR61_3.mwh1[2] ;
   dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_uvr61_3[0].DS_UVR61_3.mwh1[3] ;
 
-  for (ii=0;ii<4;ii++)
-    {
-      dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
-    }
-  for (ii=0;ii<25;ii++)
-    {
-      dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
-    }
+  for (ii=0; ii<4; ii++)
+  {
+    dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
+  }
+  for (ii=0; ii<25; ii++)
+  {
+    dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
+  }
 
   return 1;
 }
-
 /* Kopieren der Daten UVR1611(Modus 0xD1 - 2DL) in Winsol-Format-Struktur */
 int copy_UVR2winsol_D1_1611(u_modus_D1 *dsatz_modus_d1, DS_Winsol *dsatz_winsol , int geraet)
 {
   BYTES_LONG byteslong_mlstg1, byteslong_mlstg2;
 
-  if ( geraet == 1 )
+  if (geraet == 1)
   {
-    dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.tag ;
-    dsatz_winsol[0].std = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.std ;
-    dsatz_winsol[0].min = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.min ;
-    dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.sek ;
-    dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_1611.ausgbyte1 ;
-    dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_1611_1611.ausgbyte2 ;
-    dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_1611_1611.dza[0] ;
-    dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_1611_1611.dza[1] ;
-    dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_1611_1611.dza[2] ;
-    dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_1611_1611.dza[3] ;
+    dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.tag;
+    dsatz_winsol[0].std = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.std;
+    dsatz_winsol[0].min = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.min;
+    dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_1611_1611.datum_zeit.sek;
+    dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_1611.ausgbyte1;
+    dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_1611_1611.ausgbyte2;
+    dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_1611_1611.dza[0];
+    dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_1611_1611.dza[1];
+    dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_1611_1611.dza[2];
+    dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_1611_1611.dza[3];
 
-    int ii=0;
-    for (ii=0;ii<16;ii++)
+    int ii = 0;
+    for (ii = 0; ii < 16; ii++)
     {
-      dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_1611.sensT[ii][0] ;
-      dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_1611.sensT[ii][1] ;
+      dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_1611.sensT[ii][0];
+      dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_1611.sensT[ii][1];
     }
-    dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_1611.wmzaehler_reg ;
+    dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_1611.wmzaehler_reg;
 
-    if ( dsatz_modus_d1[0].DS_1611_1611.mlstg1[3] > 0x7f ) /* negtive Wete */
+    if (dsatz_modus_d1[0].DS_1611_1611.mlstg1[3] > 0x7f) /* negtive Wete */
     {
-      byteslong_mlstg1.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[0]*10)/256);
+      byteslong_mlstg1.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[1]) - 65536)
+        - ((float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[0] * 10) / 256);
       byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
     }
     else
-      byteslong_mlstg1.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[1])
-      +((float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[0]*10)/256);
+      byteslong_mlstg1.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[1])
+        + ((float)dsatz_modus_d1[0].DS_1611_1611.mlstg1[0] * 10) / 256);
 
-    dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_1611_1611.kwh1[0] ;
-    dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_1611_1611.kwh1[1] ;
-    dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_1611_1611.mwh1[0] ;
-    dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_1611_1611.mwh1[1] ;
+    dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte;
+    dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte;
+    dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte;
+    dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte;
+    dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_1611_1611.kwh1[0];
+    dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_1611_1611.kwh1[1];
+    dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_1611_1611.mwh1[0];
+    dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_1611_1611.mwh1[1];
 
-    if ( dsatz_modus_d1[0].DS_1611_1611.mlstg2[3] > 0x7f ) /* negtive Wete */
+    if (dsatz_modus_d1[0].DS_1611_1611.mlstg2[3] > 0x7f) /* negtive Wete */
     {
-      byteslong_mlstg2.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[0]*10)/256);
+      byteslong_mlstg2.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[1]) - 65536)
+        - ((float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[0] * 10) / 256);
       byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
     }
     else
-      byteslong_mlstg2.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[1])
-      +((float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[0]*10)/256);
+      byteslong_mlstg2.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[1])
+        + ((float)dsatz_modus_d1[0].DS_1611_1611.mlstg2[0] * 10) / 256);
 
-    dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_1611_1611.kwh2[0] ;
-    dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_1611_1611.kwh2[1] ;
-    dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_1611_1611.mwh2[0] ;
-    dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_1611_1611.mwh2[1] ;
+    dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte;
+    dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte;
+    dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte;
+    dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte;
+    dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_1611_1611.kwh2[0];
+    dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_1611_1611.kwh2[1];
+    dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_1611_1611.mwh2[0];
+    dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_1611_1611.mwh2[1];
   }
   else if (uvr_typ == UVR1611)
   {
-    dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.tag ;
-    dsatz_winsol[0].std = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.std ;
-    dsatz_winsol[0].min = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.min ;
-    dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.sek ;
-    dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_1611.Z_ausgbyte1 ;
-    dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_1611_1611.Z_ausgbyte2 ;
-    dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[0] ;
-    dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[1] ;
-    dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[2] ;
-    dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[3] ;
+    dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.tag;
+    dsatz_winsol[0].std = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.std;
+    dsatz_winsol[0].min = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.min;
+    dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_1611_1611.Z_datum_zeit.sek;
+    dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_1611.Z_ausgbyte1;
+    dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_1611_1611.Z_ausgbyte2;
+    dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[0];
+    dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[1];
+    dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[2];
+    dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_1611_1611.Z_dza[3];
 
-    int ii=0;
-    for (ii=0;ii<16;ii++)
+    int ii = 0;
+    for (ii = 0; ii < 16; ii++)
     {
-      dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_1611.Z_sensT[ii][0] ;
-      dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_1611.Z_sensT[ii][1] ;
+      dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_1611.Z_sensT[ii][0];
+      dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_1611.Z_sensT[ii][1];
     }
-    dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_1611.Z_wmzaehler_reg ;
+    dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_1611.Z_wmzaehler_reg;
 
-    if ( dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3] > 0x7f ) /* negtive Wete */
+    if (dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3] > 0x7f) /* negtive Wete */
     {
-      byteslong_mlstg1.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[0]*10)/256);
+      byteslong_mlstg1.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[1]) - 65536)
+        - ((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[0] * 10) / 256);
       byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
     }
     else
-      byteslong_mlstg1.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[1])
-      +((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[0]*10)/256);
+      byteslong_mlstg1.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[1])
+        + ((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg1[0] * 10) / 256);
 
-    dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh1[0] ;
-    dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh1[1] ;
-    dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh1[0] ;
-    dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh1[1] ;
+    dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte;
+    dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte;
+    dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte;
+    dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte;
+    dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh1[0];
+    dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh1[1];
+    dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh1[0];
+    dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh1[1];
 
-    if ( dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3] > 0x7f ) /* negtive Wete */
+    if (dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3] > 0x7f) /* negtive Wete */
     {
-      byteslong_mlstg2.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[0]*10)/256);
+      byteslong_mlstg2.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[1]) - 65536)
+        - ((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[0] * 10) / 256);
       byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
     }
     else
-      byteslong_mlstg2.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[1])
-      +((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[0]*10)/256);
+      byteslong_mlstg2.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[3]
+        + 256 * (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[2]
+        + (float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[1])
+        + ((float)dsatz_modus_d1[0].DS_1611_1611.Z_mlstg2[0] * 10) / 256);
 
-    dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh2[0] ;
-    dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh2[1] ;
-    dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh2[0] ;
-    dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh2[1] ;
+    dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte;
+    dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte;
+    dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte;
+    dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte;
+    dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh2[0];
+    dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_1611_1611.Z_kwh2[1];
+    dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh2[0];
+    dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_1611_1611.Z_mwh2[1];
   }
-  else if (uvr_typ == UVR61_3)
+}
+else if (uvr_typ == UVR61_3)
+{
+  dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.tag;
+  dsatz_winsol[0].std = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.std;
+  dsatz_winsol[0].min = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.min;
+  dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.sek;
+  dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_1611.Z_ausgbyte1;
+  dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_61_3_1611.Z_ausgbyte2;
+  dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[0];
+  dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[1];
+  dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[2];
+  dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[3];
+
+  int ii = 0;
+  for (ii = 0; ii < 16; ii++)
   {
-    dsatz_winsol[0].tag = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.tag ;
-    dsatz_winsol[0].std = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.std ;
-    dsatz_winsol[0].min = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.min ;
-    dsatz_winsol[0].sek = dsatz_modus_d1[0].DS_61_3_1611.Z_datum_zeit.sek ;
-    dsatz_winsol[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_1611.Z_ausgbyte1 ;
-    dsatz_winsol[0].ausgbyte2 = dsatz_modus_d1[0].DS_61_3_1611.Z_ausgbyte2 ;
-    dsatz_winsol[0].dza[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[0] ;
-    dsatz_winsol[0].dza[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[1] ;
-    dsatz_winsol[0].dza[2] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[2] ;
-    dsatz_winsol[0].dza[3] = dsatz_modus_d1[0].DS_61_3_1611.Z_dza[3] ;
-
-    int ii=0;
-    for (ii=0;ii<16;ii++)
-    {
-      dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_1611.Z_sensT[ii][0] ;
-      dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_1611.Z_sensT[ii][1] ;
-    }
-    dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_1611.Z_wmzaehler_reg ;
-
-    if ( dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3] > 0x7f ) /* negtive Wete */
-    {
-      byteslong_mlstg1.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[0]*10)/256);
-      byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
-    }
-    else
-      byteslong_mlstg1.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3]
-      +256*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[2]
-      +(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[1])
-      +((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[0]*10)/256);
-
-    dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh1[0] ;
-    dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh1[1] ;
-    dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh1[0] ;
-    dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh1[1] ;
-
-    if ( dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3] > 0x7f ) /* negtive Wete */
-    {
-      byteslong_mlstg2.long_word = (10*((65536*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[1])-65536)
-      -((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[0]*10)/256);
-      byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
-    }
-    else
-      byteslong_mlstg2.long_word = (10*(65536*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3]
-      +256*(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[2]
-      +(float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[1])
-      +((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[0]*10)/256);
-
-    dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte ;
-    dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte ;
-    dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte ;
-    dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte ;
-    dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh2[0] ;
-    dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh2[1] ;
-    dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh2[0] ;
-    dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh2[1] ;
+    dsatz_winsol[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_1611.Z_sensT[ii][0];
+    dsatz_winsol[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_1611.Z_sensT[ii][1];
   }
+  dsatz_winsol[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_1611.Z_wmzaehler_reg;
 
-  return 1;
+  if (dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3] > 0x7f) /* negtive Wete */
+  {
+    byteslong_mlstg1.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3]
+                       + 256 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[2]
+                       + (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[1]) - 65536)
+                    - ((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[0] * 10) / 256);
+    byteslong_mlstg1.long_word = byteslong_mlstg1.long_word | 0xffff0000;
+  }
+  else
+    byteslong_mlstg1.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[3]
+                      + 256 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[2]
+                      + (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[1])
+                    + ((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg1[0] * 10) / 256);
+
+  dsatz_winsol[0].mlstg1[0] = byteslong_mlstg1.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg1[1] = byteslong_mlstg1.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg1[2] = byteslong_mlstg1.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg1[3] = byteslong_mlstg1.bytes.highhighbyte;
+  dsatz_winsol[0].kwh1[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh1[0];
+  dsatz_winsol[0].kwh1[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh1[1];
+  dsatz_winsol[0].mwh1[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh1[0];
+  dsatz_winsol[0].mwh1[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh1[1];
+
+  if (dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3] > 0x7f) /* negtive Wete */
+  {
+    byteslong_mlstg2.long_word = (10 * ((65536 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3]
+                       + 256 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[2]
+                       + (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[1]) - 65536)
+                    - ((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[0] * 10) / 256);
+    byteslong_mlstg2.long_word = byteslong_mlstg2.long_word | 0xffff0000;
+  }
+  else
+    byteslong_mlstg2.long_word = (10 * (65536 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[3]
+                      + 256 * (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[2]
+                      + (float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[1])
+                    + ((float)dsatz_modus_d1[0].DS_61_3_1611.Z_mlstg2[0] * 10) / 256);
+
+  dsatz_winsol[0].mlstg2[0] = byteslong_mlstg2.bytes.lowlowbyte;
+  dsatz_winsol[0].mlstg2[1] = byteslong_mlstg2.bytes.lowhighbyte;
+  dsatz_winsol[0].mlstg2[2] = byteslong_mlstg2.bytes.highlowbyte;
+  dsatz_winsol[0].mlstg2[3] = byteslong_mlstg2.bytes.highhighbyte;
+  dsatz_winsol[0].kwh2[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh2[0];
+  dsatz_winsol[0].kwh2[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_kwh2[1];
+  dsatz_winsol[0].mwh2[0] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh2[0];
+  dsatz_winsol[0].mwh2[1] = dsatz_modus_d1[0].DS_61_3_1611.Z_mwh2[1];
 }
 
+return 1;
+}
 
 /* Kopieren der Daten UVR61-3(Modus 0xD1 - 2DL) in Winsol-Format-Struktur */
 int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz_winsol_uvr61_3 , int geraet)
 {
-  if ( geraet == 1 )
+  if (geraet == 1)
   {
-    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.tag ;
-    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.std ;
-    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.min ;
-    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.sek ;
-    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_61_3.ausgbyte1 ;
-    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.dza ;
+    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.tag;
+    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.std;
+    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.min;
+    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.sek;
+    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_61_3.ausgbyte1;
+    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_61_3_61_3.ausg_analog;
 
-    int ii=0;
-    for (ii=0;ii<6;ii++)
+    int ii = 0;
+    for (ii = 0; ii < 6; ii++)
     {
-      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][0] ;
-      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][1] ;
+      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][0];
+      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][1];
     }
-    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_61_3.wmzaehler_reg ;
-    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_61_3_61_3.volstrom[0] ;
-    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_61_3_61_3.volstrom[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[0] ;
-    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[2] ;
-    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[3] ;
-    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.kwh1[0] ;
-    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.kwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[0] ;
-    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[2] ;
-    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[3] ;
+    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_61_3.wmzaehler_reg;
+    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_61_3_61_3.volstrom[0];
+    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_61_3_61_3.volstrom[1];
+    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[0];
+    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[1];
+    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[2];
+    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_61_3_61_3.mlstg1[3];
+    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.kwh1[0];
+    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.kwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[0];
+    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[2];
+    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[3];
 
-    for (ii=0;ii<4;ii++)
+    for (ii = 0; ii < 4; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii=0;ii<25;ii++)
+    for (ii = 0; ii < 25; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
   }
   else if (uvr_typ == UVR61_3)
   {
-    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.tag ;
-    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.std ;
-    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.min ;
-    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.sek ;
-    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_61_3.Z_ausgbyte1 ;
-    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.Z_dza ;
+    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.tag;
+    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.std;
+    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.min;
+    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.sek;
+    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_61_3_61_3.Z_ausgbyte1;
+    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.Z_dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_61_3_61_3.Z_ausg_analog;
 
-    int ii=0;
-    for (ii=0;ii<6;ii++)
+    int ii = 0;
+    for (ii = 0; ii < 6; ii++)
     {
-      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][0] ;
-      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][1] ;
+      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][0];
+      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][1];
     }
-    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_61_3.Z_wmzaehler_reg ;
-    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_volstrom[0] ;
-    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_volstrom[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[0] ;
-    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[2] ;
-    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[3] ;
-    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_kwh1[0] ;
-    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_kwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[0] ;
-    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[2] ;
-    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[3] ;
+    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_61_3_61_3.Z_wmzaehler_reg;
+    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_volstrom[0];
+    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_volstrom[1];
+    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[0];
+    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[1];
+    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[2];
+    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mlstg1[3];
+    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_kwh1[0];
+    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_kwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[0];
+    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[2];
+    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[3];
 
-    for (ii=0;ii<4;ii++)
+    for (ii = 0; ii < 4; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii=0;ii<25;ii++)
+    for (ii = 0; ii < 25; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
   }
   else if (uvr_typ == UVR1611)
   {
-    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.tag ;
-    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.std ;
-    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.min ;
-    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.sek ;
-    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_61_3.Z_ausgbyte1 ;
-    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_1611_61_3.Z_dza ;
+    dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.tag;
+    dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.std;
+    dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.min;
+    dsatz_winsol_uvr61_3[0].sek = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.sek;
+    dsatz_winsol_uvr61_3[0].ausgbyte1 = dsatz_modus_d1[0].DS_1611_61_3.Z_ausgbyte1;
+    dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_1611_61_3.Z_dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_1611_61_3.Z_ausg_analog;
 
-    int ii=0;
-    for (ii=0;ii<6;ii++)
+    int ii = 0;
+    for (ii = 0; ii < 6; ii++)
     {
-      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][0] ;
-      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][1] ;
+      dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][0];
+      dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][1];
     }
-    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_61_3.Z_wmzaehler_reg ;
-    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_volstrom[0] ;
-    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_volstrom[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[0] ;
-    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[1] ;
-    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[2] ;
-    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[3] ;
-    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_kwh1[0] ;
-    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_kwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[0] ;
-    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[1] ;
-    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[2] ;
-    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[3] ;
+    dsatz_winsol_uvr61_3[0].wmzaehler_reg = dsatz_modus_d1[0].DS_1611_61_3.Z_wmzaehler_reg;
+    dsatz_winsol_uvr61_3[0].volstrom[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_volstrom[0];
+    dsatz_winsol_uvr61_3[0].volstrom[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_volstrom[1];
+    dsatz_winsol_uvr61_3[0].mlstg[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[0];
+    dsatz_winsol_uvr61_3[0].mlstg[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[1];
+    dsatz_winsol_uvr61_3[0].mlstg[2] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[2];
+    dsatz_winsol_uvr61_3[0].mlstg[3] = dsatz_modus_d1[0].DS_1611_61_3.Z_mlstg1[3];
+    dsatz_winsol_uvr61_3[0].kwh[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_kwh1[0];
+    dsatz_winsol_uvr61_3[0].kwh[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_kwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[0] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[0];
+    dsatz_winsol_uvr61_3[0].mwh[1] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[1];
+    dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[2];
+    dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[3];
 
-    for (ii=0;ii<4;ii++)
+    for (ii = 0; ii < 4; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii=0;ii<25;ii++)
+    for (ii = 0; ii < 25; ii++)
     {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
@@ -2322,48 +2347,48 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
 void print_dsatz_uvr1611_content(const u_DS_UVR1611_UVR61_3 *dsatz_uvr1611)
 {
   printf(" Datensatz start\n");
-  printf("Zeitstempel: %X %X %X\n",dsatz_uvr1611[0].DS_UVR1611.zeitstempel[1],dsatz_uvr1611[0].DS_UVR1611.zeitstempel[2],dsatz_uvr1611[0].DS_UVR1611.zeitstempel[3]);
+  printf("Zeitstempel: %X %X %X\n", dsatz_uvr1611[0].DS_UVR1611.zeitstempel[1], dsatz_uvr1611[0].DS_UVR1611.zeitstempel[2], dsatz_uvr1611[0].DS_UVR1611.zeitstempel[3]);
 
   printf("Zeit/Datum: %02d:%02d:%02d / %02d.%02d.200%d \n",
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.monat,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.jahr);
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.monat,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.jahr);
 
-  int ii=0;
-  for(ii=0;ii<12;ii++)
-    {
-      int k=0;
-      printf("Temperaturen ");
-      for(k=0;k<4;k++)
-  printf(" t%d: %x%X ",ii+k+1,
-         dsatz_uvr1611[0].DS_UVR1611.sensT[ii+k][0],
-         dsatz_uvr1611[0].DS_UVR1611.sensT[ii+k][1]);
+  int ii = 0;
+  for (ii = 0; ii < 12; ii++)
+  {
+    int k = 0;
+    printf("Temperaturen ");
+    for (k = 0; k < 4; k++)
+      printf(" t%d: %x%X ", ii + k + 1,
+             dsatz_uvr1611[0].DS_UVR1611.sensT[ii + k][0],
+             dsatz_uvr1611[0].DS_UVR1611.sensT[ii + k][1]);
 
-      printf("\n Temperaturen ");
-      for(k=0;k<4;k++)
-  printf(" t%d: %g ",ii+k+1,
-         berechnetemp(dsatz_uvr1611[0].DS_UVR1611.sensT[ii][0],
-          dsatz_uvr1611[0].DS_UVR1611.sensT[ii][1]));
-      printf("\n");
-    }
-  printf("Ausgangsbytes (1) %X, (2)%X\n",dsatz_uvr1611[0].DS_UVR1611.ausgbyte1,dsatz_uvr1611[0].DS_UVR1611.ausgbyte2);
-  printf("Drehzahlstufen (1) %X, (2) %X, (6) %X, (7) %X\n",dsatz_uvr1611[0].DS_UVR1611.dza[0],dsatz_uvr1611[0].DS_UVR1611.dza[1],dsatz_uvr1611[0].DS_UVR1611.dza[2],dsatz_uvr1611[0].DS_UVR1611.dza[3]);
-  printf("Waermemengenzaehler-bit: %X\n",dsatz_uvr1611[0].DS_UVR1611.wmzaehler_reg);
-  printf("(1) Momentleistung %X%x%X%x, Kwh %X%x, MWh %X%x\n",dsatz_uvr1611[0].DS_UVR1611.mlstg1[1],dsatz_uvr1611[0].DS_UVR1611.mlstg1[2],dsatz_uvr1611[0].DS_UVR1611.mlstg1[3],dsatz_uvr1611[0].DS_UVR1611.mlstg1[4],dsatz_uvr1611[0].DS_UVR1611.kwh1[1],dsatz_uvr1611[0].DS_UVR1611.kwh1[2],dsatz_uvr1611[0].DS_UVR1611.mwh1[1],dsatz_uvr1611[0].DS_UVR1611.mwh1[2]);
-  printf("(2) Momentleistung %X%x%X%x, Kwh %X%x, MWh %X%x\n",dsatz_uvr1611[0].DS_UVR1611.mlstg2[1],dsatz_uvr1611[0].DS_UVR1611.mlstg2[2],dsatz_uvr1611[0].DS_UVR1611.mlstg2[3],dsatz_uvr1611[0].DS_UVR1611.mlstg2[4],dsatz_uvr1611[0].DS_UVR1611.kwh2[1],dsatz_uvr1611[0].DS_UVR1611.kwh2[2],dsatz_uvr1611[0].DS_UVR1611.mwh2[1],dsatz_uvr1611[0].DS_UVR1611.mwh2[2]);
+    printf("\n Temperaturen ");
+    for (k = 0; k < 4; k++)
+      printf(" t%d: %g ", ii + k + 1,
+             berechnetemp(dsatz_uvr1611[0].DS_UVR1611.sensT[ii][0],
+                          dsatz_uvr1611[0].DS_UVR1611.sensT[ii][1]));
+    printf("\n");
+  }
+  printf("Ausgangsbytes (1) %X, (2)%X\n", dsatz_uvr1611[0].DS_UVR1611.ausgbyte1, dsatz_uvr1611[0].DS_UVR1611.ausgbyte2);
+  printf("Drehzahlstufen (1) %X, (2) %X, (6) %X, (7) %X\n", dsatz_uvr1611[0].DS_UVR1611.dza[0], dsatz_uvr1611[0].DS_UVR1611.dza[1], dsatz_uvr1611[0].DS_UVR1611.dza[2], dsatz_uvr1611[0].DS_UVR1611.dza[3]);
+  printf("Waermemengenzaehler-bit: %X\n", dsatz_uvr1611[0].DS_UVR1611.wmzaehler_reg);
+  printf("(1) Momentleistung %X%x%X%x, Kwh %X%x, MWh %X%x\n", dsatz_uvr1611[0].DS_UVR1611.mlstg1[1], dsatz_uvr1611[0].DS_UVR1611.mlstg1[2], dsatz_uvr1611[0].DS_UVR1611.mlstg1[3], dsatz_uvr1611[0].DS_UVR1611.mlstg1[4], dsatz_uvr1611[0].DS_UVR1611.kwh1[1], dsatz_uvr1611[0].DS_UVR1611.kwh1[2], dsatz_uvr1611[0].DS_UVR1611.mwh1[1], dsatz_uvr1611[0].DS_UVR1611.mwh1[2]);
+  printf("(2) Momentleistung %X%x%X%x, Kwh %X%x, MWh %X%x\n", dsatz_uvr1611[0].DS_UVR1611.mlstg2[1], dsatz_uvr1611[0].DS_UVR1611.mlstg2[2], dsatz_uvr1611[0].DS_UVR1611.mlstg2[3], dsatz_uvr1611[0].DS_UVR1611.mlstg2[4], dsatz_uvr1611[0].DS_UVR1611.kwh2[1], dsatz_uvr1611[0].DS_UVR1611.kwh2[2], dsatz_uvr1611[0].DS_UVR1611.mwh2[1], dsatz_uvr1611[0].DS_UVR1611.mwh2[2]);
 
   printf("Zeit/Datum: %02d:%02d:%02d / %02d.%02d.200%d \n",
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.monat,
-   dsatz_uvr1611[0].DS_UVR1611.datum_zeit.jahr);
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.std,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.min,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.sek,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.tag,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.monat,
+         dsatz_uvr1611[0].DS_UVR1611.datum_zeit.jahr);
 
-  printf("Zeitstempel: %X %X %X\n",dsatz_uvr1611[0].DS_UVR1611.zeitstempel[1],dsatz_uvr1611[0].DS_UVR1611.zeitstempel[2],dsatz_uvr1611[0].DS_UVR1611.zeitstempel[3]);
+  printf("Zeitstempel: %X %X %X\n", dsatz_uvr1611[0].DS_UVR1611.zeitstempel[1], dsatz_uvr1611[0].DS_UVR1611.zeitstempel[2], dsatz_uvr1611[0].DS_UVR1611.zeitstempel[3]);
   printf(" Datensatz ende\n");
 }
 
@@ -2372,7 +2397,7 @@ int datenlesen_A8(int anz_datensaetze)
 {
   unsigned modTeiler;
   int i, merk_i, fehlerhafte_ds, result, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
-  int Bytes_for_0xA8 = 65, monatswechsel = 0, in_bytes=0;
+  int Bytes_for_0xA8 = 65, monatswechsel = 0, in_bytes = 0;
   u_DS_UVR1611_UVR61_3 u_dsatz_uvr[1];
   DS_Winsol dsatz_winsol[1];
   DS_Winsol *puffer_dswinsol = &dsatz_winsol[0];
@@ -2390,53 +2415,53 @@ int datenlesen_A8(int anz_datensaetze)
   middlebyte = 0;
   merkmiddlebyte = middlebyte;
 
-  sendbuf[0]=VERSIONSABFRAGE;   /* Senden der Versionsabfrage */
+  sendbuf[0] = VERSIONSABFRAGE; /* Senden der Versionsabfrage */
   if (usb_zugriff)
   {
     close_usb();
     init_usb();
     fd_set rfds;
     struct timeval tv;
-    int retval=0;
-    int retry=0;
-    int retry_interval=2; 
+    int retval = 0;
+    int retry = 0;
+    int retry_interval = 2;
 
-    write_erg=write(fd,sendbuf,1);
-    if (write_erg == 1)    /* Lesen der Antwort*/
+    write_erg = write(fd, sendbuf, 1);
+    if (write_erg == 1) /* Lesen der Antwort*/
     {
       do
       {
-        in_bytes=0;
-        FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+        in_bytes = 0;
+        FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
         tv.tv_sec = retry_interval; /* Wait up to five seconds. */
         tv.tv_usec = 0;
-        retval = select(fd+1, &rfds, NULL, NULL, &tv);
+        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
         if (retval == -1)
           perror("select(fd)");
         else if (retval)
         {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+          fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-          if (FD_ISSET(fd,&rfds))
+          if (FD_ISSET(fd, &rfds))
           {
             ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+            fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
             if (in_bytes == 1)
             {
-              result=read(fd,empfbuf,1);
-              retry=4;
+              result = read(fd, empfbuf, 1);
+              retry = 4;
             }
           }
         }
-      } while( retry < 3 && in_bytes != 0);
+      } while (retry < 3 && in_bytes != 0);
     }
   }
-  
+
   if (ip_zugriff)
   {
     if (!ip_first)
@@ -2454,84 +2479,92 @@ int datenlesen_A8(int anz_datensaetze)
         do_cleanup();
         return 3;
       }
-    }  /* if (!ip_first) */
-    write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort */
-      result  = recv(sock,empfbuf,1,0);
+    } /* if (!ip_first) */
+    write_erg = send(sock, sendbuf, 1, 0);
+    if (write_erg == 1) /* Lesen der Antwort */
+      result = recv(sock, empfbuf, 1, 0);
   }
 
   /* fuellen des Sendebuffer - 6 Byte */
   sendbuf[0] = DATENBEREICHLESEN;
   // Startadressen von Kopfsatzlesen:
-  sendbuf[1] = *start_adresse;     /* Beginn des Datenbereiches (low vor high) */
-  sendbuf[2] = *(start_adresse+1);
-  sendbuf[3] = *(start_adresse+2);
-  sendbuf[4] = 0x01;  /* Anzahl der zu lesenden Rahmen */
+  sendbuf[1] = *start_adresse; /* Beginn des Datenbereiches (low vor high) */
+  sendbuf[2] = *(start_adresse + 1);
+  sendbuf[3] = *(start_adresse + 2);
+  sendbuf[4] = 0x01; /* Anzahl der zu lesenden Rahmen */
 
-  switch (sendbuf[1])  // vorbelegen lowbyte bei Startadr. > 00 00 00
+  switch (sendbuf[1]) // vorbelegen lowbyte bei Startadr. > 00 00 00
   {
-    case 0x00: lowbyte = 0; break;
-    case 0x40: lowbyte = 1; break;
-    case 0x80: lowbyte = 2; break;
-    case 0xc0: lowbyte = 3; break;
+  case 0x00:
+    lowbyte = 0;
+    break;
+  case 0x40:
+    lowbyte = 1;
+    break;
+  case 0x80:
+    lowbyte = 2;
+    break;
+  case 0xc0:
+    lowbyte = 3;
+    break;
   }
 
- #if DEBUG
-fprintf(stderr," Startadresse: %x %x %x\n",sendbuf[1],sendbuf[2],sendbuf[3]);
+#if DEBUG
+  fprintf(stderr, " Startadresse: %x %x %x\n", sendbuf[1], sendbuf[2], sendbuf[3]);
 #endif
-  for(;i<anz_datensaetze;i++)
+  for (; i < anz_datensaetze; i++)
   {
-    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler;  /* Pruefziffer */
+    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
 
     if (usb_zugriff)
     {
       fd_set rfds;
       struct timeval tv;
-      int retval=0;
-      int retry=0;
-      int retry_interval=2;
-      int durchlauf=0;
-      write_erg=write(fd,sendbuf,6);
-      if (write_erg == 6)    /* Lesen der Antwort*/
+      int retval = 0;
+      int retry = 0;
+      int retry_interval = 2;
+      int durchlauf = 0;
+      write_erg = write(fd, sendbuf, 6);
+      if (write_erg == 6) /* Lesen der Antwort*/
       {
         do
         {
-          in_bytes=0;
-          FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+          in_bytes = 0;
+          FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
           FD_SET(fd, &rfds);
           tv.tv_sec = retry_interval; /* Wait up to five seconds. */
           tv.tv_usec = 0;
-          retval = select(fd+1, &rfds, NULL, NULL, &tv);
+          retval = select(fd + 1, &rfds, NULL, NULL, &tv);
           zeitstempel();
           if (retval == -1)
             perror("select(fd)");
           else if (retval)
           {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+            fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-            if (FD_ISSET(fd,&rfds))
+            if (FD_ISSET(fd, &rfds))
             {
               ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+              fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
               if (in_bytes == 65)
               {
-                result=read(fd, u_dsatz_uvr,Bytes_for_0xA8);
-                retry=4;
+                result = read(fd, u_dsatz_uvr, Bytes_for_0xA8);
+                retry = 4;
 #ifdef DEBUG
-                fprintf(stderr,"%s - Daten beim %d. Zugriff gelesen.\n",sZeit,durchlauf);
+                fprintf(stderr, "%s - Daten beim %d. Zugriff gelesen.\n", sZeit, durchlauf);
 #endif
               }
               else
                 durchlauf++;
             }
           }
-        } while( retry < 3 && in_bytes != 0);
+        } while (retry < 3 && in_bytes != 0);
       }
     }
-    
+
     if (ip_zugriff)
     {
       if (!ip_first)
@@ -2549,215 +2582,222 @@ fprintf(stderr," Startadresse: %x %x %x\n",sendbuf[1],sendbuf[2],sendbuf[3]);
           do_cleanup();
           return 3;
         }
-       }  /* if (!ip_first) */
+      } /* if (!ip_first) */
 
-       write_erg=send(sock,sendbuf,6,0);
-       if (write_erg == 6)    /* Lesen der Antwort */
-          result  = recv(sock, u_dsatz_uvr,Bytes_for_0xA8,0);
+      write_erg = send(sock, sendbuf, 6, 0);
+      if (write_erg == 6) /* Lesen der Antwort */
+        result = recv(sock, u_dsatz_uvr, Bytes_for_0xA8, 0);
     } /* if (ip_zugriff) */
 
-//**************************************************************************************** !!!!!!!!
+    //**************************************************************************************** !!!!!!!!
     if (uvr_typ == UVR1611)
       pruefsumme = berechnepruefziffer_uvr1611(u_dsatz_uvr);
     if (uvr_typ == UVR61_3)
       pruefsumme = berechnepruefziffer_uvr61_3(u_dsatz_uvr);
 #if DEBUG > 3
-  if (uvr_typ == UVR1611)
-      fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n",i+1,u_dsatz_uvr[0].DS_UVR1611.pruefsum,pruefsumme);
-  if (uvr_typ == UVR61_3)
-      fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n",i+1,u_dsatz_uvr[0].DS_UVR61_3.pruefsum,pruefsumme);
+    if (uvr_typ == UVR1611)
+      fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n", i + 1, u_dsatz_uvr[0].DS_UVR1611.pruefsum, pruefsumme);
+    if (uvr_typ == UVR61_3)
+      fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n", i + 1, u_dsatz_uvr[0].DS_UVR61_3.pruefsum, pruefsumme);
 #endif
 
-    if (u_dsatz_uvr[0].DS_UVR1611.pruefsum == pruefsumme || u_dsatz_uvr[0].DS_UVR61_3.pruefsum == pruefsumme)
-    {  /*Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
+  if (u_dsatz_uvr[0].DS_UVR1611.pruefsum == pruefsumme || u_dsatz_uvr[0].DS_UVR61_3.pruefsum == pruefsumme)
+  {  /*Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
 #if DEBUG > 4
     print_dsatz_uvr1611_content(u_dsatz_uvr);
 #endif
-      if ( i == 0 ) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
-      {
-        if (uvr_typ == UVR1611)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat,u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr));
-          merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
-        }
-        if (uvr_typ == UVR61_3)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat,u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr));
-          merk_monat = u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat;
-        }
-        if ( tmp_erg == 0 )
-        {
-          printf("Der Logfile-Name konnte nicht erzeugt werden!");
-          exit(-1);
-        }
-        else
-        {
-          if ( open_logfile(LogFileName[1], 1) == -1 )
-          {
-            printf("Das LogFile kann nicht geoeffnet werden!\n");
-            exit(-1);
-          }
-        }
-      }
-      /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
-      if ( uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat )
-        monatswechsel = 1;
-      if ( uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat )
-        monatswechsel = 1;
-
-      if ( monatswechsel == 1 )
-      {
-        printf("Monatswechsel!\n");
-        if ( close_logfile() == -1)
-        {
-          printf("Fehler beim Monatswechsel: Cannot close logfile!");
-          exit(-1);
-        }
-        else
-        {
-          if (uvr_typ == UVR1611)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat,u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr));
-          if (uvr_typ == UVR61_3)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat,u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr));
-          if ( tmp_erg == 0 )
-          {
-            printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
-            exit(-1);
-          }
-          else
-          {
-            if ( open_logfile(LogFileName[1], 1) == -1 )
-            {
-              printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
-              exit(-1);
-            }
-          }
-        }
-      } /* Ende: if ( merk_monat != dsatz_uvr1611[0].datum_zeit.monat ) */
-
-      if (uvr_typ == UVR1611)
-        merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
-// CAN_BC----------------------------------------------------------------------------------------------------------------
-      if (uvr_typ == CAN_BC)
-        merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
-
-      if (uvr_typ == UVR61_3)
-        merk_monat = u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat;
-
-      if (uvr_typ == UVR1611)
-        copy_UVR2winsol_1611( &u_dsatz_uvr[0], &dsatz_winsol[0] );
-// CAN_BC----------------------------------------------------------------------------------------------------------------
-      if (uvr_typ == CAN_BC)
-        copy_UVR2winsol_1611( &u_dsatz_uvr[0], &dsatz_winsol[0] );
-
-      if (uvr_typ == UVR61_3)
-        copy_UVR2winsol_61_3( &u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0] );
-
-      if ( csv==1 && fp_csvfile != NULL )
-      {
-        if (uvr_typ == UVR1611)
-           writeWINSOLlogfile2CSV(fp_logfile, &dsatz_winsol[0],
-           u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr,
-           u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat );
-        if (uvr_typ == UVR61_3)
-          writeWINSOLlogfile2CSV(fp_logfile, &dsatz_winsol[0],
-           u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr,
-           u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat );
-      }
-
-      /* schreiben der gelesenen Rohdaten in das LogFile */
-      if (uvr_typ == UVR1611)
-        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-// CAN_BC-------------------------------------------------------------------------------------------------------------------
-      if (uvr_typ == CAN_BC)
-	  {
-        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-#if DEBUG > 3
-        printf("uvr_Typ CAN_BC\n");
-#endif
-		}
-      if (uvr_typ == UVR61_3)
-        tmp_erg = fwrite(puffer_dswinsol_uvr61_3,59,1,fp_logfile);
-
-      if (usb_zugriff)
-      {
-        if ( ((i%20) == 0) && (i > 0) )
-          printf("%d Datensaetze geschrieben.\n",i);
-      }
-      else if ( ((i%100) == 0) && (i > 0) )
-        printf("%d Datensaetze geschrieben.\n",i);
-
-      if ( *end_adresse == sendbuf[1] && *(end_adresse+1) == sendbuf[2] && *(end_adresse+2) == sendbuf[3] )
-            break;
-
-      /* Hochzaehlen der Startadressen                                      */
-      if (lowbyte <= 2)
-        lowbyte++;
-      else
-      {
-        lowbyte = 0;
-        middlebyte++;
-      }
-
-      switch (lowbyte)
-      {
-        case 0: sendbuf[1] = 0x00; break;
-        case 1: sendbuf[1] = 0x40; break;
-        case 2: sendbuf[1] = 0x80; break;
-        case 3: sendbuf[1] = 0xc0; break;
-      }
-
-      if (middlebyte > merkmiddlebyte)   /* das mittlere Byte muss erhoeht werden */
-      {
-        if ( sendbuf[2] != 0xFE )
-        {
-          sendbuf[2] = sendbuf[2] + 0x02;
-          merkmiddlebyte = middlebyte;
-        }
-        else /* das highbyte muss erhoeht werden */
-        {
-          sendbuf[2] = 0x00;
-          sendbuf[3] = sendbuf[3] + 0x01;
-          merkmiddlebyte = middlebyte;
-        }
-      }
-
-          if (sendbuf[3] > 0x0F ) // "Speicherueberlauf" im BL-Net
-          {
-                sendbuf[1] = 0x00;
-                sendbuf[2] = 0x00;
-                sendbuf[3] = 0x00;
-          }
-
-      monatswechsel = 0;
-    } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
-    else
+    if (i == 0) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
     {
-      if (merk_i < 5)
+      if (uvr_typ == UVR1611)
       {
-        i--; /* falsche Pruefziffer - also nochmals lesen */
-#ifdef DEBUG
-        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n",merk_i);
-#endif
-        merk_i++; /* hochzaehlen bis 5 */
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat, u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr));
+        merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
+      }
+      if (uvr_typ == UVR61_3)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr));
+        merk_monat = u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat;
+      }
+      if (tmp_erg == 0)
+      {
+        printf("Der Logfile-Name konnte nicht erzeugt werden!");
+        exit(-1);
       }
       else
       {
-        merk_i = 0;
-        fehlerhafte_ds++;
-        printf ( " fehlerhafter1 Datensatz - insgesamt:%d\n",fehlerhafte_ds);
+        if (open_logfile(LogFileName[1], 1) == -1)
+        {
+          printf("Das LogFile kann nicht geoeffnet werden!\n");
+          exit(-1);
+        }
       }
     }
+    /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
+    if (uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat)
+      monatswechsel = 1;
+    if (uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat)
+      monatswechsel = 1;
+
+    if (monatswechsel == 1)
+    {
+      printf("Monatswechsel!\n");
+      if (close_logfile() == -1)
+      {
+        printf("Fehler beim Monatswechsel: Cannot close logfile!");
+        exit(-1);
+      }
+      else
+      {
+        if (uvr_typ == UVR1611)
+          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat, u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr));
+        if (uvr_typ == UVR61_3)
+          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr));
+        if (tmp_erg == 0)
+        {
+          printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
+          exit(-1);
+        }
+        else
+        {
+          if (open_logfile(LogFileName[1], 1) == -1)
+          {
+            printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
+            exit(-1);
+          }
+        }
+      }
+    } /* Ende: if ( merk_monat != dsatz_uvr1611[0].datum_zeit.monat ) */
+
+    if (uvr_typ == UVR1611)
+      merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
+    // CAN_BC----------------------------------------------------------------------------------------------------------------
+    if (uvr_typ == CAN_BC)
+      merk_monat = u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat;
+
+    if (uvr_typ == UVR61_3)
+      merk_monat = u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat;
+
+    if (uvr_typ == UVR1611)
+      copy_UVR2winsol_1611(&u_dsatz_uvr[0], &dsatz_winsol[0]);
+    // CAN_BC----------------------------------------------------------------------------------------------------------------
+    if (uvr_typ == CAN_BC)
+      copy_UVR2winsol_1611(&u_dsatz_uvr[0], &dsatz_winsol[0]);
+
+    if (uvr_typ == UVR61_3)
+      copy_UVR2winsol_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0]);
+
+    if (csv == 1 && fp_csvfile != NULL)
+    {
+      if (uvr_typ == UVR1611)
+        writeWINSOLlogfile2CSV(fp_logfile, &dsatz_winsol[0],
+                     u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr,
+                     u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat);
+      if (uvr_typ == UVR61_3)
+        writeWINSOLlogfile2CSV(fp_logfile, &dsatz_winsol[0],
+                     u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.jahr,
+                     u_dsatz_uvr[0].DS_UVR61_3.datum_zeit.monat);
+    }
+
+    /* schreiben der gelesenen Rohdaten in das LogFile */
+    if (uvr_typ == UVR1611)
+      tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+    // CAN_BC-------------------------------------------------------------------------------------------------------------------
+    if (uvr_typ == CAN_BC)
+    {
+      tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+#if DEBUG > 3
+      printf("uvr_Typ CAN_BC\n");
+#endif
+    }
+    if (uvr_typ == UVR61_3)
+      tmp_erg = fwrite(puffer_dswinsol_uvr61_3, 59, 1, fp_logfile);
+
+    if (usb_zugriff)
+    {
+      if (((i % 20) == 0) && (i > 0))
+        printf("%d Datensaetze geschrieben.\n", i);
+    }
+    else if (((i % 100) == 0) && (i > 0))
+      printf("%d Datensaetze geschrieben.\n", i);
+
+    if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3])
+      break;
+
+    /* Hochzaehlen der Startadressen                                      */
+    if (lowbyte <= 2)
+      lowbyte++;
+    else
+    {
+      lowbyte = 0;
+      middlebyte++;
+    }
+
+    switch (lowbyte)
+    {
+    case 0:
+      sendbuf[1] = 0x00;
+      break;
+    case 1:
+      sendbuf[1] = 0x40;
+      break;
+    case 2:
+      sendbuf[1] = 0x80;
+      break;
+    case 3:
+      sendbuf[1] = 0xc0;
+      break;
+    }
+
+    if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
+    {
+      if (sendbuf[2] != 0xFE)
+      {
+        sendbuf[2] = sendbuf[2] + 0x02;
+        merkmiddlebyte = middlebyte;
+      }
+      else /* das highbyte muss erhoeht werden */
+      {
+        sendbuf[2] = 0x00;
+        sendbuf[3] = sendbuf[3] + 0x01;
+        merkmiddlebyte = middlebyte;
+      }
+    }
+
+    if (sendbuf[3] > 0x0F) // "Speicherueberlauf" im BL-Net
+    {
+      sendbuf[1] = 0x00;
+      sendbuf[2] = 0x00;
+      sendbuf[3] = 0x00;
+    }
+
+    monatswechsel = 0;
+  } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
+  else
+  {
+    if (merk_i < 5)
+    {
+      i--; /* falsche Pruefziffer - also nochmals lesen */
+#ifdef DEBUG
+      fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+#endif
+      merk_i++; /* hochzaehlen bis 5 */
+    }
+    else
+    {
+      merk_i = 0;
+      fehlerhafte_ds++;
+      printf(" fehlerhafter1 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
+    }
   }
-  return i + 1 - fehlerhafte_ds;
 }
+return i + 1 - fehlerhafte_ds;
 
 /* Daten vom DL lesen - 2DL-Modus */
 int datenlesen_D1(int anz_datensaetze)
 {
   unsigned modTeiler;
-  int i, merk_i, fehlerhafte_ds, result=0, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
-  int Bytes_for_0xD1 = 127, monatswechsel = 0, in_bytes=0;
+  int i, merk_i, fehlerhafte_ds, result = 0, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
+  int Bytes_for_0xD1 = 127, monatswechsel = 0, in_bytes = 0;
   u_modus_D1 u_dsatz_uvr[1];
 
   DS_Winsol dsatz_winsol[1];
@@ -2769,7 +2809,7 @@ int datenlesen_D1(int anz_datensaetze)
   DS_Winsol_UVR61_3 dsatz_winsol_uvr61_3_2[1];
   DS_Winsol_UVR61_3 *puffer_dswinsol_uvr61_3_2 = &dsatz_winsol_uvr61_3_2[0];
   UCHAR pruefsumme = 0, merk_monat = 0;
-  UCHAR sendbuf[6];       /*  sendebuffer fuer die Request-Commandos*/
+  UCHAR sendbuf[6]; /* sendebuffer fuer die Request-Commandos */
   UCHAR empfbuf[6];
 
   modTeiler = 0x100;
@@ -2780,50 +2820,50 @@ int datenlesen_D1(int anz_datensaetze)
   middlebyte = 0;
   merkmiddlebyte = middlebyte;
 
-  sendbuf[0]=VERSIONSABFRAGE;   /* Senden der Versionsabfrage */
+  sendbuf[0] = VERSIONSABFRAGE; /* Senden der Versionsabfrage */
   if (usb_zugriff)
   {
     close_usb();
     init_usb();
     fd_set rfds;
     struct timeval tv;
-    int retval=0;
-    int retry=0;
-    int retry_interval=2; 
-    
-    write_erg=write(fd,sendbuf,1);
-    if (write_erg == 1)    /* Lesen der Antwort*/
+    int retval = 0;
+    int retry = 0;
+    int retry_interval = 2;
+
+    write_erg = write(fd, sendbuf, 1);
+    if (write_erg == 1) /* Lesen der Antwort */
     {
       do
       {
-        in_bytes=0;
-        FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+        in_bytes = 0;
+        FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
         tv.tv_sec = retry_interval; /* Wait up to five seconds. */
         tv.tv_usec = 0;
-        retval = select(fd+1, &rfds, NULL, NULL, &tv);
+        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
         if (retval == -1)
           perror("select(fd)");
         else if (retval)
         {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+          fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-          if (FD_ISSET(fd,&rfds))
+          if (FD_ISSET(fd, &rfds))
           {
             ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+            fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
             if (in_bytes == 1)
             {
-              result=read(fd,empfbuf,1);
-              retry=4;
+              result = read(fd, empfbuf, 1);
+              retry = 4;
             }
           }
         }
-      } while( retry < 3 && in_bytes != 0);
+      } while (retry < 3 && in_bytes != 0);
     }
   }
   if (ip_zugriff)
@@ -2843,70 +2883,74 @@ int datenlesen_D1(int anz_datensaetze)
         do_cleanup();
         return 3;
       }
-    }  /* if (!ip_first) */
-    write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort */
-      result  = recv(sock,empfbuf,1,0);
+    } /* if (!ip_first) */
+    write_erg = send(sock, sendbuf, 1, 0);
+    if (write_erg == 1) /* Lesen der Antwort */
+      result = recv(sock, empfbuf, 1, 0);
   }
 
   /* fuellen des Sendebuffer - 6 Byte */
   sendbuf[0] = DATENBEREICHLESEN;
   // Startadressen von Kopfsatzlesen:
-  sendbuf[1] = *start_adresse;     /* Beginn des Datenbereiches (low vor high) */
-  sendbuf[2] = *(start_adresse+1);
-  sendbuf[3] = *(start_adresse+2);
-  sendbuf[4] = 0x01;  /* Anzahl der zu lesenden Rahmen */
+  sendbuf[1] = *start_adresse; /* Beginn des Datenbereiches (low vor high) */
+  sendbuf[2] = *(start_adresse + 1);
+  sendbuf[3] = *(start_adresse + 2);
+  sendbuf[4] = 0x01; /* Anzahl der zu lesenden Rahmen */
 
-  switch (sendbuf[1])  // vorbelegen lowbyte bei Startadr. > 00 00 00
+  switch (sendbuf[1]) // vorbelegen lowbyte bei Startadr. > 00 00 00
   {
-    case 0x00: lowbyte = 0; break;
-    case 0x80: lowbyte = 1; break;
+  case 0x00:
+    lowbyte = 0;
+    break;
+  case 0x80:
+    lowbyte = 1;
+    break;
   }
 
-  for(;i<anz_datensaetze;i++)
+  for (; i < anz_datensaetze; i++)
   {
-    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler;  /* Pruefziffer */
+    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
 
     if (usb_zugriff)
     {
       fd_set rfds;
       struct timeval tv;
-      int retval=0;
-      int retry=0;
-      int retry_interval=2; 
-      write_erg=write(fd,sendbuf,6);
-      if (write_erg == 6)    /* Lesen der Antwort*/
+      int retval = 0;
+      int retry = 0;
+      int retry_interval = 2;
+      write_erg = write(fd, sendbuf, 6);
+      if (write_erg == 6) /* Lesen der Antwort */
       {
-         do
+        do
         {
-          in_bytes=0;
-          FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+          in_bytes = 0;
+          FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
           FD_SET(fd, &rfds);
           tv.tv_sec = retry_interval; /* Wait up to five seconds. */
           tv.tv_usec = 0;
-          retval = select(fd+1, &rfds, NULL, NULL, &tv);
+          retval = select(fd + 1, &rfds, NULL, NULL, &tv);
           zeitstempel();
           if (retval == -1)
             perror("select(fd)");
           else if (retval)
           {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+            fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-            if (FD_ISSET(fd,&rfds))
+            if (FD_ISSET(fd, &rfds))
             {
               ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+              fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
               if (in_bytes == Bytes_for_0xD1) /* 127 */
               {
-                result=read(fd, u_dsatz_uvr,Bytes_for_0xD1);
-                retry=4;
+                result = read(fd, u_dsatz_uvr, Bytes_for_0xD1);
+                retry = 4;
               }
             }
           }
-        } while( retry < 3 && in_bytes != 0);
+        } while (retry < 3 && in_bytes != 0);
       }
     }
     if (ip_zugriff)
@@ -2926,206 +2970,210 @@ int datenlesen_D1(int anz_datensaetze)
           do_cleanup();
           return 3;
         }
-       }  /* if (!ip_first) */
+      } /* if (!ip_first) */
 
-       write_erg=send(sock,sendbuf,6,0);
-       if (write_erg == 6)    /* Lesen der Antwort */
-          result  = recv(sock, u_dsatz_uvr,Bytes_for_0xD1,0);
+      write_erg = send(sock, sendbuf, 6, 0);
+      if (write_erg == 6) /* Lesen der Antwort */
+        result = recv(sock, u_dsatz_uvr, Bytes_for_0xD1, 0);
     } /* if (ip_zugriff) */
 
-//**************************************************************************************** !!!!!!!!
-      pruefsumme = berechnepruefziffer_modus_D1( &u_dsatz_uvr[0], result );
+    //**************************************************************************************** !!!!!!!!
+    pruefsumme = berechnepruefziffer_modus_D1(&u_dsatz_uvr[0], result);
 #if DEBUG > 3
-      printf("Pruefsumme berechnet: %x in Byte %d erhalten %x\n",pruefsumme,result,u_dsatz_uvr[0].DS_alles.all_bytes[result-1]);
+    printf("Pruefsumme berechnet: %x in Byte %d erhalten %x\n", pruefsumme, result, u_dsatz_uvr[0].DS_alles.all_bytes[result - 1]);
 #endif
 
-    if (u_dsatz_uvr[0].DS_alles.all_bytes[result-1] == pruefsumme )
-    {  /*Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-#if DEBUG > 4
-    print_dsatz_uvr1611_content(u_dsatz_uvr);
+    if (u_dsatz_uvr[0].DS_alles.all_bytes[result - 1] == pruefsumme)
+    { /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
+  #if DEBUG > 4
+      print_dsatz_uvr1611_content(u_dsatz_uvr);
       int zz;
-      for (zz=0;zz<result-1;zz++)
-        fprintf(stderr, "%2x ",u_dsatz_uvr[0].DS_alles.all_bytes[zz]);
-      fprintf(stderr, "\nuvr_typ(1): 0x%x uvr_typ(2): 0x%x \n",uvr_typ,uvr_typ2);
-      fprintf(stderr, "%2x \n",u_dsatz_uvr[0].DS_alles.all_bytes[59]);
-#endif
-      if ( i == 0 ) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
+      for (zz = 0; zz < result - 1; zz++)
+      fprintf(stderr, "%2x ", u_dsatz_uvr[0].DS_alles.all_bytes[zz]);
+      fprintf(stderr, "\nuvr_typ(1): 0x%x uvr_typ(2): 0x%x \n", uvr_typ, uvr_typ2);
+      fprintf(stderr, "%2x \n", u_dsatz_uvr[0].DS_alles.all_bytes[59]);
+  #endif
+      if (i == 0) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
       {
-        if (uvr_typ == UVR1611)
-        {
-          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat,u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
-          merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
-        }
-        if (uvr_typ == UVR61_3)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
-          merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
-        }
+      if (uvr_typ == UVR1611)
+      {
+        tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
+        merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
+      }
+      if (uvr_typ == UVR61_3)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
+        merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
+      }
 
-        if ( tmp_erg == 0 ) /* Das erste  */
+      if (tmp_erg == 0) /* Das erste  */
+      {
+        printf("Der Logfile-Name (1) konnte nicht erzeugt werden!");
+        exit(-1);
+      }
+      /* ********* 2. Geraet ********* */
+      if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
+      }
+      else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
+      }
+      if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
+      }
+      else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
+      {
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
+      }
+      if (tmp_erg == 0)
+      {
+        printf("Der Logfile-Name (2) konnte nicht erzeugt werden!");
+        exit(-1);
+      }
+      else
+      {
+        if (open_logfile(LogFileName[1], 1) == -1)
         {
-          printf("Der Logfile-Name (1) konnte nicht erzeugt werden!");
-          exit(-1);
+        printf("Das LogFile kann nicht geoeffnet werden!\n");
+        exit(-1);
         }
-        /* ********* 2. Geraet ********* */
-        if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
+        if (open_logfile(LogFileName[2], 2) == -1)
         {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
-        }
-        else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
-        }
-        if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
-        }
-        else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
-        {
-          tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
-        }
-        if ( tmp_erg == 0 )
-        {
-          printf("Der Logfile-Name (2) konnte nicht erzeugt werden!");
-          exit(-1);
-        }
-        else
-        {
-          if ( open_logfile(LogFileName[1], 1) == -1 )
-          {
-            printf("Das LogFile kann nicht geoeffnet werden!\n");
-            exit(-1);
-          }
-          if ( open_logfile(LogFileName[2], 2) == -1 )
-          {
-            printf("Das LogFile kann nicht geoeffnet werden!\n");
-            exit(-1);
-          }
+        printf("Das LogFile kann nicht geoeffnet werden!\n");
+        exit(-1);
         }
       }
+      }
       /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
-      if ( uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat )
-        monatswechsel = 1;
-      if ( uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat )
-        monatswechsel = 1;
+      if (uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat)
+      monatswechsel = 1;
+      if (uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat)
+      monatswechsel = 1;
 
-      if ( monatswechsel == 1 )
+      if (monatswechsel == 1)
       {
-        printf("Monatswechsel!\n");
-        if ( close_logfile() == -1)
+      printf("Monatswechsel!\n");
+      if (close_logfile() == -1)
+      {
+        printf("Fehler beim Monatswechsel: Cannot close logfile!");
+        exit(-1);
+      }
+      else
+      {
+        if (uvr_typ == UVR1611)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr));
+        if (uvr_typ == UVR61_3)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
+
+        /* ********* 2. Geraet ********* */
+        if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
+        else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
+
+        if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
+        else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
+        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
+
+        if (tmp_erg == 0)
         {
-          printf("Fehler beim Monatswechsel: Cannot close logfile!");
-          exit(-1);
+        printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
+        exit(-1);
         }
         else
         {
-          if (uvr_typ == UVR1611)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat,u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr));
-          if (uvr_typ == UVR61_3)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
-
-          /* ********* 2. Geraet ********* */
-          if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
-          else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
-
-          if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
-          else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
-            tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat,u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
-
-          if ( tmp_erg == 0 )
-          {
-            printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
-            exit(-1);
-          }
-          else
-          {
-            if ( open_logfile(LogFileName[1], 1) == -1 )
-            {
-              printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
-              exit(-1);
-            }
-            if ( open_logfile(LogFileName[2], 2) == -1 )
-            {
-              printf("Das LogFile kann nicht geoeffnet werden!\n");
-              exit(-1);
-            }
-          }
+        if (open_logfile(LogFileName[1], 1) == -1)
+        {
+          printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
+          exit(-1);
         }
+        if (open_logfile(LogFileName[2], 2) == -1)
+        {
+          printf("Das LogFile kann nicht geoeffnet werden!\n");
+          exit(-1);
+        }
+        }
+      }
       } /* Ende: if ( merk_monat != dsatz_uvr1611[0].datum_zeit.monat ) */
 
       if (uvr_typ == UVR1611)
-        merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
+      merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
       if (uvr_typ == UVR61_3)
-        merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
+      merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
 
       /* Daten in die Winsol-Struktur kopieren */
       if (uvr_typ == UVR1611)
-        copy_UVR2winsol_D1_1611( &u_dsatz_uvr[0], &dsatz_winsol[0], 1 );
+      copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol[0], 1);
       if (uvr_typ == UVR61_3)
-        copy_UVR2winsol_D1_61_3( &u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0], 1);
+      copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0], 1);
       /* schreiben der gelesenen Rohdaten in das LogFile */
       if (uvr_typ == UVR1611)
-        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
+      tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
       if (uvr_typ == UVR61_3)
-        tmp_erg = fwrite(puffer_dswinsol_uvr61_3,59,1,fp_logfile);
+      tmp_erg = fwrite(puffer_dswinsol_uvr61_3, 59, 1, fp_logfile);
 
       /* ********* 2. Geraet ********* */
       /* Daten in die Winsol-Struktur kopieren */
       if (uvr_typ2 == UVR1611)
-        copy_UVR2winsol_D1_1611( &u_dsatz_uvr[0], &dsatz_winsol_2[0], 2 );
+      copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol_2[0], 2);
       if (uvr_typ2 == UVR61_3)
-        copy_UVR2winsol_D1_61_3( &u_dsatz_uvr[0], &dsatz_winsol_uvr61_3_2[0], 2 );
+      copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3_2[0], 2);
       /* schreiben der gelesenen Rohdaten in das LogFile */
       if (uvr_typ2 == UVR1611)
-        tmp_erg = fwrite(puffer_dswinsol_2,59,1,fp_logfile_2);
+      tmp_erg = fwrite(puffer_dswinsol_2, 59, 1, fp_logfile_2);
       if (uvr_typ2 == UVR61_3)
-        tmp_erg = fwrite(puffer_dswinsol_uvr61_3_2 ,59,1,fp_logfile_2);
+      tmp_erg = fwrite(puffer_dswinsol_uvr61_3_2, 59, 1, fp_logfile_2);
 
-      if ( ((i%100) == 0) && (i > 0) )
-        printf("%d Datensaetze geschrieben.\n",i);
+      if (((i % 100) == 0) && (i > 0))
+      printf("%d Datensaetze geschrieben.\n", i);
 
-      if ( *end_adresse == sendbuf[1] && *(end_adresse+1) == sendbuf[2] && *(end_adresse+2) == sendbuf[3] )
-            break;
+      if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3])
+      break;
 
-      /* Hochzaehlen der Startadressen                                      */
+      /* Hochzaehlen der Startadressen */
       if (lowbyte == 0)
-        lowbyte++;
+      lowbyte++;
       else
       {
-        lowbyte = 0;
-        middlebyte++;
+      lowbyte = 0;
+      middlebyte++;
       }
 
       switch (lowbyte)
       {
-        case 0: sendbuf[1] = 0x00; break;
-        case 1: sendbuf[1] = 0x80; break;
+      case 0:
+      sendbuf[1] = 0x00;
+      break;
+      case 1:
+      sendbuf[1] = 0x80;
+      break;
       }
 
-      if (middlebyte > merkmiddlebyte)   /* das mittlere Byte muss erhoeht werden */
+      if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
       {
-        if ( sendbuf[2] != 0xFE )
-        {
-          sendbuf[2] = sendbuf[2] + 0x02;
-          merkmiddlebyte = middlebyte;
-        }
-        else /* das highbyte muss erhoeht werden */
-        {
-          sendbuf[2] = 0x00;
-          sendbuf[3] = sendbuf[3] + 0x01;
-          merkmiddlebyte = middlebyte;
-        }
+      if (sendbuf[2] != 0xFE)
+      {
+        sendbuf[2] = sendbuf[2] + 0x02;
+        merkmiddlebyte = middlebyte;
+      }
+      else /* das highbyte muss erhoeht werden */
+      {
+        sendbuf[2] = 0x00;
+        sendbuf[3] = sendbuf[3] + 0x01;
+        merkmiddlebyte = middlebyte;
+      }
       }
 
-          if (sendbuf[3] > 0x0F ) // "Speicherueberlauf" im BL-Net
-          {
-                sendbuf[1] = 0x00;
-                sendbuf[2] = 0x00;
-                sendbuf[3] = 0x00;
-          }
+      if (sendbuf[3] > 0x0F) // "Speicherueberlauf" im BL-Net
+      {
+      sendbuf[1] = 0x00;
+      sendbuf[2] = 0x00;
+      sendbuf[3] = 0x00;
+      }
 
       monatswechsel = 0;
     } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
@@ -3133,17 +3181,17 @@ int datenlesen_D1(int anz_datensaetze)
     {
       if (merk_i < 5)
       {
-        i--; /* falsche Pruefziffer - also nochmals lesen */
-#ifdef DEBUG
-        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n",merk_i);
-#endif
-        merk_i++; /* hochzaehlen bis 5 */
+      i--; /* falsche Pruefziffer - also nochmals lesen */
+  #ifdef DEBUG
+      fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+  #endif
+      merk_i++; /* hochzaehlen bis 5 */
       }
       else
       {
-        merk_i = 0;
-        fehlerhafte_ds++;
-        printf ( " fehlerhafter2 Datensatz - insgesamt:%d\n",fehlerhafte_ds);
+      merk_i = 0;
+      fehlerhafte_ds++;
+      printf(" fehlerhafter2 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
       }
     }
   }
@@ -3155,29 +3203,29 @@ int datenlesen_D1(int anz_datensaetze)
 int datenlesen_DC(int anz_datensaetze)
 {
   unsigned modTeiler;
-  int i=0, j=0, y=0, merk_i=0, fehlerhafte_ds=0, result, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
-  int Bytes_for_0xDC = 524, monatswechsel = 0, anzahl_can_rahmen = 0, marker = 0, in_bytes=0;
+  int i = 0, j = 0, y = 0, merk_i = 0, fehlerhafte_ds = 0, result, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
+  int Bytes_for_0xDC = 524, monatswechsel = 0, anzahl_can_rahmen = 0, marker = 0, in_bytes = 0;
   int pruefsum_check = 0;
   int Speicherueberlauf = 0; /* = 1 wenn Ringspeicher komplett voll und wird ueberschrieben */
   u_DS_CAN u_dsatz_can[1];
-  DS_Winsol dsatz_winsol[8];  /* 8 Datensaetze moeglich */
+  DS_Winsol dsatz_winsol[8]; /* 8 Datensaetze moeglich */
   DS_Winsol *puffer_dswinsol = &dsatz_winsol[0];
   DS_CANBC dsatz_canbc[8];
   DS_CANBC *puffer_dscanbc = &dsatz_canbc[0];
 
   UCHAR pruefsumme = 0, merk_monat = 0;
-  UCHAR sendbuf[6];       /*  sendebuffer fuer die Request-Commandos*/
+  UCHAR sendbuf[6]; /*  sendebuffer fuer die Request-Commandos*/
   UCHAR empfbuf[18];
   UCHAR tmp_buf[525];
 
 #if DEBUG > 3
-/*  ##### Debug 3-CAN-Rahmen ########  */
-  FILE *fp_logfile_debug=NULL;
+  /*  ##### Debug 3-CAN-Rahmen ########  */
+  FILE *fp_logfile_debug = NULL;
   char DebugFile[] = "debug.log";
-  FILE *fp_logfile_debug2=NULL;
+  FILE *fp_logfile_debug2 = NULL;
   char DebugFile2[] = "debug2.log";
   u_DS_CAN *puffer_u_dsatz_can = &u_dsatz_can[0];
-/*  ##### Debug 3-CAN-Rahmen ########  */
+  /*  ##### Debug 3-CAN-Rahmen ########  */
 #endif
 
   modTeiler = 0x100;
@@ -3189,72 +3237,72 @@ int datenlesen_DC(int anz_datensaetze)
   merkmiddlebyte = middlebyte;
 
 #if DEBUG > 3
-/*  ##### Debug 3-CAN-Rahmen ########  */
-  if ((fp_logfile_debug=fopen(DebugFile,"w")) == NULL) /* dann Neuerstellung der Logdatei */
+  /*  ##### Debug 3-CAN-Rahmen ########  */
+  if ((fp_logfile_debug = fopen(DebugFile, "w")) == NULL) /* dann Neuerstellung der Logdatei */
   {
-     printf("Debug-Datei %s konnte nicht erstellt werden\n",DebugFile);
+    printf("Debug-Datei %s konnte nicht erstellt werden\n", DebugFile);
   }
 
-if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der Logdatei */
+  if ((fp_logfile_debug2 = fopen(DebugFile2, "w")) == NULL) /* dann Neuerstellung der Logdatei */
   {
-     printf("Debug2-Datei %s konnte nicht erstellt werden\n",DebugFile);
+    printf("Debug2-Datei %s konnte nicht erstellt werden\n", DebugFile2);
   }
-/*  ##### Debug 3-CAN-Rahmen ########  */
+  /*  ##### Debug 3-CAN-Rahmen ########  */
 #endif
 
-  for(i=1;i<525;i++)
+  for (i = 1; i < 525; i++)
   {
     u_dsatz_can[0].all_bytes[i] = 0xFF;
   }
 
-  sendbuf[0]=VERSIONSABFRAGE;   /* Senden der Versionsabfrage */
+  sendbuf[0] = VERSIONSABFRAGE; /* Senden der Versionsabfrage */
   if (usb_zugriff)
   {
     close_usb();
     init_usb();
     fd_set rfds;
     struct timeval tv;
-    int retval=0;
-    int retry=0;
-    int retry_interval=2; 
-    
-    write_erg=write(fd,sendbuf,1);
-    if (write_erg == 1)    /* Lesen der Antwort*/
-      result=read(fd,empfbuf,1);
-    sendbuf[0]=KONFIGCAN;
-    write_erg=write(fd,sendbuf,1);
-    if (write_erg == 1)    /* Lesen der Antwort*/
+    int retval = 0;
+    int retry = 0;
+    int retry_interval = 2;
+
+    write_erg = write(fd, sendbuf, 1);
+    if (write_erg == 1) /* Lesen der Antwort*/
+      result = read(fd, empfbuf, 1);
+    sendbuf[0] = KONFIGCAN;
+    write_erg = write(fd, sendbuf, 1);
+    if (write_erg == 1) /* Lesen der Antwort*/
     {
       do
       {
-        in_bytes=0;
-        FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+        in_bytes = 0;
+        FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
         tv.tv_sec = retry_interval; /* Wait up to five seconds. */
         tv.tv_usec = 0;
-        retval = select(fd+1, &rfds, NULL, NULL, &tv);
+        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
         if (retval == -1)
           perror("select(fd)");
         else if (retval)
         {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+          fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-          if (FD_ISSET(fd,&rfds))
+          if (FD_ISSET(fd, &rfds))
           {
             ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+            fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
             if (in_bytes == 18)
             {
-              result=read(fd,empfbuf,18);   /* ?? */
-              retry=4;
+              result = read(fd, empfbuf, 18); /* ?? */
+              retry = 4;
             }
           }
         }
-      } while( retry < 3 && in_bytes != 0);
+      } while (retry < 3 && in_bytes != 0);
     }
   }
   if (ip_zugriff)
@@ -3274,124 +3322,157 @@ if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der
         do_cleanup();
         return 3;
       }
-    }  /* if (!ip_first) */
-    write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort */
-      result  = recv(sock,empfbuf,1,0);
+    } /* if (!ip_first) */
+    write_erg = send(sock, sendbuf, 1, 0);
+    if (write_erg == 1) /* Lesen der Antwort */
+      result = recv(sock, empfbuf, 1, 0);
 
-    sendbuf[0]=KONFIGCAN;
-    write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort */
-      result  = recv(sock,empfbuf,18,0);
+    sendbuf[0] = KONFIGCAN;
+    write_erg = send(sock, sendbuf, 1, 0);
+    if (write_erg == 1) /* Lesen der Antwort */
+      result = recv(sock, empfbuf, 18, 0);
   }
 
   anzahl_can_rahmen = empfbuf[0];
 #if DEBUG > 3
-  fprintf(stderr,"Anzahl CAN-Datenrahmen: %d. \n",anzahl_can_rahmen);
+  fprintf(stderr, "Anzahl CAN-Datenrahmen: %d. \n", anzahl_can_rahmen);
 
   /*  ##### Debug 3-CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2,"Anzahl CAN-Datenrahmen: %d. \n",anzahl_can_rahmen);
+  fprintf(fp_logfile_debug2, "Anzahl CAN-Datenrahmen: %d. \n", anzahl_can_rahmen);
 #endif
 
-  if ( *start_adresse > 0 || *(start_adresse+1) > 0 || *(start_adresse+2) > 0 )
-        Speicherueberlauf = 1;  /* Der Ringspeicher im BL-Net ist voll */
+  if (*start_adresse > 0 || *(start_adresse + 1) > 0 || *(start_adresse + 2) > 0)
+    Speicherueberlauf = 1; /* Der Ringspeicher im BL-Net ist voll */
 
   /* fuellen des Sendebuffer - 6 Byte */
   sendbuf[0] = DATENBEREICHLESEN;
   // Startadressen von Kopfsatzlesen:
-  sendbuf[1] = *start_adresse;      /* Beginn des Datenbereiches (low vor high) */
-  sendbuf[2] = *(start_adresse+1);
-  sendbuf[3] = *(start_adresse+2);
-  sendbuf[4] = 0x01;  /* Anzahl der zu lesenden Rahmen */
+  sendbuf[1] = *start_adresse; /* Beginn des Datenbereiches (low vor high) */
+  sendbuf[2] = *(start_adresse + 1);
+  sendbuf[3] = *(start_adresse + 2);
+  sendbuf[4] = 0x01; /* Anzahl der zu lesenden Rahmen */
 
-  switch (sendbuf[1])  // vorbelegen lowbyte bei Startadr. > 00 00 00
+  switch (sendbuf[1]) // vorbelegen lowbyte bei Startadr. > 00 00 00
   {
-    case 0x00: lowbyte = 0; break;
-    case 0x40: switch(anzahl_can_rahmen)
-               {
-                  case 1: lowbyte = 1; break;
-                  case 3: lowbyte = 3; break;
-                  case 5: lowbyte = 1; break;
-                  case 7: lowbyte = 3; break;
-               }
-               break;
-    case 0x80: switch(anzahl_can_rahmen)
-               {
-                  case 1: lowbyte = 2; break;
-                  case 2: lowbyte = 3; break;
-                  case 3: lowbyte = 2; break;
-                  case 5: lowbyte = 2; break;
-                  case 6: lowbyte = 3; break;
-                  case 7: lowbyte = 2; break;
-               }
-               break;
-    case 0xc0: switch(anzahl_can_rahmen)
-               {
-                  case 1: lowbyte = 3; break;
-                  case 3: lowbyte = 1; break;
-                  case 5: lowbyte = 3; break;
-                  case 7: lowbyte = 1; break;
-               }
-               break;
+  case 0x00:
+    lowbyte = 0;
+    break;
+  case 0x40:
+    switch (anzahl_can_rahmen)
+    {
+    case 1:
+      lowbyte = 1;
+      break;
+    case 3:
+      lowbyte = 3;
+      break;
+    case 5:
+      lowbyte = 1;
+      break;
+    case 7:
+      lowbyte = 3;
+      break;
+    }
+    break;
+  case 0x80:
+    switch (anzahl_can_rahmen)
+    {
+    case 1:
+      lowbyte = 2;
+      break;
+    case 2:
+      lowbyte = 3;
+      break;
+    case 3:
+      lowbyte = 2;
+      break;
+    case 5:
+      lowbyte = 2;
+      break;
+    case 6:
+      lowbyte = 3;
+      break;
+    case 7:
+      lowbyte = 2;
+      break;
+    }
+    break;
+  case 0xc0:
+    switch (anzahl_can_rahmen)
+    {
+    case 1:
+      lowbyte = 3;
+      break;
+    case 3:
+      lowbyte = 1;
+      break;
+    case 5:
+      lowbyte = 3;
+      break;
+    case 7:
+      lowbyte = 1;
+      break;
+    }
+    break;
   }
 
 #if DEBUG > 3
-/*  ##### Debug 3-CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2,"Anzahl Datensaetze: %d. \n",anz_datensaetze);
+  /*  ##### Debug 3-CAN-Rahmen ########  */
+  fprintf(fp_logfile_debug2, "Anzahl Datensaetze: %d. \n", anz_datensaetze);
 #endif
 
-  for(i=0;i<anz_datensaetze;i++)
+  for (i = 0; i < anz_datensaetze; i++)
   {
-    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler;  /* Pruefziffer */
+    sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
 
-/* DEBUG */
-// fprintf(stderr," CAN-Logging-Test: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
+    /* DEBUG */
+    // fprintf(stderr," CAN-Logging-Test: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
 
 #if DEBUG > 3
-/*  ##### Debug CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2," CAN-Logging-Debug: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
+    /*  ##### Debug CAN-Rahmen ########  */
+    fprintf(fp_logfile_debug2, " CAN-Logging-Debug: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
 #endif
 
     if (usb_zugriff)
     {
       fd_set rfds;
       struct timeval tv;
-      int retval=0;
-      int retry=0;
-      int retry_interval=2; 
-      write_erg=write(fd,sendbuf,6);
-      if (write_erg == 6)    /* Lesen der Antwort*/
+      int retval = 0;
+      int retry = 0;
+      int retry_interval = 2;
+      write_erg = write(fd, sendbuf, 6);
+      if (write_erg == 6) /* Lesen der Antwort*/
       {
-         do
+        do
         {
-          in_bytes=0;
-          FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+          in_bytes = 0;
+          FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
           FD_SET(fd, &rfds);
           tv.tv_sec = retry_interval; /* Wait up to five seconds. */
           tv.tv_usec = 0;
-          retval = select(fd+1, &rfds, NULL, NULL, &tv);
+          retval = select(fd + 1, &rfds, NULL, NULL, &tv);
           zeitstempel();
           if (retval == -1)
             perror("select(fd)");
           else if (retval)
           {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+            fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-            if (FD_ISSET(fd,&rfds))
+            if (FD_ISSET(fd, &rfds))
             {
               ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+              fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
               if (in_bytes == Bytes_for_0xDC) /* 524 */
               {
-                result=read(fd, u_dsatz_can,Bytes_for_0xDC);
-                retry=4;
+                result = read(fd, u_dsatz_can, Bytes_for_0xDC);
+                retry = 4;
               }
             }
           }
-        } while( retry < 3 && in_bytes != 0);
+        } while (retry < 3 && in_bytes != 0);
       }
     }
     if (ip_zugriff)
@@ -3411,143 +3492,189 @@ if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der
           do_cleanup();
           return 3;
         }
-      }  /* if (!ip_first) */
+      } /* if (!ip_first) */
 
       result = 0;
       marker = 0;
-      write_erg=send(sock,sendbuf,6,0);
-      if (write_erg == 6)    /* Lesen der Antwort */
+      write_erg = send(sock, sendbuf, 6, 0);
+      if (write_erg == 6) /* Lesen der Antwort */
       {
-         do
-         {
-            result = recv(sock, tmp_buf,Bytes_for_0xDC,0);
-            if (result > 0)
-            {
-              for (j=0;j<result;j++)
-                 u_dsatz_can[0].all_bytes[marker+j] = tmp_buf[j];
-              marker = marker + result;
-            }
-         } while ( marker < ((anzahl_can_rahmen * 61) + 3) );
+        do
+        {
+          result = recv(sock, tmp_buf, Bytes_for_0xDC, 0);
+          if (result > 0)
+          {
+            for (j = 0; j < result; j++)
+              u_dsatz_can[0].all_bytes[marker + j] = tmp_buf[j];
+            marker = marker + result;
+          }
+        } while (marker < ((anzahl_can_rahmen * 61) + 3));
       }
     } /* if (ip_zugriff) */
 
     if (uvr_typ == UVR1611)
       pruefsumme = berechnepruefziffer_uvr1611_CAN(u_dsatz_can, anzahl_can_rahmen);
 
-  if (uvr_typ == UVR1611)
-  {
-    switch(anzahl_can_rahmen)
-        {
-          case 1: if (u_dsatz_can[0].DS_CAN_1.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 2: if (u_dsatz_can[0].DS_CAN_2.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 3: if (u_dsatz_can[0].DS_CAN_3.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 4: if (u_dsatz_can[0].DS_CAN_4.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 5: if (u_dsatz_can[0].DS_CAN_5.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 6: if (u_dsatz_can[0].DS_CAN_6.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 7: if (u_dsatz_can[0].DS_CAN_7.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-          case 8: if (u_dsatz_can[0].DS_CAN_8.pruefsum == pruefsumme )
-                    pruefsum_check = 1;
-                break;
-        }
-  }
+    if (uvr_typ == UVR1611)
+    {
+      switch (anzahl_can_rahmen)
+      {
+      case 1:
+        if (u_dsatz_can[0].DS_CAN_1.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 2:
+        if (u_dsatz_can[0].DS_CAN_2.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 3:
+        if (u_dsatz_can[0].DS_CAN_3.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 4:
+        if (u_dsatz_can[0].DS_CAN_4.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 5:
+        if (u_dsatz_can[0].DS_CAN_5.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 6:
+        if (u_dsatz_can[0].DS_CAN_6.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 7:
+        if (u_dsatz_can[0].DS_CAN_7.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      case 8:
+        if (u_dsatz_can[0].DS_CAN_8.pruefsum == pruefsumme)
+          pruefsum_check = 1;
+        break;
+      }
+    }
 
-    if ( pruefsum_check == 1 )
+    if (pruefsum_check == 1)
     {  /*Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-      if ( i == 0 ) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
+      if (i == 0) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
       {
         if (uvr_typ == UVR1611)
         {
-          tmp_erg = ( erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat,u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr,anzahl_can_rahmen) );
+          tmp_erg = (erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen));
           merk_monat = u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat;
         }
-        if ( tmp_erg == 0 )
+        if (tmp_erg == 0)
         {
           printf("Der Logfile-Name konnte nicht erzeugt werden!");
           exit(-1);
         }
         else
         {
-
-// CAN_BC-------------------------------------------------------------------------------------------------------------------
-                     printf("Rahmen %d\n",kopf_DC[0].all_bytes[5]);
-                     int c=0;
-                     int cc=0;
-//                     int can_typ[8];
-                     for (c=0;c<kopf_DC[0].all_bytes[5];c++)
-                     {
-                     cc=c+6;
-                     can_typ[c]=kopf_DC[0].all_bytes[cc];
-                     fprintf(stderr, " Typ%02x: %02X \n", c, can_typ[c]);
-                     }
-// CAN_BC-------------------------------------------------------------------------------------------------------------------
-                     int x;
-                     for(x=1;x<=anzahl_can_rahmen;x++)
-                        {
-                                 if ( open_logfile_CAN(LogFileName[x], x, can_typ) == -1 )
-                                {
-                                  printf("Das LogFile %s kann nicht geoeffnet werden!\n",LogFileName[x]);
-                                  exit(-1);
-                                }
-                        }
+          // CAN_BC-------------------------------------------------------------------------------------------------------------------
+          printf("Rahmen %d\n", kopf_DC[0].all_bytes[5]);
+          int c = 0;
+          int cc = 0;
+          // int can_typ[8];
+          for (c = 0; c < kopf_DC[0].all_bytes[5]; c++)
+          {
+            cc = c + 6;
+            can_typ[c] = kopf_DC[0].all_bytes[cc];
+            fprintf(stderr, " Typ%02x: %02X \n", c, can_typ[c]);
+          }
+          // CAN_BC-------------------------------------------------------------------------------------------------------------------
+          int x;
+          for (x = 1; x <= anzahl_can_rahmen; x++)
+          {
+            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1)
+            {
+              printf("Das LogFile %s kann nicht geoeffnet werden!\n", LogFileName[x]);
+              exit(-1);
+            }
+          }
         }
-
       }
       /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
-      if ( merk_monat != u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat )
+      if (merk_monat != u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat)
         monatswechsel = 1;
 
-      if ( monatswechsel == 1 )
+      if (monatswechsel == 1)
       {
-            switch(anzahl_can_rahmen)
-                {
-                  case 1: fclose(fp_logfile); break;
-                  case 2: fclose(fp_logfile); fclose(fp_logfile_2); break;
-                  case 3: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); break;
-                  case 4: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); fclose(fp_logfile_4); break;
-                  case 5: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); fclose(fp_logfile_4);
-                          fclose(fp_logfile_5); break;
-                  case 6: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); fclose(fp_logfile_4);
-                          fclose(fp_logfile_5); fclose(fp_logfile_6); break;
-                  case 7: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); fclose(fp_logfile_4);
-                          fclose(fp_logfile_5); fclose(fp_logfile_6); fclose(fp_logfile_7); break;
-                  case 8: fclose(fp_logfile); fclose(fp_logfile_2); fclose(fp_logfile_3); fclose(fp_logfile_4);
-                          fclose(fp_logfile_5); fclose(fp_logfile_6); fclose(fp_logfile_7); fclose(fp_logfile_8); break;
-                }
+        switch (anzahl_can_rahmen)
+        {
+        case 1:
+          fclose(fp_logfile);
+          break;
+        case 2:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          break;
+        case 3:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          break;
+        case 4:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          fclose(fp_logfile_4);
+          break;
+        case 5:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          fclose(fp_logfile_4);
+          fclose(fp_logfile_5);
+          break;
+        case 6:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          fclose(fp_logfile_4);
+          fclose(fp_logfile_5);
+          fclose(fp_logfile_6);
+          break;
+        case 7:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          fclose(fp_logfile_4);
+          fclose(fp_logfile_5);
+          fclose(fp_logfile_6);
+          fclose(fp_logfile_7);
+          break;
+        case 8:
+          fclose(fp_logfile);
+          fclose(fp_logfile_2);
+          fclose(fp_logfile_3);
+          fclose(fp_logfile_4);
+          fclose(fp_logfile_5);
+          fclose(fp_logfile_6);
+          fclose(fp_logfile_7);
+          fclose(fp_logfile_8);
+          break;
+        }
 
         printf("Monatswechsel!\n");
 
-                if (uvr_typ == UVR1611)
-            tmp_erg = (erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat,u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr,anzahl_can_rahmen));
-        if ( tmp_erg == 0 )
+        if (uvr_typ == UVR1611)
+          tmp_erg = (erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen));
+        if (tmp_erg == 0)
         {
-           printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
-           exit(-1);
+          printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
+          exit(-1);
         }
         else
         {
-                        int x;
-                        for(x=1;x<=anzahl_can_rahmen;x++)
-                        {
-                                 if ( open_logfile_CAN(LogFileName[x], x, can_typ) == -1 )
-                                {
-                                  printf("Fehler beim Monatswechsel: Das LogFile %s kann nicht geoeffnet werden!\n",LogFileName[x]);
-                                  exit(-1);
-                                }
-                        }
+          int x;
+          for (x = 1; x <= anzahl_can_rahmen; x++)
+          {
+            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1)
+            {
+              printf("Fehler beim Monatswechsel: Das LogFile %s kann nicht geoeffnet werden!\n", LogFileName[x]);
+              exit(-1);
+            }
+          }
         }
       } /* Ende: if ( merk_monat != dsatz_uvr1611[0].datum_zeit.monat ) */
 
@@ -3555,115 +3682,145 @@ if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der
       merk_monat = u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat;
 
       /* uvr_typ == UVR1611 */
-          /* gelesene Datensaetze dem Winsol-Format zuordnen und in Logdateien schreiben */
-          switch(anzahl_can_rahmen)
+      /* gelesene Datensaetze dem Winsol-Format zuordnen und in Logdateien schreiben */
+      switch (anzahl_can_rahmen)
+      {
+        case 1:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_1.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          break;
+        case 2:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_2.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_2.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          break;
+        case 3:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[2], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+    #if DEBUG > 3
+          /*  ##### Debug 3-CAN-Rahmen ########  */
+          tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
+    #endif
+          break;
+        case 4:
+          if (can_typ[0] == UVR1611)
           {
-            case 1: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_1.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        break;
-            case 2: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_2.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_2.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                        break;
-            case 3: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_3.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                    copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_3.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                    copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_3.DS_CAN[2], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3);
-#if DEBUG > 3
-/*  ##### Debug 3-CAN-Rahmen ########  */
-        tmp_erg = fwrite(puffer_u_dsatz_can,marker,1,fp_logfile_debug);
-#endif
-                        break;
-            case 4:     if(can_typ[0]==UVR1611){copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_4.DS_CAN[0], &dsatz_winsol[0] );  
-				           tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile); }
-                        if(can_typ[0]==CAN_BC){copy_UVR2winsol_1611_CANBC( &u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[0], &dsatz_canbc[0] ); 
-                           tmp_erg = fwrite(puffer_dscanbc,59,1,fp_logfile);  }
-                        if(can_typ[1]==UVR1611){copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_4.DS_CAN[1], &dsatz_winsol[0] ); 
-							tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2); }
-                        if(can_typ[1]==CAN_BC){copy_UVR2winsol_1611_CANBC( &u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[1], &dsatz_canbc[0] ); 
-                            tmp_erg = fwrite(puffer_dscanbc,59,1,fp_logfile_2);  }
-                        if(can_typ[2]==UVR1611){copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_4.DS_CAN[2], &dsatz_winsol[0] );
-							tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3); }
-                        if(can_typ[2]==CAN_BC){copy_UVR2winsol_1611_CANBC( &u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[2], &dsatz_canbc[0] ); 
-                            tmp_erg = fwrite(puffer_dscanbc,59,1,fp_logfile_3); }
-//                       fprintf(stderr, " Typ2: %02X \n",can_typ[3]);
-                        if(can_typ[3]==UVR1611){copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_4.DS_CAN[3], &dsatz_winsol[0] );
-							tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_4); }
-                        if(can_typ[3]==CAN_BC){copy_UVR2winsol_1611_CANBC( &u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[3], &dsatz_canbc[0] ); 
-//                        copy_UVR2winsol_1611_CANBC( &u_dsatz_can[0].DS_CAN_4.DS_CAN[3], &dsatz_winsol[0] );
-                            tmp_erg = fwrite(puffer_dscanbc,59,1,fp_logfile_4); }
-                        break;
-            case 5: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_5.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_5.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_5.DS_CAN[2], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_5.DS_CAN[3], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_4);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_5.DS_CAN[4], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_5);
-#if DEBUG > 3
-        tmp_erg = fwrite(puffer_u_dsatz_can,marker,1,fp_logfile_debug);
-#endif
-                        break;
-            case 6: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[2], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[3], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_4);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[4], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_5);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_6.DS_CAN[5], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_6);
-                        break;
-            case 7: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[2], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[3], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_4);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[4], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_5);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[5], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_6);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_7.DS_CAN[6], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_7);
-                        break;
-            case 8: copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[0], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile);
-                        copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[1], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_2);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[2], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_3);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[3], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_4);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[4], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_5);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[5], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_6);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[6], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_7);
-                                copy_UVR2winsol_1611_CAN( &u_dsatz_can[0].DS_CAN_8.DS_CAN[7], &dsatz_winsol[0] );
-                        tmp_erg = fwrite(puffer_dswinsol,59,1,fp_logfile_8);
-                        break;
+            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[0], &dsatz_winsol[0]);
+            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
           }
+          if (can_typ[0] == CAN_BC)
+          {
+            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[0], &dsatz_canbc[0]);
+            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile);
+          }
+          if (can_typ[1] == UVR1611)
+          {
+            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[1], &dsatz_winsol[0]);
+            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          }
+          if (can_typ[1] == CAN_BC)
+          {
+            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[1], &dsatz_canbc[0]);
+            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_2);
+          }
+          if (can_typ[2] == UVR1611)
+          {
+            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[2], &dsatz_winsol[0]);
+            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+          }
+          if (can_typ[2] == CAN_BC)
+          {
+            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[2], &dsatz_canbc[0]);
+            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_3);
+          }
+          if (can_typ[3] == UVR1611)
+          {
+            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[3], &dsatz_winsol[0]);
+            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+          }
+          if (can_typ[3] == CAN_BC)
+          {
+            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[3], &dsatz_canbc[0]);
+            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_4);
+          }
+          break;
+        case 5:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[2], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[3], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[4], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+    #if DEBUG > 3
+          tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
+    #endif
+          break;
+        case 6:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[2], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[3], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[4], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[5], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+          break;
+        case 7:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[2], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[3], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[4], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[5], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[6], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
+          break;
+        case 8:
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[0], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[1], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[2], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[3], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[4], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[5], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[6], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
+          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[7], &dsatz_winsol[0]);
+          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_8);
+          break;
+      }
 
-      if ( ((i%100) == 0) && (i > 0) )
-        printf("%d Datensaetze geschrieben.\n",i);
+      if (((i % 100) == 0) && (i > 0))
+        printf("%d Datensaetze geschrieben.\n", i);
 
-      if ( *end_adresse == sendbuf[1] && *(end_adresse+1) == sendbuf[2] && *(end_adresse+2) == sendbuf[3] )
-            break;
+      if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3])
+        break;
 
-      /* Hochzaehlen der Startadressen                                      */
+      /* Hochzaehlen der Startadressen */
       if (lowbyte <= 2)
         lowbyte++;
       else
@@ -3671,192 +3828,247 @@ if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der
         lowbyte = 0;
       }
 
-          switch (anzahl_can_rahmen)
+      switch (anzahl_can_rahmen)
+      {
+        case 1:
+          switch (lowbyte)
           {
-            case 1: switch (lowbyte)
-                {
-                   case 0: sendbuf[1] = 0x00; middlebyte++; break;
-                   case 1: sendbuf[1] = 0x40; break;
-                   case 2: sendbuf[1] = 0x80; break;
-                   case 3: sendbuf[1] = 0xc0; break;
-                }
-                                if (middlebyte > merkmiddlebyte)   /* das mittlere Byte muss erhoeht werden */
-                                {
-                                        sendbuf[2] = sendbuf[2] + 0x02;
-                                        merkmiddlebyte = middlebyte;
-                                }
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                                {
-                                        sendbuf[2] = 0x00;
-                                        sendbuf[3] = sendbuf[3] + 0x01;
-                                        merkmiddlebyte = middlebyte;
-                                }
-                                break;
-                case 2: if ( sendbuf[2] == 0xFE && sendbuf[1] == 0x80 ) /* das highbyte muss erhoeht werden */
-                                {
-                                        switch (lowbyte)
-                                        {
-                                                case 0: sendbuf[1] = 0x00; middlebyte++; break;
-                                                case 1: sendbuf[1] = 0x80; lowbyte = 3; break;
-                                        }
-                                        sendbuf[2] = 0x00;
-                                        sendbuf[3] = sendbuf[3] + 0x01;
-                                        merkmiddlebyte = middlebyte;
-                                }
-                                else
-                                {
-                                        switch (lowbyte)
-                                        {
-                                                case 0: sendbuf[1] = 0x00; middlebyte++; break;
-                                                case 1: sendbuf[1] = 0x80; lowbyte = 3; break;
-                                        }
-                                        if (middlebyte > merkmiddlebyte)   /* das mittlere Byte muss erhoeht werden */
-                                        {
-                                                sendbuf[2] = sendbuf[2] + 0x02;
-                                                merkmiddlebyte = middlebyte;
-                                        }
-                                }
-                break;
-            case 3: switch (lowbyte)
-                {
-                   case 0: sendbuf[1] = 0x00; break;
-                   case 1: sendbuf[1] = 0xc0; break;
-                   case 2: sendbuf[1] = 0x80; break;
-                   case 3: sendbuf[1] = 0x40; break;
-                }
-                if (( sendbuf[2] == 0xFE ) && ( sendbuf[1] != 0xc0 )) /* das highbyte muss erhoeht werden */
-                {
-                    sendbuf[2] = 0x00;
-                    sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                else
-                                {
-                                        if ( sendbuf[1] != 0xc0 )
-                                        {
-                                                sendbuf[2] = sendbuf[2] + 0x02;
-                                        }
-                                }
-                                break;
-                case 4: sendbuf[1] = 0x00;
-                sendbuf[2] = sendbuf[2] + 0x02;
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                {
-                    sendbuf[2] = 0x00;
-                    sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                break;
-            case 5: switch (lowbyte)
-                {
-                   case 0: sendbuf[1] = 0x00; break;
-                   case 1: sendbuf[1] = 0x40; break;
-                   case 2: sendbuf[1] = 0x80; break;
-                   case 3: sendbuf[1] = 0xc0; break;
-                }
-                            if ( y == 3 )
-                            {
-                              sendbuf[2] = sendbuf[2] + 0x04;
-                              y++;
-                            }
-                            else
-                            {
-                              sendbuf[2] = sendbuf[2] + 0x02;
-                                  y++;
-                            }
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                {
-                   sendbuf[2] = 0x00;
-                   sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                break;
-                case 6: switch (lowbyte)
-                {
-                   case 0: sendbuf[1] = 0x00;
-                           sendbuf[2] = sendbuf[2] + 0x04;
-                                           break;
-                   case 1: sendbuf[1] = 0x80;
-                           sendbuf[2] = sendbuf[2] + 0x02;
-                                                   lowbyte = 3;
-                                           break;
-                }
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                {
-                    sendbuf[2] = 0x00;
-                    sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                break;
-            case 7: switch (lowbyte)
-                {
-                   case 0: sendbuf[1] = 0x00; break;
-                   case 1: sendbuf[1] = 0xc0; break;
-                   case 2: sendbuf[1] = 0x80; break;
-                   case 3: sendbuf[1] = 0x40; break;
-                }
-                        if ( y == 0 )
-                                {
-                                    sendbuf[2] = sendbuf[2] + 0x02;
-                                    y++;
-                                }
-                                else
-                                {
-                                    sendbuf[2] = sendbuf[2] + 0x04;
-                                    y++;
-                                }
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                {
-                    sendbuf[2] = 0x00;
-                    sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                break;
-                case 8: sendbuf[1] = 0x00;
-                sendbuf[2] = sendbuf[2] + 0x04;
-                if ( sendbuf[2] >= 0xFE ) /* das highbyte muss erhoeht werden */
-                {
-                    sendbuf[2] = 0x00;
-                    sendbuf[3] = sendbuf[3] + 0x01;
-                }
-                                break;
+            case 0:
+              sendbuf[1] = 0x00;
+              middlebyte++;
+              break;
+            case 1:
+              sendbuf[1] = 0x40;
+              break;
+            case 2:
+              sendbuf[1] = 0x80;
+              break;
+            case 3:
+              sendbuf[1] = 0xc0;
+              break;
           }
-
-      if ( y == 4 )
-            y = 0;
-
-          if (sendbuf[3] > 0x0F ) // "Speicherueberlauf" im BL-Net
+          if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
           {
-                sendbuf[1] = 0x00;
-                sendbuf[2] = 0x00;
-                sendbuf[3] = 0x00;
-                Speicherueberlauf = 0;
+            sendbuf[2] = sendbuf[2] + 0x02;
+            merkmiddlebyte = middlebyte;
           }
-
-          if ( Speicherueberlauf == 0 )
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
           {
-                if ( *(end_adresse+2) == sendbuf[3] || *(end_adresse+2) < sendbuf[3] )
-                {
-                        if ( *(end_adresse+1) == sendbuf[2] )
-                        {
-#if DEBUG > 3
- /*  ##### Debug 3-CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2," Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
-#endif
-                                if ( *end_adresse == sendbuf[1] || *end_adresse < sendbuf[1] )
-                                {
-#if DEBUG > 3
- /*  ##### Debug 3-CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2," Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
-#endif
-                                        break;
-                                }
-                        }
-                        else if ( *(end_adresse+1) < sendbuf[2] )
-                        {
-#if DEBUG > 3
-/*  ##### Debug 3-CAN-Rahmen ########  */
-  fprintf(fp_logfile_debug2," Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
-#endif
-                                break;
-                        }
-                }
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+            merkmiddlebyte = middlebyte;
           }
+          break;
+        case 2:
+          if (sendbuf[2] == 0xFE && sendbuf[1] == 0x80) /* das highbyte muss erhoeht werden */
+          {
+            switch (lowbyte)
+            {
+              case 0:
+              sendbuf[1] = 0x00;
+              middlebyte++;
+              break;
+              case 1:
+              sendbuf[1] = 0x80;
+              lowbyte = 3;
+              break;
+            }
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+            merkmiddlebyte = middlebyte;
+          }
+          else
+          {
+            switch (lowbyte)
+            {
+              case 0:
+          sendbuf[1] = 0x00;
+          middlebyte++;
+          break;
+              case 1:
+          sendbuf[1] = 0x80;
+          lowbyte = 3;
+          break;
+            }
+            if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
+            {
+              sendbuf[2] = sendbuf[2] + 0x02;
+              merkmiddlebyte = middlebyte;
+            }
+          }
+          break;
+        case 3:
+          switch (lowbyte)
+          {
+            case 0:
+              sendbuf[1] = 0x00;
+              break;
+            case 1:
+              sendbuf[1] = 0xc0;
+              break;
+            case 2:
+              sendbuf[1] = 0x80;
+              break;
+            case 3:
+              sendbuf[1] = 0x40;
+              break;
+          }
+          if (sendbuf[2] == 0xFE && sendbuf[1] != 0xc0) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          else
+          {
+            if (sendbuf[1] != 0xc0)
+            {
+              sendbuf[2] = sendbuf[2] + 0x02;
+            }
+          }
+          break;
+        case 4:
+          sendbuf[1] = 0x00;
+          sendbuf[2] = sendbuf[2] + 0x02;
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          break;
+        case 5:
+          switch (lowbyte)
+          {
+            case 0:
+              sendbuf[1] = 0x00;
+              break;
+            case 1:
+              sendbuf[1] = 0x40;
+              break;
+            case 2:
+              sendbuf[1] = 0x80;
+              break;
+            case 3:
+              sendbuf[1] = 0xc0;
+              break;
+          }
+          if (y == 3)
+          {
+            sendbuf[2] = sendbuf[2] + 0x04;
+            y++;
+          }
+          else
+          {
+            sendbuf[2] = sendbuf[2] + 0x02;
+            y++;
+          }
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          break;
+        case 6:
+          switch (lowbyte)
+          {
+            case 0:
+              sendbuf[1] = 0x00;
+              sendbuf[2] = sendbuf[2] + 0x04;
+              break;
+            case 1:
+              sendbuf[1] = 0x80;
+              sendbuf[2] = sendbuf[2] + 0x02;
+              lowbyte = 3;
+              break;
+          }
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          break;
+        case 7:
+          switch (lowbyte)
+          {
+            case 0:
+              sendbuf[1] = 0x00;
+              break;
+            case 1:
+              sendbuf[1] = 0xc0;
+              break;
+            case 2:
+              sendbuf[1] = 0x80;
+              break;
+            case 3:
+              sendbuf[1] = 0x40;
+              break;
+          }
+          if (y == 0)
+          {
+            sendbuf[2] = sendbuf[2] + 0x02;
+            y++;
+          }
+          else
+          {
+            sendbuf[2] = sendbuf[2] + 0x04;
+            y++;
+          }
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          break;
+        case 8:
+          sendbuf[1] = 0x00;
+          sendbuf[2] = sendbuf[2] + 0x04;
+          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
+          {
+            sendbuf[2] = 0x00;
+            sendbuf[3] = sendbuf[3] + 0x01;
+          }
+          break;
+            }
+
+      if (y == 4)
+        y = 0;
+
+      if (sendbuf[3] > 0x0F) // "Speicherueberlauf" im BL-Net
+      {
+        sendbuf[1] = 0x00;
+        sendbuf[2] = 0x00;
+        sendbuf[3] = 0x00;
+        Speicherueberlauf = 0;
+      }
+
+      if (Speicherueberlauf == 0)
+      {
+        if (*(end_adresse + 2) == sendbuf[3] || *(end_adresse + 2) < sendbuf[3])
+        {
+          if (*(end_adresse + 1) == sendbuf[2])
+          {
+        #if DEBUG > 3
+            /*  ##### Debug 3-CAN-Rahmen ########  */
+            fprintf(fp_logfile_debug2, " Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+        #endif
+            if (*end_adresse == sendbuf[1] || *end_adresse < sendbuf[1])
+            {
+        #if DEBUG > 3
+              /*  ##### Debug 3-CAN-Rahmen ########  */
+              fprintf(fp_logfile_debug2, " Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+        #endif
+              break;
+            }
+          }
+          else if (*(end_adresse + 1) < sendbuf[2])
+          {
+        #if DEBUG > 3
+            /*  ##### Debug 3-CAN-Rahmen ########  */
+            fprintf(fp_logfile_debug2, " Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+        #endif
+            break;
+          }
+        }
+      }
 
       monatswechsel = 0;
     } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
@@ -3865,97 +4077,96 @@ if ((fp_logfile_debug2=fopen(DebugFile2,"w")) == NULL) /* dann Neuerstellung der
       if (merk_i < 5)
       {
         i--; /* falsche Pruefziffer - also nochmals lesen */
-#ifdef DEBUG
-        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n",merk_i);
-#endif
+  #ifdef DEBUG
+        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+  #endif
         merk_i++; /* hochzaehlen bis 5 */
       }
       else
       {
         merk_i = 0;
         fehlerhafte_ds++;
-        printf ( " fehlerhafter3 Datensatz - insgesamt:%d\n",fehlerhafte_ds);
+        printf(" fehlerhafter3 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
       }
     }
   }
   return i + 1 - fehlerhafte_ds;
-//  return anz_datensaetze - fehlerhafte_ds;
+  //  return anz_datensaetze - fehlerhafte_ds;
 }
-
 /* Berechnung der Pruefsumme des Kopfsatz Modus 0xD1 */
-int berechneKopfpruefziffer_D1(KopfsatzD1 derKopf[] )
+int berechneKopfpruefziffer_D1(KopfsatzD1 derKopf[])
 {
-  return  ((derKopf[0].kennung + derKopf[0].version
-     + derKopf[0].zeitstempel[0]
-     + derKopf[0].zeitstempel[1]
-     + derKopf[0].zeitstempel[2]
-     + derKopf[0].satzlaengeGeraet1
-     + derKopf[0].satzlaengeGeraet2
-     + derKopf[0].startadresse[0]
-     + derKopf[0].startadresse[1]
-     + derKopf[0].startadresse[2]
-     + derKopf[0].endadresse[0]
-     + derKopf[0].endadresse[1]
-     + derKopf[0].endadresse[2]) % 0x100);
+  return ((derKopf[0].kennung + derKopf[0].version
+       + derKopf[0].zeitstempel[0]
+       + derKopf[0].zeitstempel[1]
+       + derKopf[0].zeitstempel[2]
+       + derKopf[0].satzlaengeGeraet1
+       + derKopf[0].satzlaengeGeraet2
+       + derKopf[0].startadresse[0]
+       + derKopf[0].startadresse[1]
+       + derKopf[0].startadresse[2]
+       + derKopf[0].endadresse[0]
+       + derKopf[0].endadresse[1]
+       + derKopf[0].endadresse[2]) % 0x100);
 }
 
 /* Berechnung der Pruefsumme des Kopfsatz Modus 0xDC */
-int berechneKopfpruefziffer_DC(KOPFSATZ_DC derKopf[] )
+int berechneKopfpruefziffer_DC(KOPFSATZ_DC derKopf[])
 {
-  int retval=0, allebytes=0, i=0 ;
+  int retval = 0, allebytes = 0, i = 0;
 
   allebytes = 12 + derKopf[0].all_bytes[5];
 
-  for ( i=0; i<allebytes; i++)
-        retval += derKopf[0].all_bytes[i];
+  for (i = 0; i < allebytes; i++)
+    retval += derKopf[0].all_bytes[i];
   return retval % 0x100;
-  }
+}
 
 /* Berechnung der Pruefsumme des Kopfsatz Modus 0xA8 */
-int berechneKopfpruefziffer_A8(KopfsatzA8 derKopf[] )
+int berechneKopfpruefziffer_A8(KopfsatzA8 derKopf[])
 {
-  return  ((derKopf[0].kennung + derKopf[0].version
-     + derKopf[0].zeitstempel[0]
-     + derKopf[0].zeitstempel[1]
-     + derKopf[0].zeitstempel[2]
-     + derKopf[0].satzlaengeGeraet1
-     + derKopf[0].startadresse[0]
-     + derKopf[0].startadresse[1]
-     + derKopf[0].startadresse[2]
-     + derKopf[0].endadresse[0]
-     + derKopf[0].endadresse[1]
-     + derKopf[0].endadresse[2]) % 0x100);
+  return ((derKopf[0].kennung + derKopf[0].version
+       + derKopf[0].zeitstempel[0]
+       + derKopf[0].zeitstempel[1]
+       + derKopf[0].zeitstempel[2]
+       + derKopf[0].satzlaengeGeraet1
+       + derKopf[0].startadresse[0]
+       + derKopf[0].startadresse[1]
+       + derKopf[0].startadresse[2]
+       + derKopf[0].endadresse[0]
+       + derKopf[0].endadresse[1]
+       + derKopf[0].endadresse[2]) % 0x100);
 }
 
 /* Berechnung der Pruefsumme fuer UVR1611 */
 int berechnepruefziffer_uvr1611(u_DS_UVR1611_UVR61_3 ds_uvr1611[])
 {
   unsigned modTeiler;
-  modTeiler = 0x100;    /* modTeiler = 256; */
+  modTeiler = 0x100; /* modTeiler = 256; */
 
-  int retval=0;
+  int retval = 0;
 
-  int k=0;
-  for (k=0;k<16;k++)
-    retval+= (ds_uvr1611[0].DS_UVR1611.sensT[k][0]+ds_uvr1611[0].DS_UVR1611.sensT[k][1]);
+  int k = 0;
+  for (k = 0; k < 16; k++)
+    retval += (ds_uvr1611[0].DS_UVR1611.sensT[k][0] + ds_uvr1611[0].DS_UVR1611.sensT[k][1]);
 
-  retval += ds_uvr1611[0].DS_UVR1611.ausgbyte1+ds_uvr1611[0].DS_UVR1611.ausgbyte2+
-    ds_uvr1611[0].DS_UVR1611.dza[0]+ds_uvr1611[0].DS_UVR1611.dza[1]+ds_uvr1611[0].DS_UVR1611.dza[2]+ds_uvr1611[0].DS_UVR1611.dza[3]+
-    ds_uvr1611[0].DS_UVR1611.wmzaehler_reg+
-    ds_uvr1611[0].DS_UVR1611.mlstg1[0]+ds_uvr1611[0].DS_UVR1611.mlstg1[1]+
-    ds_uvr1611[0].DS_UVR1611.mlstg1[2]+ds_uvr1611[0].DS_UVR1611.mlstg1[3]+
-    ds_uvr1611[0].DS_UVR1611.kwh1[0]+ds_uvr1611[0].DS_UVR1611.kwh1[1]+
-    ds_uvr1611[0].DS_UVR1611.mwh1[0]+ds_uvr1611[0].DS_UVR1611.mwh1[1]+
-    ds_uvr1611[0].DS_UVR1611.mlstg2[0]+ds_uvr1611[0].DS_UVR1611.mlstg2[1]+
-    ds_uvr1611[0].DS_UVR1611.mlstg2[2]+ds_uvr1611[0].DS_UVR1611.mlstg2[3]+
-    ds_uvr1611[0].DS_UVR1611.kwh2[0]+ds_uvr1611[0].DS_UVR1611.kwh2[1]+
-    ds_uvr1611[0].DS_UVR1611.mwh2[0]+ds_uvr1611[0].DS_UVR1611.mwh2[1]+
-    ds_uvr1611[0].DS_UVR1611.datum_zeit.sek+ds_uvr1611[0].DS_UVR1611.datum_zeit.min+
-    ds_uvr1611[0].DS_UVR1611.datum_zeit.std+
-    ds_uvr1611[0].DS_UVR1611.datum_zeit.tag+ds_uvr1611[0].DS_UVR1611.datum_zeit.monat+
-    ds_uvr1611[0].DS_UVR1611.datum_zeit.jahr+
-    ds_uvr1611[0].DS_UVR1611.zeitstempel[0]+ds_uvr1611[0].DS_UVR1611.zeitstempel[1]+
-    ds_uvr1611[0].DS_UVR1611.zeitstempel[2];
+  retval += ds_uvr1611[0].DS_UVR1611.ausgbyte1 + ds_uvr1611[0].DS_UVR1611.ausgbyte2 +
+        ds_uvr1611[0].DS_UVR1611.dza[0] + ds_uvr1611[0].DS_UVR1611.dza[1] + ds_uvr1611[0].DS_UVR1611.dza[2] + ds_uvr1611[0].DS_UVR1611.dza[3] +
+        ds_uvr1611[0].DS_UVR1611.wmzaehler_reg +
+        ds_uvr1611[0].DS_UVR1611.mlstg1[0] + ds_uvr1611[0].DS_UVR1611.mlstg1[1] +
+        ds_uvr1611[0].DS_UVR1611.mlstg1[2] + ds_uvr1611[0].DS_UVR1611.mlstg1[3] +
+        ds_uvr1611[0].DS_UVR1611.kwh1[0] + ds_uvr1611[0].DS_UVR1611.kwh1[1] +
+        ds_uvr1611[0].DS_UVR1611.mwh1[0] + ds_uvr1611[0].DS_UVR1611.mwh1[1] +
+        ds_uvr1611[0].DS_UVR1611.mlstg2[0] + ds_uvr1611[0].DS_UVR1611.mlstg2[1] +
+        ds_uvr1611[0].DS_UVR1611.mlstg2[2] + ds_uvr1611[0].DS_UVR1611.mlstg2[3] +
+        ds_uvr1611[0].DS_UVR1611.kwh2[0] + ds_uvr1611[0].DS_UVR1611.kwh2[1] +
+        ds_uvr1611[0].DS_UVR1611.mwh2[0] + ds_uvr1611[0].DS_UVR1611.mwh2[1] +
+        ds_uvr1611[0].DS_UVR1611.datum_zeit.sek + ds_uvr1611[0].DS_UVR1611.datum_zeit.min +
+        ds_uvr1611[0].DS_UVR1611.datum_zeit.std +
+        ds_uvr1611[0].DS_UVR1611.datum_zeit.tag + ds_uvr1611[0].DS_UVR1611.datum_zeit.monat +
+        ds_uvr1611[0].DS_UVR1611.datum_zeit.jahr +
+        ds_uvr1611[0].DS_UVR1611.zeitstempel[0] + ds_uvr1611[0].DS_UVR1611.zeitstempel[1] +
+        ds_uvr1611[0].DS_UVR1611.zeitstempel[2];
 
   return retval % modTeiler;
 }
@@ -3963,12 +4174,12 @@ int berechnepruefziffer_uvr1611(u_DS_UVR1611_UVR61_3 ds_uvr1611[])
 /* Berechnung der Pruefsumme fuer UVR1611 CAN-Logging */
 int berechnepruefziffer_uvr1611_CAN(u_DS_CAN dsatz_can[], int anzahl_can_rahmen)
 {
-  unsigned modTeiler = 0x100;    /* modTeiler = 256; */
-  int retval=0, i=0, allebytes = 0;
+  unsigned modTeiler = 0x100; /* modTeiler = 256; */
+  int retval = 0, i = 0, allebytes = 0;
 
-  allebytes = anzahl_can_rahmen*61 + 3;  // ohne Byte Pruefsumme
-  for ( i=0; i<allebytes; i++)
-        retval += dsatz_can[0].all_bytes[i];
+  allebytes = anzahl_can_rahmen * 61 + 3; // ohne Byte Pruefsumme
+  for (i = 0; i < allebytes; i++)
+    retval += dsatz_can[0].all_bytes[i];
   return retval % modTeiler;
 }
 
@@ -3976,28 +4187,28 @@ int berechnepruefziffer_uvr1611_CAN(u_DS_CAN dsatz_can[], int anzahl_can_rahmen)
 int berechnepruefziffer_uvr61_3(u_DS_UVR1611_UVR61_3 ds_uvr61_3[])
 {
   unsigned modTeiler;
-  modTeiler = 0x100;    /* modTeiler = 256; */
+  modTeiler = 0x100; /* modTeiler = 256; */
 
-  int retval=0;
+  int retval = 0;
 
-  int k=0;
-  for (k=0;k<6;k++)
-    retval+= (ds_uvr61_3[0].DS_UVR61_3.sensT[k][0]+ds_uvr61_3[0].DS_UVR61_3.sensT[k][1]);
+  int k = 0;
+  for (k = 0; k < 6; k++)
+    retval += (ds_uvr61_3[0].DS_UVR61_3.sensT[k][0] + ds_uvr61_3[0].DS_UVR61_3.sensT[k][1]);
 
-    retval+= ds_uvr61_3[0].DS_UVR61_3.ausgbyte1+
-    ds_uvr61_3[0].DS_UVR61_3.dza+ds_uvr61_3[0].DS_UVR61_3.ausg_analog+
-    ds_uvr61_3[0].DS_UVR61_3.wmzaehler_reg+
-    ds_uvr61_3[0].DS_UVR61_3.volstrom[0]+ds_uvr61_3[0].DS_UVR61_3.volstrom[1]+
-    ds_uvr61_3[0].DS_UVR61_3.mlstg1[0]+ds_uvr61_3[0].DS_UVR61_3.mlstg1[1]+
-    ds_uvr61_3[0].DS_UVR61_3.kwh1[0]+ds_uvr61_3[0].DS_UVR61_3.kwh1[1]+
-    ds_uvr61_3[0].DS_UVR61_3.mwh1[0]+ds_uvr61_3[0].DS_UVR61_3.mwh1[1]+
-    ds_uvr61_3[0].DS_UVR61_3.mwh1[2]+ds_uvr61_3[0].DS_UVR61_3.mwh1[3]+
-    ds_uvr61_3[0].DS_UVR61_3.datum_zeit.sek+ds_uvr61_3[0].DS_UVR61_3.datum_zeit.min+
-    ds_uvr61_3[0].DS_UVR61_3.datum_zeit.std+
-    ds_uvr61_3[0].DS_UVR61_3.datum_zeit.tag+ds_uvr61_3[0].DS_UVR61_3.datum_zeit.monat+
-    ds_uvr61_3[0].DS_UVR61_3.datum_zeit.jahr+
-    ds_uvr61_3[0].DS_UVR61_3.zeitstempel[0]+ds_uvr61_3[0].DS_UVR61_3.zeitstempel[1]+
-    ds_uvr61_3[0].DS_UVR61_3.zeitstempel[2];
+  retval += ds_uvr61_3[0].DS_UVR61_3.ausgbyte1 +
+        ds_uvr61_3[0].DS_UVR61_3.dza + ds_uvr61_3[0].DS_UVR61_3.ausg_analog +
+        ds_uvr61_3[0].DS_UVR61_3.wmzaehler_reg +
+        ds_uvr61_3[0].DS_UVR61_3.volstrom[0] + ds_uvr61_3[0].DS_UVR61_3.volstrom[1] +
+        ds_uvr61_3[0].DS_UVR61_3.mlstg1[0] + ds_uvr61_3[0].DS_UVR61_3.mlstg1[1] +
+        ds_uvr61_3[0].DS_UVR61_3.kwh1[0] + ds_uvr61_3[0].DS_UVR61_3.kwh1[1] +
+        ds_uvr61_3[0].DS_UVR61_3.mwh1[0] + ds_uvr61_3[0].DS_UVR61_3.mwh1[1] +
+        ds_uvr61_3[0].DS_UVR61_3.mwh1[2] + ds_uvr61_3[0].DS_UVR61_3.mwh1[3] +
+        ds_uvr61_3[0].DS_UVR61_3.datum_zeit.sek + ds_uvr61_3[0].DS_UVR61_3.datum_zeit.min +
+        ds_uvr61_3[0].DS_UVR61_3.datum_zeit.std +
+        ds_uvr61_3[0].DS_UVR61_3.datum_zeit.tag + ds_uvr61_3[0].DS_UVR61_3.datum_zeit.monat +
+        ds_uvr61_3[0].DS_UVR61_3.datum_zeit.jahr +
+        ds_uvr61_3[0].DS_UVR61_3.zeitstempel[0] + ds_uvr61_3[0].DS_UVR61_3.zeitstempel[1] +
+        ds_uvr61_3[0].DS_UVR61_3.zeitstempel[2];
 
   return retval % modTeiler;
 }
@@ -4006,13 +4217,13 @@ int berechnepruefziffer_uvr61_3(u_DS_UVR1611_UVR61_3 ds_uvr61_3[])
 int berechnepruefziffer_modus_D1(u_modus_D1 *ds_modus_D1, int anzahl)
 {
   unsigned modTeiler;
-  modTeiler = 0x100;    /* modTeiler = 256; */
+  modTeiler = 0x100; /* modTeiler = 256; */
 
-  int retval=0;
+  int retval = 0;
 
-  int k=0;
-  for (k=0;k<anzahl-1;k++)
-    retval+= ds_modus_D1[0].DS_alles.all_bytes[k];
+  int k = 0;
+  for (k = 0; k < anzahl - 1; k++)
+    retval += ds_modus_D1[0].DS_alles.all_bytes[k];
 
   return retval % modTeiler;
 }
@@ -4025,23 +4236,28 @@ int anzahldatensaetze_D1(KopfsatzD1 kopf[])
 
   /* Byte 1 - lowest */
   switch (kopf[0].endadresse[0])
-    {
-    case 0x0  : byte1 = 1; break;
-    case 0x80 : byte1 = 2; break;
-    default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
-      return -1;
-    }
+  {
+  case 0x0:
+    byte1 = 1;
+    break;
+  case 0x80:
+    byte1 = 2;
+    break;
+  default:
+    printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+    return -1;
+  }
 
   /* Byte 2 - mitte */
   byte2 = ((kopf[0].endadresse[1] / 0x02) * 0x02);
 
   /* Byte 3 - highest */
-  byte3 = (kopf[0].endadresse[2] * 0x100)*0x02;
+  byte3 = (kopf[0].endadresse[2] * 0x100) * 0x02;
 
-  if ( *end_adresse < *start_adresse || *(end_adresse+1) < *(start_adresse+1) || *(end_adresse+2) < *(start_adresse+2) )
-        return 4096; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
+  if (*end_adresse < *start_adresse || *(end_adresse + 1) < *(start_adresse + 1) || *(end_adresse + 2) < *(start_adresse + 2))
+    return 4096; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
   else
-        return byte1 + byte2 + byte3;
+    return byte1 + byte2 + byte3;
 }
 
 /* Ermittlung Anzahl der Datensaetze Modus 0xDC (CAN-Logging) */
@@ -4050,192 +4266,264 @@ int anzahldatensaetze_DC(KOPFSATZ_DC kopf[])
   /* UCHAR byte1, byte2, byte3; */
   int byte1, byte2, byte3, return_byte, return_byte_max;
 
-  switch(kopf[0].all_bytes[5])
+  switch (kopf[0].all_bytes[5])
   {
     case 1:
-          if (kopf[0].DC_Rahmen1.endadresse[0] == kopf[0].DC_Rahmen1.startadresse[0] &&
+      if (kopf[0].DC_Rahmen1.endadresse[0] == kopf[0].DC_Rahmen1.startadresse[0] &&
           kopf[0].DC_Rahmen1.endadresse[1] == kopf[0].DC_Rahmen1.startadresse[1] &&
           kopf[0].DC_Rahmen1.endadresse[2] == kopf[0].DC_Rahmen1.startadresse[2] &&
-          kopf[0].DC_Rahmen1.endadresse[0] == 0xFF && kopf[0].DC_Rahmen1.endadresse[1] == 0xFF && kopf[0].DC_Rahmen1.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen1.endadresse[0] == 0xFF && kopf[0].DC_Rahmen1.endadresse[1] == 0xFF && kopf[0].DC_Rahmen1.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen1.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
       /* Byte 2 - mitte */
       byte2 = ((kopf[0].DC_Rahmen1.endadresse[1] / 0x02) * 0x04);
       /* Byte 3 - highest */
       byte3 = (kopf[0].DC_Rahmen1.endadresse[2] * 0x200);
-          return_byte = byte1 + byte2 + byte3;
-          return_byte_max = 8192;
+      return_byte = byte1 + byte2 + byte3;
+      return_byte_max = 8192;
       break;
     case 2:
-          if (kopf[0].DC_Rahmen2.endadresse[0] == kopf[0].DC_Rahmen2.startadresse[0] &&
+      if (kopf[0].DC_Rahmen2.endadresse[0] == kopf[0].DC_Rahmen2.startadresse[0] &&
           kopf[0].DC_Rahmen2.endadresse[1] == kopf[0].DC_Rahmen2.startadresse[1] &&
-          kopf[0].DC_Rahmen2.endadresse[2] == kopf[0].DC_Rahmen2.startadresse[2]  &&
-          kopf[0].DC_Rahmen2.endadresse[0] == 0xFF && kopf[0].DC_Rahmen2.endadresse[1] == 0xFF && kopf[0].DC_Rahmen2.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen2.endadresse[2] == kopf[0].DC_Rahmen2.startadresse[2] &&
+          kopf[0].DC_Rahmen2.endadresse[0] == 0xFF && kopf[0].DC_Rahmen2.endadresse[1] == 0xFF && kopf[0].DC_Rahmen2.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen2.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen2.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen2.endadresse[1] /2 )* 4 + (byte1 -1)) / 2 ; // + 1;
-          return_byte_max = 4096;
+      return_byte = ((kopf[0].DC_Rahmen2.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen2.endadresse[1] / 2) * 4 + (byte1 - 1)) / 2; // + 1;
+      return_byte_max = 4096;
       break;
     case 3:
-          if (kopf[0].DC_Rahmen3.endadresse[0] == kopf[0].DC_Rahmen3.startadresse[0] &&
+      if (kopf[0].DC_Rahmen3.endadresse[0] == kopf[0].DC_Rahmen3.startadresse[0] &&
           kopf[0].DC_Rahmen3.endadresse[1] == kopf[0].DC_Rahmen3.startadresse[1] &&
-          kopf[0].DC_Rahmen3.endadresse[2] == kopf[0].DC_Rahmen3.startadresse[2]  &&
-          kopf[0].DC_Rahmen3.endadresse[0] == 0xFF && kopf[0].DC_Rahmen3.endadresse[1] == 0xFF && kopf[0].DC_Rahmen3.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen3.endadresse[2] == kopf[0].DC_Rahmen3.startadresse[2] &&
+          kopf[0].DC_Rahmen3.endadresse[0] == 0xFF && kopf[0].DC_Rahmen3.endadresse[1] == 0xFF && kopf[0].DC_Rahmen3.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen3.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen3.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen3.endadresse[1] /2 )* 4 + (byte1 -1)) / 3 ; // + 1;
-          return_byte_max = 2730;
+      return_byte = ((kopf[0].DC_Rahmen3.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen3.endadresse[1] / 2) * 4 + (byte1 - 1)) / 3; // + 1;
+      return_byte_max = 2730;
       break;
     case 4:
-          if (kopf[0].DC_Rahmen4.endadresse[0] == kopf[0].DC_Rahmen4.startadresse[0] &&
+      if (kopf[0].DC_Rahmen4.endadresse[0] == kopf[0].DC_Rahmen4.startadresse[0] &&
           kopf[0].DC_Rahmen4.endadresse[1] == kopf[0].DC_Rahmen4.startadresse[1] &&
-          kopf[0].DC_Rahmen4.endadresse[2] == kopf[0].DC_Rahmen4.startadresse[2]  &&
-          kopf[0].DC_Rahmen4.endadresse[0] == 0xFF && kopf[0].DC_Rahmen4.endadresse[1] == 0xFF && kopf[0].DC_Rahmen4.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen4.endadresse[2] == kopf[0].DC_Rahmen4.startadresse[2] &&
+          kopf[0].DC_Rahmen4.endadresse[0] == 0xFF && kopf[0].DC_Rahmen4.endadresse[1] == 0xFF && kopf[0].DC_Rahmen4.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen4.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen4.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen4.endadresse[1] /2 )* 4 + (byte1 -1)) / 4 ; // + 1;
-          return_byte_max = 2048;
+      return_byte = ((kopf[0].DC_Rahmen4.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen4.endadresse[1] / 2) * 4 + (byte1 - 1)) / 4; // + 1;
+      return_byte_max = 2048;
       break;
     case 5:
-          if (kopf[0].DC_Rahmen5.endadresse[0] == kopf[0].DC_Rahmen5.startadresse[0] &&
+      if (kopf[0].DC_Rahmen5.endadresse[0] == kopf[0].DC_Rahmen5.startadresse[0] &&
           kopf[0].DC_Rahmen5.endadresse[1] == kopf[0].DC_Rahmen5.startadresse[1] &&
-          kopf[0].DC_Rahmen5.endadresse[2] == kopf[0].DC_Rahmen5.startadresse[2]  &&
-          kopf[0].DC_Rahmen5.endadresse[0] == 0xFF && kopf[0].DC_Rahmen5.endadresse[1] == 0xFF && kopf[0].DC_Rahmen5.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen5.endadresse[2] == kopf[0].DC_Rahmen5.startadresse[2] &&
+          kopf[0].DC_Rahmen5.endadresse[0] == 0xFF && kopf[0].DC_Rahmen5.endadresse[1] == 0xFF && kopf[0].DC_Rahmen5.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen5.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen5.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen5.endadresse[1] /2 )* 4 + (byte1 -1)) / 5 ; // + 1;
-          return_byte_max = 1638;
+      return_byte = ((kopf[0].DC_Rahmen5.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen5.endadresse[1] / 2) * 4 + (byte1 - 1)) / 5; // + 1;
+      return_byte_max = 1638;
       break;
     case 6:
-          if (kopf[0].DC_Rahmen6.endadresse[0] == kopf[0].DC_Rahmen6.startadresse[0] &&
+      if (kopf[0].DC_Rahmen6.endadresse[0] == kopf[0].DC_Rahmen6.startadresse[0] &&
           kopf[0].DC_Rahmen6.endadresse[1] == kopf[0].DC_Rahmen6.startadresse[1] &&
-          kopf[0].DC_Rahmen6.endadresse[2] == kopf[0].DC_Rahmen6.startadresse[2]  &&
-          kopf[0].DC_Rahmen6.endadresse[0] == 0xFF && kopf[0].DC_Rahmen6.endadresse[1] == 0xFF && kopf[0].DC_Rahmen6.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen6.endadresse[2] == kopf[0].DC_Rahmen6.startadresse[2] &&
+          kopf[0].DC_Rahmen6.endadresse[0] == 0xFF && kopf[0].DC_Rahmen6.endadresse[1] == 0xFF && kopf[0].DC_Rahmen6.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen6.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen6.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen6.endadresse[1] /2 )* 4 + (byte1 -1)) / 6 ; // + 1;
-          return_byte_max = 1365;
+      return_byte = ((kopf[0].DC_Rahmen6.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen6.endadresse[1] / 2) * 4 + (byte1 - 1)) / 6; // + 1;
+      return_byte_max = 1365;
       break;
     case 7:
-          if (kopf[0].DC_Rahmen7.endadresse[0] == kopf[0].DC_Rahmen7.startadresse[0] &&
+      if (kopf[0].DC_Rahmen7.endadresse[0] == kopf[0].DC_Rahmen7.startadresse[0] &&
           kopf[0].DC_Rahmen7.endadresse[1] == kopf[0].DC_Rahmen7.startadresse[1] &&
-          kopf[0].DC_Rahmen7.endadresse[2] == kopf[0].DC_Rahmen7.startadresse[2]  &&
-          kopf[0].DC_Rahmen7.endadresse[0] == 0xFF && kopf[0].DC_Rahmen7.endadresse[1] == 0xFF && kopf[0].DC_Rahmen7.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen7.endadresse[2] == kopf[0].DC_Rahmen7.startadresse[2] &&
+          kopf[0].DC_Rahmen7.endadresse[0] == 0xFF && kopf[0].DC_Rahmen7.endadresse[1] == 0xFF && kopf[0].DC_Rahmen7.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen7.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen7.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen7.endadresse[1] /2 )* 4 + (byte1 -1)) / 7 ; //+ 1;
-          return_byte_max = 1170;
+      return_byte = ((kopf[0].DC_Rahmen7.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen7.endadresse[1] / 2) * 4 + (byte1 - 1)) / 7; // + 1;
+      return_byte_max = 1170;
       break;
     case 8:
-          if (kopf[0].DC_Rahmen8.endadresse[0] == kopf[0].DC_Rahmen8.startadresse[0] &&
+      if (kopf[0].DC_Rahmen8.endadresse[0] == kopf[0].DC_Rahmen8.startadresse[0] &&
           kopf[0].DC_Rahmen8.endadresse[1] == kopf[0].DC_Rahmen8.startadresse[1] &&
-          kopf[0].DC_Rahmen8.endadresse[2] == kopf[0].DC_Rahmen8.startadresse[2]  &&
-          kopf[0].DC_Rahmen8.endadresse[0] == 0xFF && kopf[0].DC_Rahmen8.endadresse[1] == 0xFF && kopf[0].DC_Rahmen8.endadresse[2] == 0xFF )
-          {
-             printf("Keine geloggten Daten verfuegbar!\n");
-                 return -2;
-          }
+          kopf[0].DC_Rahmen8.endadresse[2] == kopf[0].DC_Rahmen8.startadresse[2] &&
+          kopf[0].DC_Rahmen8.endadresse[0] == 0xFF && kopf[0].DC_Rahmen8.endadresse[1] == 0xFF && kopf[0].DC_Rahmen8.endadresse[2] == 0xFF)
+      {
+        printf("Keine geloggten Daten verfuegbar!\n");
+        return -2;
+      }
       /* Byte 1 - lowest */
       switch (kopf[0].DC_Rahmen8.endadresse[0])
       {
-        case 0x0  : byte1 = 1; break;
-        case 0x40 : byte1 = 2; break;
-        case 0x80 : byte1 = 3; break;
-        case 0xc0 : byte1 = 4; break;
-        default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+        case 0x0:
+          byte1 = 1;
+          break;
+        case 0x40:
+          byte1 = 2;
+          break;
+        case 0x80:
+          byte1 = 3;
+          break;
+        case 0xc0:
+          byte1 = 4;
+          break;
+        default:
+          printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
           return -1;
       }
-          return_byte = ((kopf[0].DC_Rahmen8.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen8.endadresse[1] /2 )* 4 + (byte1 -1)) / 8 ; // + 1;
-          return_byte_max = 1024;
-          break;
+      return_byte = ((kopf[0].DC_Rahmen8.endadresse[2] * 0x200) + (kopf[0].DC_Rahmen8.endadresse[1] / 2) * 4 + (byte1 - 1)) / 8; // + 1;
+      return_byte_max = 1024;
+      break;
   }
 
-  if ( *end_adresse < *start_adresse || *(end_adresse+1) < *(start_adresse+1) || *(end_adresse+2) < *(start_adresse+2) )
-        return return_byte_max; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
+  if (*end_adresse < *start_adresse || *(end_adresse + 1) < *(start_adresse + 1) || *(end_adresse + 2) < *(start_adresse + 2))
+    return return_byte_max; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
   else
     return return_byte;
 }
@@ -4248,173 +4536,182 @@ int anzahldatensaetze_A8(KopfsatzA8 kopf[])
 
   /* Byte 1 - lowest */
   switch (kopf[0].endadresse[0])
-    {
-    case 0x0  : byte1 = 1; break;
-    case 0x40 : byte1 = 2; break;
-    case 0x80 : byte1 = 3; break;
-    case 0xc0 : byte1 = 4; break;
-    default: printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
+  {
+    case 0x0:
+      byte1 = 1;
+      break;
+    case 0x40:
+      byte1 = 2;
+      break;
+    case 0x80:
+      byte1 = 3;
+      break;
+    case 0xc0:
+      byte1 = 4;
+      break;
+    default:
+      printf("Falschen Wert im Low-Byte Endadresse gelesen!\n");
       return -1;
-    }
+  }
 
   /* Byte 2 - mitte */
   byte2 = ((kopf[0].endadresse[1] / 0x02) * 0x04);
 
   /* Byte 3 - highest */
-  byte3 = (kopf[0].endadresse[2] * 0x100)*0x02;
+  byte3 = (kopf[0].endadresse[2] * 0x100) * 0x02;
 
-  if ( *end_adresse < *start_adresse || *(end_adresse+1) < *(start_adresse+1) || *(end_adresse+2) < *(start_adresse+2) )
-        return 8192; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
+  if (*end_adresse < *start_adresse || *(end_adresse + 1) < *(start_adresse + 1) || *(end_adresse + 2) < *(start_adresse + 2))
+    return 8192; // max. Anzahl Datenrahmen bei UVR1611 bzw. UVR61-3, Speicherueberlauf
   else
-        return byte1 + byte2 + byte3;
+    return byte1 + byte2 + byte3;
 }
 
 /* Datenpuffer im D-LOGG zuruecksetzen -USB */
-int reset_datenpuffer_usb(int do_reset )
+int reset_datenpuffer_usb(int do_reset)
 {
-  int result = 0, in_bytes=0;;
-  UCHAR sendbuf[1];       /*  sendebuffer fuer die Request-Commandos*/
+  int result = 0, in_bytes = 0;
+  UCHAR sendbuf[1]; /* sendebuffer fuer die Request-Commandos*/
   UCHAR empfbuf[256];
 
   close_usb();
-  sendbuf[0]=ENDELESEN;   /* Senden "Ende lesen" */
+  sendbuf[0] = ENDELESEN; /* Senden "Ende lesen" */
   init_usb();
-  
+
   fd_set rfds;
   struct timeval tv;
-  int retval=0;
-  int retry=0;
-  int retry_interval=2; 
+  int retval = 0;
+  int retry = 0;
+  int retry_interval = 2;
 
-  write_erg=write(fd,sendbuf,1);
-  if (write_erg == 1)    /* Lesen der Antwort*/
+  write_erg = write(fd, sendbuf, 1);
+  if (write_erg == 1) /* Lesen der Antwort*/
   {
     do
     {
-	    in_bytes=0;
-      FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+      in_bytes = 0;
+      FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
       FD_SET(fd, &rfds);
       tv.tv_sec = retry_interval; /* Wait up to five seconds. */
       tv.tv_usec = 0;
-      retval = select(fd+1, &rfds, NULL, NULL, &tv);
+      retval = select(fd + 1, &rfds, NULL, NULL, &tv);
       zeitstempel();
       if (retval == -1)
         perror("select(fd)");
       else if (retval)
       {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+        fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-        if (FD_ISSET(fd,&rfds))
+        if (FD_ISSET(fd, &rfds))
         {
           ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+          fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
           if (in_bytes == 1)
-            result=read(fd,empfbuf,1);
+            result = read(fd, empfbuf, 1);
         }
       }
-    } while( retry < 3 && in_bytes != 0);
-  }  /* Hier fertig mit "Ende lesen" */
+    } while (retry < 3 && in_bytes != 0);
+  } /* Hier fertig mit "Ende lesen" */
 
   zeitstempel();
 
-  if ( (empfbuf[0] == ENDELESEN) && (do_reset == 1) )
+  if ((empfbuf[0] == ENDELESEN) && (do_reset == 1))
   {
-    sendbuf[0]=RESETDATAFLASH;   /* Senden Buffer zuruecksetzen */
-    write_erg=write(fd,sendbuf,1);
-    if (write_erg == 1)    /* Lesen der Antwort*/
+    sendbuf[0] = RESETDATAFLASH; /* Senden Buffer zuruecksetzen */
+    write_erg = write(fd, sendbuf, 1);
+    if (write_erg == 1) /* Lesen der Antwort*/
     {
       do
       {
-        in_bytes=0;
-        FD_ZERO(&rfds);  /* muss jedes Mal gesetzt werden */
+        in_bytes = 0;
+        FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
         tv.tv_sec = retry_interval; /* Wait up to five seconds. */
         tv.tv_usec = 0;
-        retval = select(fd+1, &rfds, NULL, NULL, &tv);
+        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
         if (retval == -1)
           perror("select(fd)");
         else if (retval)
         {
 #ifdef DEBUG
-          fprintf(stderr,"Data is available now. %d.%d\n",(int)tv.tv_sec,(int)tv.tv_usec);
+          fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-          if (FD_ISSET(fd,&rfds))
+          if (FD_ISSET(fd, &rfds))
           {
             ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
-		     fprintf(stderr,"Bytes im Puffer: %d\n",in_bytes);
+            fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
             if (in_bytes == 1)
             {
-              result=read(fd,empfbuf,1);
+              result = read(fd, empfbuf, 1);
               /* printf("Vom DL erhaltene Reset-Bestaetigung: %x\n",empfbuf[0]); */
-              fprintf(fp_varlogfile,"%s - %s -- Vom DL erhaltene Reset-Bestaetigung: %x.\n",sDatum, sZeit,empfbuf[0]);
+              fprintf(fp_varlogfile, "%s - %s -- Vom DL erhaltene Reset-Bestaetigung: %x.\n", sDatum, sZeit, empfbuf[0]);
             }
           }
         }
-      } while( retry < 3 && in_bytes != 0);
+      } while (retry < 3 && in_bytes != 0);
     }
     else
-      printf("Reset konnte nicht gesendet werden. Ergebnis = %d\n",result);
+      printf("Reset konnte nicht gesendet werden. Ergebnis = %d\n", result);
   }
   else
   {
     /* printf("Kein Data-Reset! \n"); */ /* reset-variable=%d \n",reset); */
-    fprintf(fp_varlogfile,"%s - %s -- Kein Data-Reset! \n",sDatum, sZeit);
+    fprintf(fp_varlogfile, "%s - %s -- Kein Data-Reset! \n", sDatum, sZeit);
   }
   return 1;
 }
 
 /* Datenpuffer im D-LOGG zuruecksetzen -IP */
-int reset_datenpuffer_ip(int do_reset )
+int reset_datenpuffer_ip(int do_reset)
 {
   int result = 0;
-  UCHAR sendbuf[1];       /*  sendebuffer fuer die Request-Commandos*/
+  UCHAR sendbuf[1]; /* sendebuffer fuer die Request-Commandos*/
   UCHAR empfbuf[256];
 
-  sendbuf[0]=ENDELESEN;   /* Senden "Ende lesen" */
+  sendbuf[0] = ENDELESEN; /* Senden "Ende lesen" */
   if (!ip_first)
   {
     sock = socket(PF_INET, SOCK_STREAM, 0);
-      if (sock == -1)
-      {
-        perror("socket failed()");
-        do_cleanup();
-        return 2;
-      }
-      if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-      {
-        perror("connect failed()");
-        do_cleanup();
-        return 3;
-      }
-     }  /* if (!ip_first) */
-     write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort */
-      result  = recv(sock,empfbuf,1,0);
-   /* Hier fertig mit "Ende lesen" */
+    if (sock == -1)
+    {
+      perror("socket failed()");
+      do_cleanup();
+      return 2;
+    }
+    if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
+    {
+      perror("connect failed()");
+      do_cleanup();
+      return 3;
+    }
+  } /* if (!ip_first) */
+  write_erg = send(sock, sendbuf, 1, 0);
+  if (write_erg == 1) /* Lesen der Antwort */
+    result = recv(sock, empfbuf, 1, 0);
+  /* Hier fertig mit "Ende lesen" */
 
   zeitstempel();
 
-  if ( (empfbuf[0] == ENDELESEN) && (do_reset == 1) )
+  if ((empfbuf[0] == ENDELESEN) && (do_reset == 1))
   {
-    sendbuf[0]=RESETDATAFLASH;   /* Senden Buffer zuruecksetzen */
-    write_erg=send(sock,sendbuf,1,0);
-    if (write_erg == 1)    /* Lesen der Antwort*/
+    sendbuf[0] = RESETDATAFLASH; /* Senden Buffer zuruecksetzen */
+    write_erg = send(sock, sendbuf, 1, 0);
+    if (write_erg == 1) /* Lesen der Antwort*/
     {
-      result  = recv(sock,empfbuf,1,0);
-      fprintf(fp_varlogfile,"%s - %s -- Vom DL erhaltene Reset-Bestaetigung: %x.\n",sDatum, sZeit,empfbuf[0]);
+      result = recv(sock, empfbuf, 1, 0);
+      fprintf(fp_varlogfile, "%s - %s -- Vom DL erhaltene Reset-Bestaetigung: %x.\n", sDatum, sZeit, empfbuf[0]);
     }
     else
-      printf("Reset konnte nicht gesendet werden. Ergebnis = %d\n",result);
+      printf("Reset konnte nicht gesendet werden. Ergebnis = %d\n", result);
   }
   else
   {
-    fprintf(fp_varlogfile,"%s - %s -- Kein Data-Reset! \n",sDatum, sZeit);
+    fprintf(fp_varlogfile, "%s - %s -- Kein Data-Reset! \n", sDatum, sZeit);
   }
   return 1;
 }
@@ -4438,35 +4735,35 @@ float berechnetemp(UCHAR lowbyte, UCHAR highbyte)
   UCHAR temp_highbyte;
   int z;
   short wert;
-int sensor=0; //!!!!!!!!!!!!!
+  int sensor = 0; //!!!!!!!!!!!!!
   temp_highbyte = highbyte;
-  wert = lowbyte | ((highbyte & 0x0f)<<8);
+  wert = lowbyte | ((highbyte & 0x0f) << 8);
 
-  if( (highbyte & UVR1611) != 0 )
-    {
-      wert = wert ^ 0xfff;
-      wert = -wert -1 ;
-      return ((float) wert / 10);
-    }
+  if ((highbyte & UVR1611) != 0)
+  {
+    wert = wert ^ 0xfff;
+    wert = -wert - 1;
+    return ((float)wert / 10);
+  }
   else
+  {
+    if (sensor == 7) // Raumtemperatur
     {
-      if( sensor == 7)  // Raumtemperatur
-      {
-        if( (highbyte & 0x01) != 0 )
-          return((256 + (float)lowbyte) / 10); /* Temperatur in C */
-        else
-          return(((float)lowbyte) / 10); /* Temperatur in C */
-      }
+      if ((highbyte & 0x01) != 0)
+        return ((256 + (float)lowbyte) / 10); /* Temperatur in C */
       else
-      {
-        for(z=5;z<9;z++)
-          temp_highbyte = temp_highbyte & ~(1 << z); /* die oberen 4 Bit auf 0 setzen */
-        if (sensor == 6)
-          return(((float)temp_highbyte*256) + (float)lowbyte); /* Strahlung in W/m2 */
-        else
-          return((((float)temp_highbyte*256) + (float)lowbyte) / 10); /* Temperatur in C */
-      }
+        return (((float)lowbyte) / 10); /* Temperatur in C */
     }
+    else
+    {
+      for (z = 5; z < 9; z++)
+        temp_highbyte = temp_highbyte & ~(1 << z); /* die oberen 4 Bit auf 0 setzen */
+      if (sensor == 6)
+        return (((float)temp_highbyte * 256) + (float)lowbyte); /* Strahlung in W/m2 */
+      else
+        return ((((float)temp_highbyte * 256) + (float)lowbyte) / 10); /* Temperatur in C */
+    }
+  }
 }
 
 /* Berechne Volumenstrom */
@@ -4477,43 +4774,43 @@ float berechnevol(UCHAR lowbyte, UCHAR highbyte)
   short wert;
 
   temp_highbyte = highbyte;
-  wert = lowbyte | ((highbyte & 0x0f)<<8);
+  wert = lowbyte | ((highbyte & 0x0f) << 8);
 
   //  if( (highbyte & UVR1611) != 0 )
-  if( (highbyte & UVR1611) == 0 ) /* Volumenstrom kann nicht negativ sein*/
-    {
-      for(z=5;z<9;z++)
-  temp_highbyte = temp_highbyte & ~(1 << z); /* die oberen 4 Bit auf 0 setzen */
+  if ((highbyte & UVR1611) == 0) /* Volumenstrom kann nicht negativ sein*/
+  {
+    for (z = 5; z < 9; z++)
+      temp_highbyte = temp_highbyte & ~(1 << z); /* die oberen 4 Bit auf 0 setzen */
 
-      wert = (lowbyte | ((temp_highbyte & 0x0f)<<8)) * 4;
-      return ((float) wert );
-    }
+    wert = (lowbyte | ((temp_highbyte & 0x0f) << 8)) * 4;
+    return ((float)wert);
+  }
   else
-    {
-      return( 0 ); /* Volumenstrom in l/h */
-    }
+  {
+    return (0); /* Volumenstrom in l/h */
+  }
 }
 
 /* Loesche ein bestimmtes Bit */
-int clrbit( int word, int bit )
+int clrbit(int word, int bit)
 {
   return (word & ~(1 << bit));
 }
 
 /* Teste, ob ein bestimmtes Bit 0 oder 1 ist */
-int tstbit( int word, int bit )
+int tstbit(int word, int bit)
 {
   return ((word & (1 << bit)) != 0);
 }
 
 /* Setze ein bestimmtes Bit */
-int setbit( int word, int bit )
+int setbit(int word, int bit)
 {
   return (word | (1 << bit));
 }
 
 /* Invertiere ein bestimmtes Bit */
-int xorbit( int word, int bit )
+int xorbit(int word, int bit)
 {
   return (word ^ (1 << bit));
 }
@@ -4524,15 +4821,14 @@ int ip_handling(int sock)
   unsigned char empfbuf[256];
   int send_bytes, recv_bytes;
   UCHAR sendbuf[1];
-//  int sendbuf[1];
 
   sendbuf[0] = 0x81; /* Modusabfrage */
 
-  send_bytes = send(sock, sendbuf,1,0);
+  send_bytes = send(sock, sendbuf, 1, 0);
   if (send_bytes == -1)
     return -1;
 
-  recv_bytes = recv(sock, empfbuf,1,0);
+  recv_bytes = recv(sock, empfbuf, 1, 0);
   if (recv_bytes == -1)
     return -1;
 
