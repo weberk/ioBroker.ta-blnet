@@ -50,7 +50,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Performs a test read from the device to determine input units.
-     * @returns {Promise<{success: boolean, stateValues: Object, units: Object}>} - The result of the test read with success status, state values, and units.
+     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the test read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
         return new Promise(async (resolve, reject) => {
@@ -126,7 +126,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Declare objects in ioBroker based on the provided units.
-     * @param {Object} units - The units determined from the test read.
+     * @param {Object} systemConfiguration - The systemConfiguration determined from the device info reading.
      */
     async declareObjects(systemConfiguration) {
         const units = systemConfiguration.units;
