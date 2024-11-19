@@ -127,6 +127,11 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   testing deployment via "npm run release"
+
 ### 1.0.6 (2024-11-19)
 
 -   testing deployment via "npm run release"
