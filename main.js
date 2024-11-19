@@ -49,62 +49,144 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
+     * Polling function to fetch state values from the IoT device at regular intervals.
+     */
+    startPolling() {
+        const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
+
+        this.pollingInterval = setInterval(async () => {
+            // Perform an initialization read attempt, if failed do not start polling
+            if (!this.initialized) {
+                try {
+                    const systemConfiguration = await this.readSystemConfiguration();
+
+                    // Set status for info.connection
+                    this.log.debug("Setting connection status to: " + systemConfiguration.success);
+                    await this.setState("info.connection", systemConfiguration.success, true);
+
+                    // Declare objects
+                    await this.declareObjects(systemConfiguration);
+
+                    this.initialized = true;
+                    this.log.debug("Initialization succeeded: ");
+                } catch (error) {
+                    this.log.error("Initialization failed: " + error);
+                    return; // Verriegelung des Pollings, wenn die Initialisierung fehlschlägt
+                }
+            }
+
+            // Polling-Operationen nur ausführen, wenn die Initialisierung erfolgreich war
+            if (this.initialized) {
+                try {
+                    const stateValues = await this.fetchStateValuesFromDevice();
+                    await this.setState("info.connection", true, true);
+
+                    for (const [key, value] of Object.entries(stateValues)) {
+                        if (typeof value === "object" && value !== null) {
+                            for (const [subKey, subValue] of Object.entries(value)) {
+                                const stateKey = `${key}.${subKey}`;
+                                let finalValue = subValue;
+
+                                // Process input values: filter bits 4-6 and handle sign bit
+                                if (key === "inputs") {
+                                    if (typeof subValue === "number") {
+                                        const highByte = subValue >> 8;
+                                        const lowByte = subValue & 0xFF;
+                                        const signBit = highByte & 0x80;
+                                        const unitBits = highByte & 0x70;
+                                        let input = this.byte2short(lowByte, highByte & 0x0F);
+                                        if (signBit) {
+                                            input = -input;
+                                        }
+                                        if (unitBits === 0x20) { // °C
+                                            finalValue = input / 10.0; // Assuming input is in tenths of degrees
+                                        } else {
+                                            finalValue = input;
+                                        }
+                                        this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
+                                    } else {
+                                        this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
+                                    }
+                                }
+
+                                // Update the state in ioBroker
+                                await this.setState(stateKey, {
+                                    val: finalValue,
+                                    ack: true
+                                });
+                            }
+                        } else {
+                            this.log.debug(`Setting state ${key} to value ${value}`);
+                            // Update the state in ioBroker
+                            await this.setState(key, {
+                                val: value,
+                                ack: true
+                            });
+                        }
+                    }
+                    this.log.info("Polled state values from the IoT device");
+                } catch (error) {
+                    await this.setState("info.connection", false, true);
+                    this.log.error("Error polling state values: " + error);
+                }
+            }
+        }, pollInterval); // Poll every pollInterval milliseconds
+    }
+
+    /**
      * Performs a test read from the device to determine input units.
      * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the test read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
-        return new Promise((resolve, _reject) => {
-            let stateValues;
-            let deviceInfo;
+        let stateValues;
+        let deviceInfo;
 
-            // Try to read some metadata on the device
-            try {
-                deviceInfo = await this.readDeviceInfo();
-                this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
-            } catch (error) {
-                this.log.debug("readDeviceInfo function error: " + error);
-                resolve({
-                    success: false,
-                    stateValues: {},
-                    deviceInfo: {},
-                    units: {}
-                });
-                return;
-            }
+        // Try to read some metadata on the device
+        try {
+            deviceInfo = await this.readDeviceInfo();
+            this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
+        } catch (error) {
+            this.log.debug("readDeviceInfo function error: " + error);
+            return {
+                success: false,
+                stateValues: {},
+                deviceInfo: {},
+                units: {}
+            };
+        }
 
-            try {
-                stateValues = await this.fetchStateValuesFromDevice();
-                const units = {};
+        try {
+            stateValues = await this.fetchStateValuesFromDevice();
+            const units = {};
 
-                // Determine units based on bits 4-6 of the high byte for inputs
-                for (const [key, value] of Object.entries(stateValues.inputs)) {
-                    if (typeof value === "number") {
-                        const highByte = value >> 8;
-                        const unitBits = highByte & 0x70;
-                        const unit = this.determineUnit(unitBits);
-                        units[key] = unit;
-                    } else {
-                        this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
-                    }
+            // Determine units based on bits 4-6 of the high byte for inputs
+            for (const [key, value] of Object.entries(stateValues.inputs)) {
+                if (typeof value === "number") {
+                    const highByte = value >> 8;
+                    const unitBits = highByte & 0x70;
+                    const unit = this.determineUnit(unitBits);
+                    units[key] = unit;
+                } else {
+                    this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
                 }
-
-                this.log.info("readDeviceInfo succeeded.");
-                resolve({
-                    success: true,
-                    stateValues: stateValues,
-                    deviceInfo: deviceInfo,
-                    units: units
-                });
-            } catch (error) {
-                this.log.error("readDeviceInfo failed: " + error);
-                resolve({
-                    success: false,
-                    stateValues: {},
-                    deviceInfo: {},
-                    units: {}
-                });
             }
-        });
+
+            this.log.info("readDeviceInfo succeeded.");
+            return {
+                success: true,
+                stateValues: stateValues,
+                deviceInfo: deviceInfo,
+                units: units
+            };
+        } catch (error) {
+            this.log.error("readDeviceInfo failed: " + error);
+            return {
+                success: false,
+                stateValues: {},
+                deviceInfo: {},
+                units: {}
+            };
+        }
     }
 
     /**
@@ -303,90 +385,6 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.debug("objects for metrics declared.");
     }
 
-    /**
-     * Polling function to fetch state values from the IoT device at regular intervals.
-     */
-    startPolling() {
-        const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
-
-        this.pollingInterval = setInterval(async () => {
-            // Perform an initialization read attempt, if failed do not start polling
-            if (!this.initialized) {
-                try {
-                    const systemConfiguration = await this.readSystemConfiguration();
-
-                    // Set status for info.connection
-                    this.log.debug("Setting connection status to: " + systemConfiguration.success);
-                    await this.setState("info.connection", systemConfiguration.success, true);
-
-                    // Declare objects
-                    await this.declareObjects(systemConfiguration);
-
-                    this.initialized = true;
-                    this.log.debug("Initialization succeeded: ");
-                } catch (error) {
-                    this.log.error("Initialization failed: " + error);
-                    return; // Verriegelung des Pollings, wenn die Initialisierung fehlschlägt
-                }
-            }
-
-            // Polling-Operationen nur ausführen, wenn die Initialisierung erfolgreich war
-            if (this.initialized) {
-                try {
-                    const stateValues = await this.fetchStateValuesFromDevice();
-                    await this.setState("info.connection", true, true);
-
-                    for (const [key, value] of Object.entries(stateValues)) {
-                        if (typeof value === "object" && value !== null) {
-                            for (const [subKey, subValue] of Object.entries(value)) {
-                                const stateKey = `${key}.${subKey}`;
-                                let finalValue = subValue;
-
-                                // Process input values: filter bits 4-6 and handle sign bit
-                                if (key === "inputs") {
-                                    if (typeof subValue === "number") {
-                                        const highByte = subValue >> 8;
-                                        const lowByte = subValue & 0xFF;
-                                        const signBit = highByte & 0x80;
-                                        const unitBits = highByte & 0x70;
-                                        let input = this.byte2short(lowByte, highByte & 0x0F);
-                                        if (signBit) {
-                                            input = -input;
-                                        }
-                                        if (unitBits === 0x20) { // °C
-                                            finalValue = input / 10.0; // Assuming input is in tenths of degrees
-                                        } else {
-                                            finalValue = input;
-                                        }
-                                        this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
-                                    } else {
-                                        this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
-                                    }
-                                }
-
-                                // Update the state in ioBroker
-                                await this.setState(stateKey, {
-                                    val: finalValue,
-                                    ack: true
-                                });
-                            }
-                        } else {
-                            this.log.debug(`Setting state ${key} to value ${value}`);
-                            // Update the state in ioBroker
-                            await this.setState(key, {
-                                val: value,
-                                ack: true
-                            });
-                        }
-                    }
-                    this.log.info("Polled state values from the IoT device");
-                } catch (error) {
-                    await this.setState("info.connection", false, true);
-                    this.log.error("Error polling state values: " + error);
-                }
-            }
-        }, pollInterval); // Poll every pollInterval milliseconds
-    }
 
     async readDeviceInfo() {
         return new Promise((resolve, reject) => {
