@@ -41,14 +41,8 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
 
-        // Perform a test read attempt
-        const testResult = await this.testRead();
-
-        // Set status for info.connection
-        await this.setState("info.connection", testResult.success, true);
-
-        // Declare objects
-        await this.declareObjects(testResult.units);
+        // create status for adapter initialization success
+        this.initialized = false;
 
         // Start polling
         this.startPolling();
@@ -56,44 +50,54 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Performs a test read from the device to determine input units.
-     * @returns {Promise<{success: boolean, units: Object}>} - The result of the test read with success status and units.
+     * @returns {Promise<{success: boolean, stateValues: Object, units: Object}>} - The result of the test read with success status, state values, and units.
      */
-    async testRead() {
-        // try to read some metadata on the device
-        try {
-            await this.testFunction();
-        } catch (error) {
-            this.log.debug("Test function error: " + error);
-        }
+    async readSystemConfiguration() {
+        return new Promise(async (resolve, reject) => {
+            let stateValues;
+            let deviceInfo;
 
-        try {
-            const stateValues = await this.fetchStateValuesFromDevice();
-            const units = {};
-
-            // Determine units based on bits 4-6 of the high byte for inputs
-            for (const [key, value] of Object.entries(stateValues.inputs)) {
-                if (typeof value === "number") {
-                    const highByte = value >> 8;
-                    const unitBits = highByte & 0x70;
-                    const unit = this.determineUnit(unitBits);
-                    units[key] = unit;
-                } else {
-                    this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
-                }
+            // Try to read some metadata on the device
+            try {
+                deviceInfo = await this.readDeviceInfo();
+                this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
+            } catch (error) {
+                this.log.debug("readDeviceInfo function error: " + error);
             }
 
-            this.log.info("Test read succeeded.");
-            return {
-                success: true,
-                units
-            };
-        } catch (error) {
-            this.log.error("Test read failed: " + error);
-            return {
-                success: false,
-                units: {}
-            };
-        }
+            try {
+                stateValues = await this.fetchStateValuesFromDevice();
+                const units = {};
+
+                // Determine units based on bits 4-6 of the high byte for inputs
+                for (const [key, value] of Object.entries(stateValues.inputs)) {
+                    if (typeof value === "number") {
+                        const highByte = value >> 8;
+                        const unitBits = highByte & 0x70;
+                        const unit = this.determineUnit(unitBits);
+                        units[key] = unit;
+                    } else {
+                        this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
+                    }
+                }
+
+                this.log.info("readDeviceInfo succeeded.");
+                resolve({
+                    success: true,
+                    stateValues: stateValues,
+                    deviceInfo: deviceInfo,
+                    units: units
+                });
+            } catch (error) {
+                this.log.error("readDeviceInfo failed: " + error);
+                resolve({
+                    success: false,
+                    stateValues: {},
+                    deviceInfo: {},
+                    units: {}
+                });
+            }
+        });
     }
 
     /**
@@ -124,7 +128,34 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Declare objects in ioBroker based on the provided units.
      * @param {Object} units - The units determined from the test read.
      */
-    async declareObjects(units) {
+    async declareObjects(systemConfiguration) {
+        const units = systemConfiguration.units;
+        const deviceInfo = systemConfiguration.deviceInfo;
+
+        // Überprüfen, ob deviceInfo definiert ist
+        if (deviceInfo) {
+            // Declare device information
+            for (const [key, value] of Object.entries(deviceInfo)) {
+                await this.setObjectNotExistsAsync("info." + key, {
+                    type: "state",
+                    common: {
+                        name: key,
+                        type: "string",
+                        role: "indicator",
+                        read: true,
+                        write: false,
+                        def: value // Setzen des Initialwerts
+                    },
+                    native: {},
+                });
+                await this.setState("info." + key, {
+                    val: value,
+                    ack: true
+                });
+            }
+        } else {
+            this.log.error("deviceInfo is undefined or null");
+        }
         // Declare outputs
         const outputs = {
             "A01": "OFF", // Byte 1, Bit 0
@@ -262,6 +293,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 native: {},
             });
         }
+        this.log.debug("objects for metrics declared.");
     }
 
     /**
@@ -269,210 +301,266 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     startPolling() {
         const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
+
         this.pollingInterval = setInterval(async () => {
-            try {
-                const stateValues = await this.fetchStateValuesFromDevice();
-                await this.setState("info.connection", true, true);
+            // Perform an initialization read attempt, if failed do not start polling
+            if (!this.initialized) {
+                try {
+                    const systemConfiguration = await this.readSystemConfiguration();
 
-                for (const [key, value] of Object.entries(stateValues)) {
-                    if (typeof value === "object" && value !== null) {
-                        for (const [subKey, subValue] of Object.entries(value)) {
-                            const stateKey = `${key}.${subKey}`;
-                            let finalValue = subValue;
+                    // Set status for info.connection
+                    this.log.debug("Setting connection status to: " + systemConfiguration.success);
+                    await this.setState("info.connection", systemConfiguration.success, true);
 
-                            // Process input values: filter bits 4-6 and handle sign bit
-                            if (key === "inputs") {
-                                if (typeof subValue === "number") {
-                                    const highByte = subValue >> 8;
-                                    const lowByte = subValue & 0xFF;
-                                    const signBit = highByte & 0x80;
-                                    const unitBits = highByte & 0x70;
-                                    let input = this.byte2short(lowByte, highByte & 0x0F);
-                                    if (signBit) {
-                                        input = -input;
-                                    }
-                                    if (unitBits === 0x20) { // °C
-                                        finalValue = input / 10.0; // Assuming input is in tenths of degrees
+                    // Declare objects
+                    await this.declareObjects(systemConfiguration);
+
+                    this.initialized = true;
+                    this.log.debug("Initialization succeeded: ");
+                } catch (error) {
+                    this.log.error("Initialization failed: " + error);
+                    return; // Verriegelung des Pollings, wenn die Initialisierung fehlschlägt
+                }
+            }
+
+            // Polling-Operationen nur ausführen, wenn die Initialisierung erfolgreich war
+            if (this.initialized) {
+                try {
+                    const stateValues = await this.fetchStateValuesFromDevice();
+                    await this.setState("info.connection", true, true);
+
+                    for (const [key, value] of Object.entries(stateValues)) {
+                        if (typeof value === "object" && value !== null) {
+                            for (const [subKey, subValue] of Object.entries(value)) {
+                                const stateKey = `${key}.${subKey}`;
+                                let finalValue = subValue;
+
+                                // Process input values: filter bits 4-6 and handle sign bit
+                                if (key === "inputs") {
+                                    if (typeof subValue === "number") {
+                                        const highByte = subValue >> 8;
+                                        const lowByte = subValue & 0xFF;
+                                        const signBit = highByte & 0x80;
+                                        const unitBits = highByte & 0x70;
+                                        let input = this.byte2short(lowByte, highByte & 0x0F);
+                                        if (signBit) {
+                                            input = -input;
+                                        }
+                                        if (unitBits === 0x20) { // °C
+                                            finalValue = input / 10.0; // Assuming input is in tenths of degrees
+                                        } else {
+                                            finalValue = input;
+                                        }
+                                        this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
                                     } else {
-                                        finalValue = input;
+                                        this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
                                     }
-                                    this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
-                                } else {
-                                    this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
                                 }
-                            }
 
+                                // Update the state in ioBroker
+                                await this.setState(stateKey, {
+                                    val: finalValue,
+                                    ack: true
+                                });
+                            }
+                        } else {
+                            this.log.debug(`Setting state ${key} to value ${value}`);
                             // Update the state in ioBroker
-                            await this.setState(stateKey, {
-                                val: finalValue,
+                            await this.setState(key, {
+                                val: value,
                                 ack: true
                             });
                         }
-                    } else {
-                        this.log.debug(`Setting state ${key} to value ${value}`);
-                        // Update the state in ioBroker
-                        await this.setState(key, {
-                            val: value,
-                            ack: true
-                        });
                     }
+                    this.log.info("Polled state values from the IoT device");
+                } catch (error) {
+                    await this.setState("info.connection", false, true);
+                    this.log.error("Error polling state values: " + error);
                 }
-                this.log.info("Polled state values from the IoT device");
-            } catch (error) {
-                await this.setState("info.connection", false, true);
-                this.log.error("Error polling state values: " + error);
             }
         }, pollInterval); // Poll every pollInterval milliseconds
     }
 
-    async testFunction() {
-        const client = new net.Socket();
-        const ipAddress = this.config.ip_address; // IP address from the config
-        const port = this.config.port; // Port from the config
-        // Definieren der Konstanten
-        const VERSIONSABFRAGE = 0x81;
-        const KOPFSATZLESEN = 0xAA;
-        const FIRMWAREABFRAGE = 0x82;
-        const MODEABFRAGE = 0x21;
+    async readDeviceInfo() {
+        return new Promise((resolve, reject) => {
+            const client = new net.Socket();
+            const ipAddress = this.config.ip_address; // IP address from the config
+            const port = this.config.port; // Port from the config
+            // Definieren der Konstanten
+            const VERSIONSABFRAGE = 0x81;
+            const KOPFSATZLESEN = 0xAA;
+            const FIRMWAREABFRAGE = 0x82;
+            const MODEABFRAGE = 0x21;
 
-        const sendCommand = async (command) => {
-            return new Promise((resolve, reject) => {
-                client.write(Buffer.from([command]), (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    client.once("data", (data) => {
-                        resolve(data);
+            const sendCommand = async (command) => {
+                return new Promise((resolve, reject) => {
+                    client.write(Buffer.from([command]), (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        client.once("data", (data) => {
+                            resolve(data);
+                        });
                     });
                 });
-            });
-        };
+            };
 
-        client.connect(port, ipAddress, async () => {
-            try {
-                let data;
-                let uvr_modus;
-                let uvr_typ;
-                let uvr_typ2;
+            client.connect(port, ipAddress, async () => {
+                try {
+                    let data;
+                    let uvr_modus;
+                    let uvr_typ;
+                    let uvr_typ2;
 
-                // Senden der Versionsabfrage
-                data = await sendCommand(VERSIONSABFRAGE);
-                this.log.info("Vom DL erhalte Modulkennung: " + data.toString("hex"));
+                    // Senden der Versionsabfrage
+                    data = await sendCommand(VERSIONSABFRAGE);
+                    const modulkennung = data.toString("hex");
+                    this.log.debug("Vom DL erhalte Modulkennung: " + modulkennung);
 
-                // Abfragen des UVR-Typs
-                data = await sendCommand(KOPFSATZLESEN);
-                // Guess the uvr_modus based on the length of the data array
-                switch (data.length) {
-                    case 14:
-                        uvr_modus = 0xD1;
-                        break;
-                    case 13:
-                        uvr_modus = 0xA8;
-                        break;
-                    case 21:
-                        uvr_modus = 0xDC;
-                        break;
-                    default:
-                        throw new Error("Unknown data length: " + data.length);
-                }
-                this.log.info("Vom DL erhalter UVR-Modus: " + uvr_modus.toString(16));
-
-                // KopfsatzD1 kopf_D1[1];
-                // KopfsatzA8 kopf_A8[1];
-                // KOPFSATZ_DC kopf_DC[1];
-
-                /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
-                /* Modus 0xD1 - Laenge 14 Byte   - KopfsatzD1 -                    */
-                // typedef struct {
-                //     UCHAR kennung;
-                //     UCHAR version;
-                //     UCHAR zeitstempel[3];
-                //     UCHAR satzlaengeGeraet1;
-                //     UCHAR satzlaengeGeraet2;
-                //     UCHAR startadresse[3];
-                //     UCHAR endadresse[3];
-                //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
-                // } KopfsatzD1;
-
-                /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
-                /* Modus 0xA8 - Laenge 13 Byte  - KopfsatzA8 -                     */
-                // typedef struct {
-                //     UCHAR kennung;
-                //     UCHAR version;
-                //     UCHAR zeitstempel[3];
-                //     UCHAR satzlaengeGeraet1;
-                //     UCHAR startadresse[3];
-                //     UCHAR endadresse[3];
-                //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
-                // } KopfsatzA8;
-
-                // Define the offsets based on the C struct definitions
-                const KOPFSATZ_D1_LENGTH = 14;
-                const KOPFSATZ_A8_LENGTH = 13;
-
-                const KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET = 5;
-                const KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET = 6;
-
-                const KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET = 5;
-                //this.logHexDump(data); // Log hex dump of the data;
-
-                if (uvr_modus === 0xD1) {
-                    uvr_typ = data[KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                    uvr_typ2 = data[KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                } else {
-                    uvr_typ = data[KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                }
-
-                if (uvr_modus === 0xDC) {
-                    uvr_typ = 0x76; // CAN-Logging only with UVR1611
-                }
-
-                // Translate uvr_typ to string
-                let uvr_typ_str;
-                switch (uvr_typ) {
-                    case 0x5A:
-                        uvr_typ_str = "UVR61-3";
-                        break;
-                    case 0x76:
-                        uvr_typ_str = "UVR1611";
-                        break;
-                    default:
-                        uvr_typ_str = "Unknown";
-                }
-                this.log.info("Vom DL erhalter UVR-Typ: " + uvr_typ_str);
-
-                // Translate uvr_typ2 to string if it exists
-                let uvr_typ2_str;
-                if (uvr_typ2 !== undefined) {
-                    switch (uvr_typ2) {
-                        case 0x5A:
-                            uvr_typ2_str = "UVR61-3";
+                    // Abfragen des UVR-Typs
+                    data = await sendCommand(KOPFSATZLESEN);
+                    // Guess the uvr_modus based on the length of the data array
+                    const KOPFSATZ_D1_LENGTH = 14;
+                    const KOPFSATZ_A8_LENGTH = 13;
+                    const KOPFSATZ_DC_LENGTH = 21;
+                    //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
+                    let uvr_modus_str;
+                    switch (data.length) {
+                        case KOPFSATZ_D1_LENGTH:
+                            uvr_modus = 0xD1;
+                            uvr_modus_str = "2DL";
                             break;
-                        case 0x76:
-                            uvr_typ2_str = "UVR1611";
+                        case KOPFSATZ_A8_LENGTH:
+                            uvr_modus = 0xA8;
+                            uvr_modus_str = "1DL";
+                            break;
+                        case KOPFSATZ_DC_LENGTH:
+                            uvr_modus = 0xDC;
+                            uvr_modus_str = "CAN";
                             break;
                         default:
-                            uvr_typ2_str = "Unknown";
+                            throw new Error("Unknown data length: " + data.length);
                     }
-                    this.log.info("Vom DL erhalter UVR-Typ2: " + uvr_typ2_str);
+                    this.log.debug("Vom DL erhalter UVR-Modus: " + uvr_modus_str);
+
+                    // KopfsatzD1 kopf_D1[1];
+                    // KopfsatzA8 kopf_A8[1];
+                    // KOPFSATZ_DC kopf_DC[1];
+
+                    /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
+                    /* Modus 0xD1 - Laenge 14 Byte   - KopfsatzD1 -                    */
+                    // typedef struct {
+                    //     UCHAR kennung;
+                    //     UCHAR version;
+                    //     UCHAR zeitstempel[3];
+                    //     UCHAR satzlaengeGeraet1;
+                    //     UCHAR satzlaengeGeraet2;
+                    //     UCHAR startadresse[3];
+                    //     UCHAR endadresse[3];
+                    //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                    // } KopfsatzD1;
+
+                    /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
+                    /* Modus 0xA8 - Laenge 13 Byte  - KopfsatzA8 -                     */
+                    // typedef struct {
+                    //     UCHAR kennung;
+                    //     UCHAR version;
+                    //     UCHAR zeitstempel[3];
+                    //     UCHAR satzlaengeGeraet1;
+                    //     UCHAR startadresse[3];
+                    //     UCHAR endadresse[3];
+                    //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                    // } KopfsatzA8;
+
+                    // Define the offsets based on the C struct definitions
+                    const KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET = 5;
+                    const KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET = 6;
+                    const KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET = 5;
+                    //this.logHexDump(data); // Log hex dump of the data;
+
+                    if (uvr_modus === 0xD1) {
+                        uvr_typ = data[KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                        uvr_typ2 = data[KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                    } else {
+                        uvr_typ = data[KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                    }
+
+                    if (uvr_modus === 0xDC) {
+                        uvr_typ = 0x76; // CAN-Logging only with UVR1611
+                    }
+
+                    // Translate uvr_typ to string
+                    let uvr_typ_str;
+                    switch (uvr_typ) {
+                        case 0x5A:
+                            uvr_typ_str = "UVR61-3";
+                            break;
+                        case 0x76:
+                            uvr_typ_str = "UVR1611";
+                            break;
+                        default:
+                            uvr_typ_str = "Unknown";
+                    }
+                    this.log.debug("Vom DL erhalter UVR-Typ: " + uvr_typ_str);
+
+                    // Translate uvr_typ2 to string if it exists
+                    let uvr_typ2_str;
+                    if (uvr_typ2 !== undefined) {
+                        switch (uvr_typ2) {
+                            case 0x5A:
+                                uvr_typ2_str = "UVR61-3";
+                                break;
+                            case 0x76:
+                                uvr_typ2_str = "UVR1611";
+                                break;
+                            default:
+                                uvr_typ2_str = "Unknown";
+                        }
+                        this.log.debug("Vom DL erhalter UVR-Typ2: " + uvr_typ2_str);
+                    }
+
+                    // Senden der Firmware-Versionsabfrage
+                    data = await sendCommand(FIRMWAREABFRAGE);
+                    const firmwareVersion = (data.readUInt8(0) / 100).toString();
+                    this.log.debug("Vom DL erhalten Firmwareversion: " + firmwareVersion);
+
+                    // Senden der Übertragungsodus-Abfrage
+                    data = await sendCommand(MODEABFRAGE);
+                    const transmission_mode = data.readUInt8(0);
+                    this.log.debug("Vom DL erhalten Modus: " + transmission_mode);
+                    // encode transmission_mode as string
+                    let transmission_mode_str;
+                    switch (transmission_mode) {
+                        // case 0x90:
+                        //     transmission_mode_str = "Current Data - UVR61-3";
+                        //     break;
+                        case 0x80:
+                            transmission_mode_str = "Current Data - UVR1611";
+                            break;
+                        default:
+                            transmission_mode_str = "Unknown";
+                    }
+                    this.log.debug("transmission_mode name: " + transmission_mode_str);
+                    resolve({
+                        uvr_mode: uvr_modus_str,
+                        uvr_type: uvr_typ_str,
+                        uvr2_type: uvr_typ2_str,
+                        module_id: "0x" + modulkennung.toUpperCase(),
+                        firmware_version: firmwareVersion,
+                        transmission_mode: "0x" + transmission_mode.toString(16).toUpperCase()
+                    });
+                } catch (error) {
+                    this.log.error("Error during communication with device: " + error);
+                    reject(error);
+                } finally {
+                    client.end();
                 }
+            });
 
-                // Senden der Firmware-Versionsabfrage
-                data = await sendCommand(FIRMWAREABFRAGE);
-                this.log.info("Vom DL erhalten Firmwareversion: " + data.readUInt8(0) / 100);
-
-                // Senden der Modus-Abfrage
-                data = await sendCommand(MODEABFRAGE);
-                this.log.info("Vom DL erhalten Modus: " + data.toString("hex"));
-            } catch (error) {
-                this.log.error("Error during communication with device: " + error);
-            } finally {
-                client.end();
-            }
-        });
-
-        client.on("error", (err) => {
-            this.log.error("Connection error: " + err);
+            client.on("error", (err) => {
+                this.log.error("Connection error: " + err);
+                reject(err);
+            });
         });
     }
 
@@ -484,54 +572,97 @@ class Uvr16xxBlNet extends utils.Adapter {
     async fetchStateValuesFromDevice() {
         return new Promise((resolve, reject) => {
             const stateValues = {};
-
-            const client = new net.Socket();
+            const maxRetries = 5; // Maximale Anzahl der Wiederholungen
+            let attempt = 0; // Aktueller Versuch
+            let client;
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
             const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
 
-            // Connect to the device
-            client.connect(port, ipAddress, () => {
-                const cmd = Buffer.from([READ_CURRENT_DATA]); // Command byte
-                client.write(cmd);
-            });
+            const sleep = (ms) => {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            };
 
-            // Handle incoming data
-            client.on("data", (data) => {
-                // this.logHexDump(data); // Log hex dump of the data
-                if (data[0] === 0x80) {
-                    // Process the response data
-                    const response = this.readBlock(data, 57);
-                    if (response) {
-                        // Parse the response and update stateValues
-                        const uvrRecord = this.parseUvrRecord(response);
-                        if (uvrRecord) {
-                            Object.assign(stateValues, uvrRecord);
+            const sendCommand = async (command) => {
+                await sleep(2000); // Warte zwei Sekunden zwischen den Befehlen
+                return new Promise((resolve, reject) => {
+                    const client = new net.Socket();
+                    client.connect(port, ipAddress, () => {
+                        client.write(Buffer.from([command]), (err) => {
+                            if (err) {
+                                client.destroy();
+                                return reject(err);
+                            }
+                            client.once("data", (data) => {
+                                client.destroy();
+                                resolve(data);
+                            });
+                        });
+                    });
+
+                    client.on("error", (err) => {
+                        client.destroy();
+                        reject(err);
+                    });
+                });
+            };
+
+            const attemptFetch = async () => {
+                while (attempt < maxRetries) {
+                    try {
+                        attempt++;
+                        this.log.debug("Attempt to send READ_CURRENT_DATA command: " + attempt);
+                        const data = await sendCommand(READ_CURRENT_DATA);
+
+                        // Verarbeiten Sie die empfangenen Daten hier
+                        // case 0x90: transmission_mode_str = "Current Data - UVR61-3";
+                        // case 0x80: transmission_mode_str = "Current Data - UVR1611";
+                        // this.logHexDump(data); // Log hex dump of the data
+                        if (data[0] === 0x80) {
+                            // Process the response data
+                            const response = this.readBlock(data, 57);
+                            if (response) {
+                                // Parse the response and update stateValues
+                                const uvrRecord = this.parseUvrRecord(response);
+                                if (uvrRecord) {
+                                    Object.assign(stateValues, uvrRecord);
+                                }
+
+                                this.log.debug("fetchStateValuesFromDevice successful.");
+                                resolve(stateValues); // finalize the Promise value
+                                return; // Erfolgreich, beenden Sie die Schleife
+                            } else {
+                                // ignore the non valid response
+                                this.log.debug("Invalid response from device");
+                                if (attempt >= maxRetries) {
+                                    reject(new Error("Max retries reached. Unable to communicate with device."));
+                                } else {
+                                    await sleep(2000); // Warte zwei Sekunden
+                                }
+                            }
+                        } else {
+                            // ignore the non expected response
+                            this.log.debug("Unexpected response from device");
+                            this.logHexDump(data); // Log hex dump of the data;
+                            if (attempt >= maxRetries) {
+                                reject(new Error("Max retries reached. Unable to communicate with device."));
+                            } else {
+                                await sleep(2000); // Warte zwei Sekunden
+                            }
                         }
-
-                        client.destroy(); // Close the connection
-                        resolve(stateValues);
-                    } else {
-                        client.destroy(); // Close the connection
-                        reject(new Error("Invalid response from device"));
+                    } catch (error) {
+                        this.log.error(`Error during communication with device on attempt ${attempt}: ${error}`);
+                        if (attempt >= maxRetries) {
+                            reject(new Error("Max retries reached. Unable to communicate with device."));
+                        } else {
+                            await sleep(2000); // Warte zwei Sekunden
+                        }
                     }
-                } else {
-                    this.logHexDump(data); // Log hex dump of the data;
-                    client.destroy(); // Close the connection
-                    reject(new Error("Unexpected response from device"));
                 }
-            });
+            };
 
-            // Handle connection errors
-            client.on("error", (err) => {
-                client.destroy(); // Close the connection
-                reject(err);
-            });
-
-            // Handle connection close
-            client.on("close", () => {
-                // Connection closed
-            });
+            this.log.debug("Initiate attempt to fetch state values from the IoT device");
+            attemptFetch(); // Start with the first attempt
         });
     }
 
