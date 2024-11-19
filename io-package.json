@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "uvr16xx-blnet",
-        "version": "1.0.1",
+        "version": "1.0.5",
         "messagebox": true,
         "news": {
             "1.0.1": {
