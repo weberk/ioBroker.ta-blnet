@@ -71,11 +71,11 @@ class Uvr16xxBlNet extends utils.Adapter {
                     this.log.debug("Initialization succeeded: ");
                 } catch (error) {
                     this.log.error("Initialization failed: " + error);
-                    return; // Verriegelung des Pollings, wenn die Initialisierung fehlschlägt
+                    return; // Lock polling if initialization fails
                 }
             }
 
-            // Polling-Operationen nur ausführen, wenn die Initialisierung erfolgreich war
+            // Perform polling operations only if initialization was successful
             if (this.initialized) {
                 try {
                     const stateValues = await this.fetchStateValuesFromDevice();
@@ -84,7 +84,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     for (const [key, value] of Object.entries(stateValues)) {
                         if (typeof value === "object" && value !== null) {
                             for (const [subKey, subValue] of Object.entries(value)) {
-                                const stateKey = `${key}.${subKey}`;
+                                const stateKey = key + "." + subKey;
                                 let finalValue = subValue;
 
                                 // Process input values: filter bits 4-6 and handle sign bit
@@ -103,9 +103,9 @@ class Uvr16xxBlNet extends utils.Adapter {
                                         } else {
                                             finalValue = input;
                                         }
-                                        this.log.debug(`Setting state ${stateKey} to value ${finalValue} as type ${this.determineUnit(unitBits)}`);
+                                        this.log.debug("Setting state " + stateKey + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
                                     } else {
-                                        this.log.error(`Invalid subValue structure for ${stateKey}: ${JSON.stringify(subValue)}`);
+                                        this.log.error("Invalid subValue structure for " + stateKey + ": " + JSON.stringify(subValue));
                                     }
                                 }
 
@@ -116,7 +116,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                                 });
                             }
                         } else {
-                            this.log.debug(`Setting state ${key} to value ${value}`);
+                            this.log.debug("Setting state " + key + " to value " + value);
                             // Update the state in ioBroker
                             await this.setState(key, {
                                 val: value,
@@ -167,7 +167,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     const unit = this.determineUnit(unitBits);
                     units[key] = unit;
                 } else {
-                    this.log.error(`Invalid input value for ${key}: ${JSON.stringify(value)}`);
+                    this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
                 }
             }
 
@@ -221,7 +221,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         const units = systemConfiguration.units;
         const deviceInfo = systemConfiguration.deviceInfo;
 
-        // Überprüfen, ob deviceInfo definiert ist
+        // Check if deviceInfo is defined
         if (deviceInfo) {
             // Declare device information
             for (const [key, value] of Object.entries(deviceInfo)) {
@@ -233,7 +233,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                         role: "indicator",
                         read: true,
                         write: false,
-                        def: value // Setzen des Initialwerts
+                        def: value // Set initial value
                     },
                     native: {},
                 });
@@ -263,7 +263,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         };
 
         for (const key of Object.keys(outputs)) {
-            await this.setObjectNotExistsAsync(`outputs.${key}`, {
+            await this.setObjectNotExistsAsync("outputs." + key, {
                 type: "state",
                 common: {
                     name: key,
@@ -285,7 +285,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         };
 
         for (const key of Object.keys(speedLevels)) {
-            await this.setObjectNotExistsAsync(`speed_levels.${key}`, {
+            await this.setObjectNotExistsAsync("speed_levels." + key, {
                 type: "state",
                 common: {
                     name: key,
@@ -319,7 +319,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         };
 
         for (const key of Object.keys(inputs)) {
-            await this.setObjectNotExistsAsync(`inputs.${key}`, {
+            await this.setObjectNotExistsAsync("inputs." + key, {
                 type: "state",
                 common: {
                     name: key,
@@ -340,7 +340,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         };
 
         for (const key of Object.keys(thermalEnergyCountersStatus)) {
-            await this.setObjectNotExistsAsync(`thermal_energy_counters_status.${key}`, {
+            await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
                 type: "state",
                 common: {
                     name: key,
@@ -369,7 +369,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 unit = "kWh";
             }
 
-            await this.setObjectNotExistsAsync(`thermal_energy_counters.${key}`, {
+            await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
                 type: "state",
                 common: {
                     name: key,
@@ -385,17 +385,16 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.debug("objects for metrics declared.");
     }
 
-
     async readDeviceInfo() {
         return new Promise((resolve, reject) => {
             const client = new net.Socket();
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
-            // Definieren der Konstanten
-            const VERSIONSABFRAGE = 0x81;
-            const KOPFSATZLESEN = 0xAA;
-            const FIRMWAREABFRAGE = 0x82;
-            const MODEABFRAGE = 0x21;
+            // Define constants
+            const VERSION_REQUEST = 0x81;
+            const HEADER_READ = 0xAA;
+            const FIRMWARE_REQUEST = 0x82;
+            const MODE_REQUEST = 0x21;
 
             const sendCommand = async (command) => {
                 return new Promise((resolve, reject) => {
@@ -413,47 +412,47 @@ class Uvr16xxBlNet extends utils.Adapter {
             client.connect(port, ipAddress, async () => {
                 try {
                     let data;
-                    let uvr_modus;
-                    let uvr_typ;
-                    let uvr_typ2;
+                    let uvr_mode;
+                    let uvr_type;
+                    let uvr2_type;
 
-                    // Senden der Versionsabfrage
-                    data = await sendCommand(VERSIONSABFRAGE);
-                    const modulkennung = data.toString("hex");
-                    this.log.debug("Vom DL erhalte Modulkennung: " + modulkennung);
+                    // Send version request
+                    data = await sendCommand(VERSION_REQUEST);
+                    const module_id = data.toString("hex");
+                    this.log.debug("Received module ID of BL-NET: " + module_id);
 
-                    // Abfragen des UVR-Typs
-                    data = await sendCommand(KOPFSATZLESEN);
+                    // Query UVR type
+                    data = await sendCommand(HEADER_READ);
                     // Guess the uvr_modus based on the length of the data array
                     const KOPFSATZ_D1_LENGTH = 14;
                     const KOPFSATZ_A8_LENGTH = 13;
                     const KOPFSATZ_DC_LENGTH = 21;
                     //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
-                    let uvr_modus_str;
+                    let uvr_mode_str;
                     switch (data.length) {
                         case KOPFSATZ_D1_LENGTH:
-                            uvr_modus = 0xD1;
-                            uvr_modus_str = "2DL";
+                            uvr_mode = 0xD1;
+                            uvr_mode_str = "2DL";
                             break;
                         case KOPFSATZ_A8_LENGTH:
-                            uvr_modus = 0xA8;
-                            uvr_modus_str = "1DL";
+                            uvr_mode = 0xA8;
+                            uvr_mode_str = "1DL";
                             break;
                         case KOPFSATZ_DC_LENGTH:
-                            uvr_modus = 0xDC;
-                            uvr_modus_str = "CAN";
+                            uvr_mode = 0xDC;
+                            uvr_mode_str = "CAN";
                             break;
                         default:
                             throw new Error("Unknown data length: " + data.length);
                     }
-                    this.log.debug("Vom DL erhalter UVR-Modus: " + uvr_modus_str);
+                    this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
 
                     // KopfsatzD1 kopf_D1[1];
                     // KopfsatzA8 kopf_A8[1];
                     // KOPFSATZ_DC kopf_DC[1];
 
-                    /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
-                    /* Modus 0xD1 - Laenge 14 Byte   - KopfsatzD1 -                    */
+                    /* Data structure of the header from D-LOGG or BL-Net */
+                    /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
                     // typedef struct {
                     //     UCHAR kennung;
                     //     UCHAR version;
@@ -462,11 +461,11 @@ class Uvr16xxBlNet extends utils.Adapter {
                     //     UCHAR satzlaengeGeraet2;
                     //     UCHAR startadresse[3];
                     //     UCHAR endadresse[3];
-                    //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                    //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
                     // } KopfsatzD1;
 
-                    /* Datenstruktur des Kopfsatzes aus dem D-LOGG bzw. BL-Net kommend */
-                    /* Modus 0xA8 - Laenge 13 Byte  - KopfsatzA8 -                     */
+                    /* Data structure of the header from D-LOGG or BL-Net */
+                    /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
                     // typedef struct {
                     //     UCHAR kennung;
                     //     UCHAR version;
@@ -474,65 +473,65 @@ class Uvr16xxBlNet extends utils.Adapter {
                     //     UCHAR satzlaengeGeraet1;
                     //     UCHAR startadresse[3];
                     //     UCHAR endadresse[3];
-                    //     UCHAR pruefsum;  /* Summer der Bytes mod 256 */
+                    //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
                     // } KopfsatzA8;
 
                     // Define the offsets based on the C struct definitions
-                    const KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET = 5;
-                    const KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET = 6;
-                    const KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET = 5;
+                    const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
+                    const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
+                    const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
                     //this.logHexDump(data); // Log hex dump of the data;
 
-                    if (uvr_modus === 0xD1) {
-                        uvr_typ = data[KOPFSATZ_D1_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                        uvr_typ2 = data[KOPFSATZ_D1_SATZLAENGE_GERAET2_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                    if (uvr_mode === 0xD1) {
+                        uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                        uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
                     } else {
-                        uvr_typ = data[KOPFSATZ_A8_SATZLAENGE_GERAET1_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                        uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
                     }
 
-                    if (uvr_modus === 0xDC) {
-                        uvr_typ = 0x76; // CAN-Logging only with UVR1611
+                    if (uvr_mode === 0xDC) {
+                        uvr_type = 0x76; // CAN-Logging only with UVR1611
                     }
 
                     // Translate uvr_typ to string
-                    let uvr_typ_str;
-                    switch (uvr_typ) {
+                    let uvr_type_str;
+                    switch (uvr_type) {
                         case 0x5A:
-                            uvr_typ_str = "UVR61-3";
+                            uvr_type_str = "UVR61-3";
                             break;
                         case 0x76:
-                            uvr_typ_str = "UVR1611";
+                            uvr_type_str = "UVR1611";
                             break;
                         default:
-                            uvr_typ_str = "Unknown";
+                            uvr_type_str = "Unknown";
                     }
-                    this.log.debug("Vom DL erhalter UVR-Typ: " + uvr_typ_str);
+                    this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
 
                     // Translate uvr_typ2 to string if it exists
-                    let uvr_typ2_str;
-                    if (uvr_typ2 !== undefined) {
-                        switch (uvr_typ2) {
+                    let uvr2_type_str;
+                    if (uvr2_type !== undefined) {
+                        switch (uvr2_type) {
                             case 0x5A:
-                                uvr_typ2_str = "UVR61-3";
+                                uvr2_type_str = "UVR61-3";
                                 break;
                             case 0x76:
-                                uvr_typ2_str = "UVR1611";
+                                uvr2_type_str = "UVR1611";
                                 break;
                             default:
-                                uvr_typ2_str = "Unknown";
+                                uvr2_type_str = "Unknown";
                         }
-                        this.log.debug("Vom DL erhalter UVR-Typ2: " + uvr_typ2_str);
+                        this.log.debug("Received UVR type 2 of BL-NET: " + uvr2_type_str);
                     }
 
-                    // Senden der Firmware-Versionsabfrage
-                    data = await sendCommand(FIRMWAREABFRAGE);
+                    // Send firmware version request
+                    data = await sendCommand(FIRMWARE_REQUEST);
                     const firmwareVersion = (data.readUInt8(0) / 100).toString();
-                    this.log.debug("Vom DL erhalten Firmwareversion: " + firmwareVersion);
+                    this.log.debug("Received firmware version of BL-NET: " + firmwareVersion);
 
-                    // Senden der Übertragungsodus-Abfrage
-                    data = await sendCommand(MODEABFRAGE);
+                    // Send transmission mode request
+                    data = await sendCommand(MODE_REQUEST);
                     const transmission_mode = data.readUInt8(0);
-                    this.log.debug("Vom DL erhalten Modus: " + transmission_mode);
+                    this.log.debug("Received mode of BL-NET: " + transmission_mode);
                     // encode transmission_mode as string
                     let transmission_mode_str;
                     switch (transmission_mode) {
@@ -540,19 +539,19 @@ class Uvr16xxBlNet extends utils.Adapter {
                         //     transmission_mode_str = "Current Data - UVR61-3";
                         //     break;
                         case 0x80:
-                            transmission_mode_str = "Current Data - UVR1611";
+                            transmission_mode_str = "Current Data"; //  - UVR1611
                             break;
                         default:
                             transmission_mode_str = "Unknown";
                     }
                     this.log.debug("transmission_mode name: " + transmission_mode_str);
                     resolve({
-                        uvr_mode: uvr_modus_str,
-                        uvr_type: uvr_typ_str,
-                        uvr2_type: uvr_typ2_str,
-                        module_id: "0x" + modulkennung.toUpperCase(),
+                        uvr_mode: uvr_mode_str,
+                        uvr_type: uvr_type_str,
+                        uvr2_type: uvr2_type_str,
+                        module_id: "0x" + module_id.toUpperCase(),
                         firmware_version: firmwareVersion,
-                        transmission_mode: "0x" + transmission_mode.toString(16).toUpperCase()
+                        transmission_mode: transmission_mode_str
                     });
                 } catch (error) {
                     this.log.error("Error during communication with device: " + error);
@@ -569,7 +568,6 @@ class Uvr16xxBlNet extends utils.Adapter {
         });
     }
 
-
     /**
      * Fetches state values from the IoT device.
      * @returns {Promise<Object>} - A promise that resolves with the state values.
@@ -577,8 +575,8 @@ class Uvr16xxBlNet extends utils.Adapter {
     async fetchStateValuesFromDevice() {
         return new Promise((resolve, reject) => {
             const stateValues = {};
-            const maxRetries = 5; // Maximale Anzahl der Wiederholungen
-            let attempt = 0; // Aktueller Versuch
+            const maxRetries = 5; // Maximum number of retries
+            let attempt = 0; // Current attempt
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
             const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
@@ -588,7 +586,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             };
 
             const sendCommand = async (command) => {
-                await sleep(2000); // Warte zwei Sekunden zwischen den Befehlen
+                await sleep(2000); // Wait two seconds between commands
                 return new Promise((resolve, reject) => {
                     const client = new net.Socket();
                     client.connect(port, ipAddress, () => {
@@ -618,7 +616,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                         this.log.debug("Attempt to send READ_CURRENT_DATA command: " + attempt);
                         const data = await sendCommand(READ_CURRENT_DATA);
 
-                        // Verarbeiten Sie die empfangenen Daten hier
+                        // Process the received data here
                         // case 0x90: transmission_mode_str = "Current Data - UVR61-3";
                         // case 0x80: transmission_mode_str = "Current Data - UVR1611";
                         // this.logHexDump(data); // Log hex dump of the data
@@ -634,14 +632,12 @@ class Uvr16xxBlNet extends utils.Adapter {
 
                                 this.log.debug("fetchStateValuesFromDevice successful.");
                                 resolve(stateValues); // finalize the Promise value
-                                return; // Erfolgreich, beenden Sie die Schleife
+                                return; // Successfully, exit the loop
                             } else {
                                 // ignore the non valid response
                                 this.log.debug("Invalid response from device");
                                 if (attempt >= maxRetries) {
                                     reject(new Error("Max retries reached. Unable to communicate with device."));
-                                } else {
-                                    await sleep(2000); // Warte zwei Sekunden
                                 }
                             }
                         } else {
@@ -650,16 +646,12 @@ class Uvr16xxBlNet extends utils.Adapter {
                             this.logHexDump(data); // Log hex dump of the data;
                             if (attempt >= maxRetries) {
                                 reject(new Error("Max retries reached. Unable to communicate with device."));
-                            } else {
-                                await sleep(2000); // Warte zwei Sekunden
                             }
                         }
                     } catch (error) {
-                        this.log.error(`Error during communication with device on attempt ${attempt}: ${error}`);
+                        this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
                         if (attempt >= maxRetries) {
                             reject(new Error("Max retries reached. Unable to communicate with device."));
-                        } else {
-                            await sleep(2000); // Warte zwei Sekunden
                         }
                     }
                 }
@@ -699,7 +691,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 hexString += "\n";
             }
         }
-        this.log.debug(`Hex dump:\n${hexString}`);
+        this.log.debug("Hex dump:\n" + hexString);
     }
 
     /**
@@ -740,7 +732,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         uvrRecord.outputs["A13"] = (output & 0x1000) ? "ON" : "OFF";
 
         // Log outputs
-        this.log.debug(`Outputs: ${JSON.stringify(uvrRecord.outputs)}`);
+        this.log.debug("Outputs: " + JSON.stringify(uvrRecord.outputs));
 
         // Speed levels
         uvrRecord.speed_levels["DzA1"] = response[35];
@@ -749,15 +741,15 @@ class Uvr16xxBlNet extends utils.Adapter {
         uvrRecord.speed_levels["DzA7"] = response[38];
 
         // Log speed levels
-        this.log.debug(`Speed levels: ${JSON.stringify(uvrRecord.speed_levels)}`);
+        this.log.debug("Speed levels: " + JSON.stringify(uvrRecord.speed_levels));
 
         // Inputs
         for (let i = 0; i < 16; i++) {
-            uvrRecord.inputs[`S${(i + 1).toString().padStart(2, "0")}`] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
+            uvrRecord.inputs["S" + (i + 1).toString().padStart(2, "0")] = this.byte2short(response[i * 2 + 1], response[i * 2 + 2]);
         }
 
         // Log inputs
-        this.log.debug(`Inputs: ${JSON.stringify(uvrRecord.inputs)}`);
+        this.log.debug("Inputs: " + JSON.stringify(uvrRecord.inputs));
 
         // Thermal energy counters status
         const wmz = response[39];
@@ -765,7 +757,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         uvrRecord.thermal_energy_counters_status["wmz2"] = (wmz & 0x2) ? "active" : "inactive";
 
         // Log thermal energy counters status
-        this.log.debug(`Thermal energy counters status: ${JSON.stringify(uvrRecord.thermal_energy_counters_status)}`);
+        this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
 
         // Thermal energy counters
         if (wmz & 0x1) {
@@ -812,7 +804,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
         }
         // Log thermal energy counters
-        this.log.debug(`Thermal energy counters: ${JSON.stringify(uvrRecord.thermal_energy_counters)}`);
+        this.log.debug("Thermal energy counters: " + JSON.stringify(uvrRecord.thermal_energy_counters));
 
         return uvrRecord;
     }
@@ -890,10 +882,10 @@ class Uvr16xxBlNet extends utils.Adapter {
     onStateChange(id, state) {
         if (state) {
             // The state was changed
-            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+            this.log.info("state " + id + " changed: " + state.val + " (ack = " + state.ack + ")");
         } else {
             // The state was deleted
-            this.log.info(`state ${id} deleted`);
+            this.log.info("state " + id + " deleted");
         }
     }
 
