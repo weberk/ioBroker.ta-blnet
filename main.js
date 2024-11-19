@@ -532,7 +532,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     data = await sendCommand(MODE_REQUEST);
                     const transmission_mode = data.readUInt8(0);
                     this.log.debug("Received mode of BL-NET: " + transmission_mode);
-                    // encode transmission_mode as string
+                    // encode transmission_mode to string
                     let transmission_mode_str;
                     switch (transmission_mode) {
                         // case 0x90:
