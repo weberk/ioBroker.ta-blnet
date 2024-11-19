@@ -53,20 +53,27 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the test read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve) => {
             let stateValues;
             let deviceInfo;
 
             // Try to read some metadata on the device
             try {
-                deviceInfo = await this.readDeviceInfo();
+                deviceInfo = this.readDeviceInfo();
                 this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
             } catch (error) {
                 this.log.debug("readDeviceInfo function error: " + error);
+                resolve({
+                    success: false,
+                    stateValues: {},
+                    deviceInfo: {},
+                    units: {}
+                });
+                return;
             }
 
             try {
-                stateValues = await this.fetchStateValuesFromDevice();
+                stateValues = this.fetchStateValuesFromDevice();
                 const units = {};
 
                 // Determine units based on bits 4-6 of the high byte for inputs
@@ -574,7 +581,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             const stateValues = {};
             const maxRetries = 5; // Maximale Anzahl der Wiederholungen
             let attempt = 0; // Aktueller Versuch
-            let client;
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
             const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
