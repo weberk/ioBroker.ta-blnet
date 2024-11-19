@@ -15,7 +15,7 @@
 
 An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.
 ![BL-NET](doc/BL-NET.png)
-You can find the manual of this device here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf 
+You can find the manual of this device here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf
 
 ## Developer manual
 
@@ -130,6 +130,10 @@ Placeholder for next version:
 -->
 
 ### **WORK IN PROGRESS**
+
+-   testing deployment via "npm run release"
+
+### 1.0.5 (2024-11-17)
 
 -   improve build and deploy using github workflow (workflow>test-and-release.yml, ioBroker Check and Service Bot)
 -   added compliance with ioBrokers adapter repository (https://github.com/ioBroker/ioBroker.repositories?tab=readme-ov-file#how-to-publish-on-npm)
