@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "messagebox": true,
     "news": {
+      "1.0.7": {
+        "en": "testing deployment via \"npm run release\"",
+        "de": "testeinsatz über \"npm run release\"",
+        "ru": "тестирование развертывания через \"npm run release\"",
+        "pt": "testando a implementação através da \"versão de liberação\"",
+        "nl": "testen implementatie via \"npm run release\"",
+        "fr": "test de déploiement via \"npm run release\"",
+        "it": "distribuzione di test tramite \"npm run release\"",
+        "es": "despliegue de pruebas a través de \"npm run release\"",
+        "pl": "testowanie rozmieszczenia poprzez \"npm uruchom\"",
+        "uk": "тестування розгортання через \"npm run release\"",
+        "zh-cn": "通过“ npm 运行释放” 测试部署"
+      },
       "1.0.6": {
         "en": "testing deployment via \"npm run release\"",
         "de": "testeinsatz über \"npm run release\"",
