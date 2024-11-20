@@ -1351,11 +1351,11 @@ int kopfsatzlesen(void) {
     fprintf(stderr, " Durchlauf #%i -  berechnete pruefziffer:%d kopfsatz.pruefsumme:%d\n", durchlauf, pruefz, merk_pruefz);
     return -1;
   }
-  #ifdef DEBUG
+#ifdef DEBUG
   else {
     fprintf(stderr, "Anzahl Durchlaeufe Pruefziffer Kopfsatz: %i\n", durchlauf);
   }
-  #endif
+#endif
   
   /* Startadresse der Daten */
   switch (uvr_modus) {
@@ -1414,7 +1414,7 @@ int kopfsatzlesen(void) {
       break;
     case 0xDC:
       anz_ds = anzahldatensaetze_DC(kopf_DC);
-  #if DEBUG > 3
+#if DEBUG > 3
       switch (kopf_DC[0].all_bytes[5]) {
         case 1: /* print_endaddr = kopf_DC[0].DC_Rahmen1.endadresse[0]; */
           fprintf(stderr, "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
@@ -1478,11 +1478,11 @@ int kopfsatzlesen(void) {
                   kopf_DC[0].all_bytes[16], kopf_DC[0].all_bytes[17], kopf_DC[0].all_bytes[18], kopf_DC[0].all_bytes[19], kopf_DC[0].all_bytes[20]);
           break;
       }
-  #endif
+#endif
       break;
   }
   
-  #if DEBUG > 5
+#if DEBUG > 5
   fprintf(stderr, "  Errechnete Pruefsumme: %x\n", berechneKopfpruefziffer(kopf));
   printf(" empfangene Pruefsumme: %x\n", kopf[0].pruefsum);
   fprintf(stderr, "empfangen von DL/BL:\n Kennung: %X\n", kopf[0].kennung);
@@ -1498,7 +1498,7 @@ int kopfsatzlesen(void) {
   fprintf(stderr, " Satzlaenge: %x\n", kopf[0].satzlaenge);
   fprintf(stderr, " Startadresse: %x %x %x\n", kopf[0].startadresse[0], kopf[0].startadresse[1], kopf[0].startadresse[2]);
   fprintf(stderr, " Endadresse: %x %x %x\n", kopf[0].endadresse[0], kopf[0].endadresse[1], kopf[0].endadresse[2]);
-  #endif
+#endif
   
   if (uvr_modus == 0xD1) {
     uvr_typ = kopf_D1[0].satzlaengeGeraet1; /* 0x5A -> UVR61-3; 0x76 -> UVR1611 */
@@ -2588,8 +2588,7 @@ int datenlesen_A8(int anz_datensaetze)
 return i + 1 - fehlerhafte_ds;
 
 /* Daten vom DL lesen - 2DL-Modus */
-int datenlesen_D1(int anz_datensaetze)
-{
+int datenlesen_D1(int anz_datensaetze) {
   unsigned modTeiler;
   int i, merk_i, fehlerhafte_ds, result = 0, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
   int Bytes_for_0xD1 = 127, monatswechsel = 0, in_bytes = 0;
@@ -2616,8 +2615,7 @@ int datenlesen_D1(int anz_datensaetze)
   merkmiddlebyte = middlebyte;
 
   sendbuf[0] = VERSIONSABFRAGE; /* Senden der Versionsabfrage */
-  if (usb_zugriff)
-  {
+  if (usb_zugriff) {
     close_usb();
     init_usb();
     fd_set rfds;
@@ -2627,10 +2625,8 @@ int datenlesen_D1(int anz_datensaetze)
     int retry_interval = 2;
 
     write_erg = write(fd, sendbuf, 1);
-    if (write_erg == 1) /* Lesen der Antwort */
-    {
-      do
-      {
+    if (write_erg == 1) { /* Lesen der Antwort */
+      do {
         in_bytes = 0;
         FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
@@ -2638,21 +2634,18 @@ int datenlesen_D1(int anz_datensaetze)
         tv.tv_usec = 0;
         retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
-        if (retval == -1)
+        if (retval == -1) {
           perror("select(fd)");
-        else if (retval)
-        {
+        } else if (retval) {
 #ifdef DEBUG
           fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
 #endif
-          if (FD_ISSET(fd, &rfds))
-          {
+          if (FD_ISSET(fd, &rfds)) {
             ioctl(fd, FIONREAD, &in_bytes);
 #ifdef DEBUG
             fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
 #endif
-            if (in_bytes == 1)
-            {
+            if (in_bytes == 1) {
               result = read(fd, empfbuf, 1);
               retry = 4;
             }
@@ -2661,27 +2654,24 @@ int datenlesen_D1(int anz_datensaetze)
       } while (retry < 3 && in_bytes != 0);
     }
   }
-  if (ip_zugriff)
-  {
-    if (!ip_first)
-    {
+  if (ip_zugriff) {
+    if (!ip_first) {
       sock = socket(PF_INET, SOCK_STREAM, 0);
-      if (sock == -1)
-      {
+      if (sock == -1) {
         perror("socket failed()");
         do_cleanup();
         return 2;
       }
-      if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-      {
+      if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1) {
         perror("connect failed()");
         do_cleanup();
         return 3;
       }
     } /* if (!ip_first) */
     write_erg = send(sock, sendbuf, 1, 0);
-    if (write_erg == 1) /* Lesen der Antwort */
-      result = recv(sock, empfbuf, 1, 0);
+    if (write_erg == 1) {
+      result = recv(sock, empfbuf, 1, 0); /* Lesen der Antwort */
+    }
   }
 
   /* fuellen des Sendebuffer - 6 Byte */
@@ -2691,33 +2681,27 @@ int datenlesen_D1(int anz_datensaetze)
   sendbuf[2] = *(start_adresse + 1);
   sendbuf[3] = *(start_adresse + 2);
   sendbuf[4] = 0x01; /* Anzahl der zu lesenden Rahmen */
-
-  switch (sendbuf[1]) // vorbelegen lowbyte bei Startadr. > 00 00 00
-  {
-  case 0x00:
-    lowbyte = 0;
-    break;
-  case 0x80:
-    lowbyte = 1;
-    break;
+  
+  switch (sendbuf[1]) { // vorbelegen lowbyte bei Startadr. > 00 00 00
+    case 0x00:
+      lowbyte = 0;
+      break;
+    case 0x80:
+      lowbyte = 1;
+      break;
   }
-
-  for (; i < anz_datensaetze; i++)
-  {
+  for (; i < anz_datensaetze; i++){
     sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
-
-    if (usb_zugriff)
-    {
+    
+    if (usb_zugriff) {
       fd_set rfds;
       struct timeval tv;
       int retval = 0;
       int retry = 0;
       int retry_interval = 2;
       write_erg = write(fd, sendbuf, 6);
-      if (write_erg == 6) /* Lesen der Antwort */
-      {
-        do
-        {
+      if (write_erg == 6) { /* Lesen der Antwort */
+        do {
           in_bytes = 0;
           FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
           FD_SET(fd, &rfds);
@@ -2725,21 +2709,18 @@ int datenlesen_D1(int anz_datensaetze)
           tv.tv_usec = 0;
           retval = select(fd + 1, &rfds, NULL, NULL, &tv);
           zeitstempel();
-          if (retval == -1)
+          if (retval == -1) {
             perror("select(fd)");
-          else if (retval)
-          {
-#ifdef DEBUG
+          } else if (retval) {
+    #ifdef DEBUG
             fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-#endif
-            if (FD_ISSET(fd, &rfds))
-            {
+    #endif
+            if (FD_ISSET(fd, &rfds)) {
               ioctl(fd, FIONREAD, &in_bytes);
-#ifdef DEBUG
+    #ifdef DEBUG
               fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-#endif
-              if (in_bytes == Bytes_for_0xD1) /* 127 */
-              {
+    #endif
+              if (in_bytes == Bytes_for_0xD1) { /* 127 */
                 result = read(fd, u_dsatz_uvr, Bytes_for_0xD1);
                 retry = 4;
               }
@@ -2748,245 +2729,225 @@ int datenlesen_D1(int anz_datensaetze)
         } while (retry < 3 && in_bytes != 0);
       }
     }
-    if (ip_zugriff)
-    {
-      if (!ip_first)
-      {
+    if (ip_zugriff) {
+      if (!ip_first) {
         sock = socket(PF_INET, SOCK_STREAM, 0);
-        if (sock == -1)
-        {
+        if (sock == -1) {
           perror("socket failed()");
           do_cleanup();
           return 2;
         }
-        if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-        {
+        if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1) {
           perror("connect failed()");
           do_cleanup();
           return 3;
         }
       } /* if (!ip_first) */
-
+    
       write_erg = send(sock, sendbuf, 6, 0);
-      if (write_erg == 6) /* Lesen der Antwort */
+      if (write_erg == 6) { /* Lesen der Antwort */
         result = recv(sock, u_dsatz_uvr, Bytes_for_0xD1, 0);
+      }
     } /* if (ip_zugriff) */
-
+    
     //**************************************************************************************** !!!!!!!!
     pruefsumme = berechnepruefziffer_modus_D1(&u_dsatz_uvr[0], result);
-#if DEBUG > 3
+    #if DEBUG > 3
     printf("Pruefsumme berechnet: %x in Byte %d erhalten %x\n", pruefsumme, result, u_dsatz_uvr[0].DS_alles.all_bytes[result - 1]);
-#endif
-
-    if (u_dsatz_uvr[0].DS_alles.all_bytes[result - 1] == pruefsumme)
-    { /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-  #if DEBUG > 4
+    #endif
+    
+    if (u_dsatz_uvr[0].DS_alles.all_bytes[result - 1] == pruefsumme) { /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
+    #if DEBUG > 4
       print_dsatz_uvr1611_content(u_dsatz_uvr);
       int zz;
-      for (zz = 0; zz < result - 1; zz++)
-      fprintf(stderr, "%2x ", u_dsatz_uvr[0].DS_alles.all_bytes[zz]);
+      for (zz = 0; zz < result - 1; zz++) {
+        fprintf(stderr, "%2x ", u_dsatz_uvr[0].DS_alles.all_bytes[zz]);
+      }
       fprintf(stderr, "\nuvr_typ(1): 0x%x uvr_typ(2): 0x%x \n", uvr_typ, uvr_typ2);
       fprintf(stderr, "%2x \n", u_dsatz_uvr[0].DS_alles.all_bytes[59]);
-  #endif
-      if (i == 0) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
-      {
-      if (uvr_typ == UVR1611)
-      {
-        tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
-        merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
-      }
-      if (uvr_typ == UVR61_3)
-      {
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
-        merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
-      }
-
-      if (tmp_erg == 0) /* Das erste  */
-      {
-        printf("Der Logfile-Name (1) konnte nicht erzeugt werden!");
-        exit(-1);
-      }
-      /* ********* 2. Geraet ********* */
-      if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
-      {
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
-      }
-      else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
-      {
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
-      }
-      if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
-      {
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
-      }
-      else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
-      {
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
-      }
-      if (tmp_erg == 0)
-      {
-        printf("Der Logfile-Name (2) konnte nicht erzeugt werden!");
-        exit(-1);
-      }
-      else
-      {
-        if (open_logfile(LogFileName[1], 1) == -1)
-        {
-        printf("Das LogFile kann nicht geoeffnet werden!\n");
-        exit(-1);
+    #endif
+      if (i == 0) { /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
+        if (uvr_typ == UVR1611) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
+          merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
         }
-        if (open_logfile(LogFileName[2], 2) == -1)
-        {
-        printf("Das LogFile kann nicht geoeffnet werden!\n");
-        exit(-1);
+        if (uvr_typ == UVR61_3) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr);
+          merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
         }
-      }
+    
+        if (tmp_erg == 0) { /* Das erste  */
+          printf("Der Logfile-Name (1) konnte nicht erzeugt werden!");
+          exit(-1);
+        }
+        /* ********* 2. Geraet ********* */
+        if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr);
+        } else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr);
+        }
+        if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr);
+        } else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611) {
+          tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr);
+        }
+        if (tmp_erg == 0) {
+          printf("Der Logfile-Name (2) konnte nicht erzeugt werden!");
+          exit(-1);
+        } else {
+          if (open_logfile(LogFileName[1], 1) == -1) {
+            printf("Das LogFile kann nicht geoeffnet werden!\n");
+            exit(-1);
+          }
+          if (open_logfile(LogFileName[2], 2) == -1) {
+            printf("Das LogFile kann nicht geoeffnet werden!\n");
+            exit(-1);
+          }
+        }
       }
       /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
-      if (uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat)
-      monatswechsel = 1;
-      if (uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat)
-      monatswechsel = 1;
-
-      if (monatswechsel == 1)
-      {
-      printf("Monatswechsel!\n");
-      if (close_logfile() == -1)
-      {
-        printf("Fehler beim Monatswechsel: Cannot close logfile!");
-        exit(-1);
+      if (uvr_typ == UVR1611 && merk_monat != u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat) {
+        monatswechsel = 1;
       }
-      else
-      {
-        if (uvr_typ == UVR1611)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr));
-        if (uvr_typ == UVR61_3)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr));
-
-        /* ********* 2. Geraet ********* */
-        if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr));
-        else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr));
-
-        if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr));
-        else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611)
-        tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr));
-
-        if (tmp_erg == 0)
-        {
-        printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
-        exit(-1);
-        }
-        else
-        {
-        if (open_logfile(LogFileName[1], 1) == -1)
-        {
-          printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
-          exit(-1);
-        }
-        if (open_logfile(LogFileName[2], 2) == -1)
-        {
-          printf("Das LogFile kann nicht geoeffnet werden!\n");
-          exit(-1);
-        }
-        }
+      if (uvr_typ == UVR61_3 && merk_monat != u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat) {
+        monatswechsel = 1;
       }
+    
+      if (monatswechsel == 1) {
+        printf("Monatswechsel!\n");
+        if (close_logfile() == -1) {
+          printf("Fehler beim Monatswechsel: Cannot close logfile!");
+          exit(-1);
+        } else {
+          if (uvr_typ == UVR1611) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
+          }
+          if (uvr_typ == UVR61_3) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.jahr);
+          }
+    
+          /* ********* 2. Geraet ********* */
+          if (uvr_typ2 == UVR1611 && uvr_typ == UVR1611) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.Z_datum_zeit.jahr);
+          } else if (uvr_typ2 == UVR1611 && uvr_typ == UVR61_3) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_1611.Z_datum_zeit.jahr);
+          }
+    
+          if (uvr_typ2 == UVR61_3 && uvr_typ == UVR61_3) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_61_3_61_3.Z_datum_zeit.jahr);
+          } else if (uvr_typ2 == UVR61_3 && uvr_typ == UVR1611) {
+            tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.monat, u_dsatz_uvr[0].DS_1611_61_3.Z_datum_zeit.jahr);
+          }
+    
+          if (tmp_erg == 0) {
+            printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
+            exit(-1);
+          } else {
+            if (open_logfile(LogFileName[1], 1) == -1) {
+              printf("Fehler beim Monatswechsel: Das LogFile kann nicht geoeffnet werden!\n");
+              exit(-1);
+            }
+            if (open_logfile(LogFileName[2], 2) == -1) {
+              printf("Das LogFile kann nicht geoeffnet werden!\n");
+              exit(-1);
+            }
+          }
+        }
       } /* Ende: if ( merk_monat != dsatz_uvr1611[0].datum_zeit.monat ) */
-
-      if (uvr_typ == UVR1611)
-      merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
-      if (uvr_typ == UVR61_3)
-      merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
-
+    
+      if (uvr_typ == UVR1611) {
+        merk_monat = u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat;
+      }
+      if (uvr_typ == UVR61_3) {
+        merk_monat = u_dsatz_uvr[0].DS_61_3_61_3.datum_zeit.monat;
+      }
+    
       /* Daten in die Winsol-Struktur kopieren */
-      if (uvr_typ == UVR1611)
-      copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol[0], 1);
-      if (uvr_typ == UVR61_3)
-      copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0], 1);
+      if (uvr_typ == UVR1611) {
+        copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol[0], 1);
+      }
+      if (uvr_typ == UVR61_3) {
+        copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3[0], 1);
+      }
       /* schreiben der gelesenen Rohdaten in das LogFile */
-      if (uvr_typ == UVR1611)
-      tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-      if (uvr_typ == UVR61_3)
-      tmp_erg = fwrite(puffer_dswinsol_uvr61_3, 59, 1, fp_logfile);
-
+      if (uvr_typ == UVR1611) {
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+      }
+      if (uvr_typ == UVR61_3) {
+        tmp_erg = fwrite(puffer_dswinsol_uvr61_3, 59, 1, fp_logfile);
+      }
+    
       /* ********* 2. Geraet ********* */
       /* Daten in die Winsol-Struktur kopieren */
-      if (uvr_typ2 == UVR1611)
-      copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol_2[0], 2);
-      if (uvr_typ2 == UVR61_3)
-      copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3_2[0], 2);
+      if (uvr_typ2 == UVR1611) {
+        copy_UVR2winsol_D1_1611(&u_dsatz_uvr[0], &dsatz_winsol_2[0], 2);
+      }
+      if (uvr_typ2 == UVR61_3) {
+        copy_UVR2winsol_D1_61_3(&u_dsatz_uvr[0], &dsatz_winsol_uvr61_3_2[0], 2);
+      }
       /* schreiben der gelesenen Rohdaten in das LogFile */
-      if (uvr_typ2 == UVR1611)
-      tmp_erg = fwrite(puffer_dswinsol_2, 59, 1, fp_logfile_2);
-      if (uvr_typ2 == UVR61_3)
-      tmp_erg = fwrite(puffer_dswinsol_uvr61_3_2, 59, 1, fp_logfile_2);
-
-      if (((i % 100) == 0) && (i > 0))
-      printf("%d Datensaetze geschrieben.\n", i);
-
-      if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3])
-      break;
-
+      if (uvr_typ2 == UVR1611) {
+        tmp_erg = fwrite(puffer_dswinsol_2, 59, 1, fp_logfile_2);
+      }
+      if (uvr_typ2 == UVR61_3) {
+        tmp_erg = fwrite(puffer_dswinsol_uvr61_3_2, 59, 1, fp_logfile_2);
+      }
+    
+      if (((i % 100) == 0) && (i > 0)) {
+        printf("%d Datensaetze geschrieben.\n", i);
+      }
+    
+      if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3]) {
+        break;
+      }
+    
       /* Hochzaehlen der Startadressen */
-      if (lowbyte == 0)
-      lowbyte++;
-      else
-      {
-      lowbyte = 0;
-      middlebyte++;
+      if (lowbyte == 0) {
+        lowbyte++;
+      } else {
+        lowbyte = 0;
+        middlebyte++;
       }
-
-      switch (lowbyte)
-      {
-      case 0:
-      sendbuf[1] = 0x00;
-      break;
-      case 1:
-      sendbuf[1] = 0x80;
-      break;
+    
+      switch (lowbyte) {
+        case 0:
+          sendbuf[1] = 0x00;
+          break;
+        case 1:
+          sendbuf[1] = 0x80;
+          break;
       }
-
-      if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
-      {
-      if (sendbuf[2] != 0xFE)
-      {
-        sendbuf[2] = sendbuf[2] + 0x02;
-        merkmiddlebyte = middlebyte;
+    
+      if (middlebyte > merkmiddlebyte) { /* das mittlere Byte muss erhoeht werden */
+        if (sendbuf[2] != 0xFE) {
+          sendbuf[2] = sendbuf[2] + 0x02;
+          merkmiddlebyte = middlebyte;
+        } else { /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+          merkmiddlebyte = middlebyte;
+        }
       }
-      else /* das highbyte muss erhoeht werden */
-      {
+    
+      if (sendbuf[3] > 0x0F) { // "Speicherueberlauf" im BL-Net
+        sendbuf[1] = 0x00;
         sendbuf[2] = 0x00;
-        sendbuf[3] = sendbuf[3] + 0x01;
-        merkmiddlebyte = middlebyte;
+        sendbuf[3] = 0x00;
       }
-      }
-
-      if (sendbuf[3] > 0x0F) // "Speicherueberlauf" im BL-Net
-      {
-      sendbuf[1] = 0x00;
-      sendbuf[2] = 0x00;
-      sendbuf[3] = 0x00;
-      }
-
+    
       monatswechsel = 0;
     } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
-    else
-    {
-      if (merk_i < 5)
-      {
-      i--; /* falsche Pruefziffer - also nochmals lesen */
-  #ifdef DEBUG
-      fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-  #endif
-      merk_i++; /* hochzaehlen bis 5 */
-      }
-      else
-      {
-      merk_i = 0;
-      fehlerhafte_ds++;
-      printf(" fehlerhafter2 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
+    else {
+      if (merk_i < 5) {
+        i--; /* falsche Pruefziffer - also nochmals lesen */
+    #ifdef DEBUG
+        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+    #endif
+        merk_i++; /* hochzaehlen bis 5 */
+      } else {
+        merk_i = 0;
+        fehlerhafte_ds++;
+        printf(" fehlerhafter2 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
       }
     }
   }
@@ -3497,10 +3458,10 @@ int datenlesen_DC(int anz_datensaetze)
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
           copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[2], &dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-    #if DEBUG > 3
+#if DEBUG > 3
           /*  ##### Debug 3-CAN-Rahmen ########  */
           tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
-    #endif
+#endif
           break;
         case 4:
           if (can_typ[0] == UVR1611)
@@ -3555,9 +3516,9 @@ int datenlesen_DC(int anz_datensaetze)
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
           copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[4], &dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
-    #if DEBUG > 3
+#if DEBUG > 3
           tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
-    #endif
+#endif
           break;
         case 6:
           copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[0], &dsatz_winsol[0]);
@@ -3623,11 +3584,9 @@ int datenlesen_DC(int anz_datensaetze)
         lowbyte = 0;
       }
 
-      switch (anzahl_can_rahmen)
-      {
+      switch (anzahl_can_rahmen) {
         case 1:
-          switch (lowbyte)
-          {
+          switch (lowbyte) {
             case 0:
               sendbuf[1] = 0x00;
               middlebyte++;
@@ -3642,59 +3601,50 @@ int datenlesen_DC(int anz_datensaetze)
               sendbuf[1] = 0xc0;
               break;
           }
-          if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
-          {
+          if (middlebyte > merkmiddlebyte) { /* das mittlere Byte muss erhoeht werden */
             sendbuf[2] = sendbuf[2] + 0x02;
             merkmiddlebyte = middlebyte;
           }
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
             merkmiddlebyte = middlebyte;
           }
           break;
         case 2:
-          if (sendbuf[2] == 0xFE && sendbuf[1] == 0x80) /* das highbyte muss erhoeht werden */
-          {
-            switch (lowbyte)
-            {
+          if (sendbuf[2] == 0xFE && sendbuf[1] == 0x80) { /* das highbyte muss erhoeht werden */
+            switch (lowbyte) {
               case 0:
-              sendbuf[1] = 0x00;
-              middlebyte++;
-              break;
+                sendbuf[1] = 0x00;
+                middlebyte++;
+                break;
               case 1:
-              sendbuf[1] = 0x80;
-              lowbyte = 3;
-              break;
+                sendbuf[1] = 0x80;
+                lowbyte = 3;
+                break;
             }
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
             merkmiddlebyte = middlebyte;
-          }
-          else
-          {
-            switch (lowbyte)
-            {
+          } else {
+            switch (lowbyte) {
               case 0:
-          sendbuf[1] = 0x00;
-          middlebyte++;
-          break;
+                sendbuf[1] = 0x00;
+                middlebyte++;
+                break;
               case 1:
-          sendbuf[1] = 0x80;
-          lowbyte = 3;
-          break;
+                sendbuf[1] = 0x80;
+                lowbyte = 3;
+                break;
             }
-            if (middlebyte > merkmiddlebyte) /* das mittlere Byte muss erhoeht werden */
-            {
+            if (middlebyte > merkmiddlebyte) { /* das mittlere Byte muss erhoeht werden */
               sendbuf[2] = sendbuf[2] + 0x02;
               merkmiddlebyte = middlebyte;
             }
           }
           break;
         case 3:
-          switch (lowbyte)
-          {
+          switch (lowbyte) {
             case 0:
               sendbuf[1] = 0x00;
               break;
@@ -3708,15 +3658,11 @@ int datenlesen_DC(int anz_datensaetze)
               sendbuf[1] = 0x40;
               break;
           }
-          if (sendbuf[2] == 0xFE && sendbuf[1] != 0xc0) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] == 0xFE && sendbuf[1] != 0xc0) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
-          }
-          else
-          {
-            if (sendbuf[1] != 0xc0)
-            {
+          } else {
+            if (sendbuf[1] != 0xc0) {
               sendbuf[2] = sendbuf[2] + 0x02;
             }
           }
@@ -3724,15 +3670,13 @@ int datenlesen_DC(int anz_datensaetze)
         case 4:
           sendbuf[1] = 0x00;
           sendbuf[2] = sendbuf[2] + 0x02;
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
           }
           break;
         case 5:
-          switch (lowbyte)
-          {
+          switch (lowbyte) {
             case 0:
               sendbuf[1] = 0x00;
               break;
@@ -3746,25 +3690,20 @@ int datenlesen_DC(int anz_datensaetze)
               sendbuf[1] = 0xc0;
               break;
           }
-          if (y == 3)
-          {
+          if (y == 3) {
             sendbuf[2] = sendbuf[2] + 0x04;
             y++;
-          }
-          else
-          {
+          } else {
             sendbuf[2] = sendbuf[2] + 0x02;
             y++;
           }
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
           }
           break;
         case 6:
-          switch (lowbyte)
-          {
+          switch (lowbyte) {
             case 0:
               sendbuf[1] = 0x00;
               sendbuf[2] = sendbuf[2] + 0x04;
@@ -3775,15 +3714,13 @@ int datenlesen_DC(int anz_datensaetze)
               lowbyte = 3;
               break;
           }
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
           }
           break;
         case 7:
-          switch (lowbyte)
-          {
+          switch (lowbyte) {
             case 0:
               sendbuf[1] = 0x00;
               break;
@@ -3797,18 +3734,14 @@ int datenlesen_DC(int anz_datensaetze)
               sendbuf[1] = 0x40;
               break;
           }
-          if (y == 0)
-          {
+          if (y == 0) {
             sendbuf[2] = sendbuf[2] + 0x02;
             y++;
-          }
-          else
-          {
+          } else {
             sendbuf[2] = sendbuf[2] + 0x04;
             y++;
           }
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
           }
@@ -3816,78 +3749,67 @@ int datenlesen_DC(int anz_datensaetze)
         case 8:
           sendbuf[1] = 0x00;
           sendbuf[2] = sendbuf[2] + 0x04;
-          if (sendbuf[2] >= 0xFE) /* das highbyte muss erhoeht werden */
-          {
+          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
             sendbuf[2] = 0x00;
             sendbuf[3] = sendbuf[3] + 0x01;
           }
           break;
-            }
-
-      if (y == 4)
+      }
+      
+      if (y == 4) {
         y = 0;
-
-      if (sendbuf[3] > 0x0F) // "Speicherueberlauf" im BL-Net
-      {
+      }
+      
+      if (sendbuf[3] > 0x0F) { // "Speicherueberlauf" im BL-Net
         sendbuf[1] = 0x00;
         sendbuf[2] = 0x00;
         sendbuf[3] = 0x00;
         Speicherueberlauf = 0;
       }
-
-      if (Speicherueberlauf == 0)
-      {
-        if (*(end_adresse + 2) == sendbuf[3] || *(end_adresse + 2) < sendbuf[3])
-        {
-          if (*(end_adresse + 1) == sendbuf[2])
-          {
-        #if DEBUG > 3
+      if (Speicherueberlauf == 0) {
+        if (*(end_adresse + 2) == sendbuf[3] || *(end_adresse + 2) < sendbuf[3]) {
+          if (*(end_adresse + 1) == sendbuf[2]) {
+      #if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
             fprintf(fp_logfile_debug2, " Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-        #endif
-            if (*end_adresse == sendbuf[1] || *end_adresse < sendbuf[1])
-            {
-        #if DEBUG > 3
+      #endif
+            if (*end_adresse == sendbuf[1] || *end_adresse < sendbuf[1]) {
+      #if DEBUG > 3
               /*  ##### Debug 3-CAN-Rahmen ########  */
               fprintf(fp_logfile_debug2, " Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-        #endif
+      #endif
               break;
             }
-          }
-          else if (*(end_adresse + 1) < sendbuf[2])
-          {
-        #if DEBUG > 3
+          } else if (*(end_adresse + 1) < sendbuf[2]) {
+      #if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
             fprintf(fp_logfile_debug2, " Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-        #endif
+      #endif
             break;
           }
         }
       }
-
+      
       monatswechsel = 0;
-    } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
-    else
-    {
-      if (merk_i < 5)
-      {
-        i--; /* falsche Pruefziffer - also nochmals lesen */
-  #ifdef DEBUG
-        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-  #endif
-        merk_i++; /* hochzaehlen bis 5 */
+      } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
+      else {
+        if (merk_i < 5) {
+          i--; /* falsche Pruefziffer - also nochmals lesen */
+      #ifdef DEBUG
+          fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+      #endif
+          merk_i++; /* hochzaehlen bis 5 */
+        } else {
+          merk_i = 0;
+          fehlerhafte_ds++;
+          printf(" fehlerhafter3 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
+        }
       }
-      else
-      {
-        merk_i = 0;
-        fehlerhafte_ds++;
-        printf(" fehlerhafter3 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
       }
-    }
-  }
-  return i + 1 - fehlerhafte_ds;
+      return i + 1 - fehlerhafte_ds;
   //  return anz_datensaetze - fehlerhafte_ds;
 }
+
 /* Berechnung der Pruefsumme des Kopfsatz Modus 0xD1 */
 int berechneKopfpruefziffer_D1(KopfsatzD1 derKopf[])
 {
@@ -4416,10 +4338,8 @@ int reset_datenpuffer_usb(int do_reset)
   {
     sendbuf[0] = RESETDATAFLASH; /* Senden Buffer zuruecksetzen */
     write_erg = write(fd, sendbuf, 1);
-    if (write_erg == 1) /* Lesen der Antwort*/
-    {
-      do
-      {
+    if (write_erg == 1) { /* Lesen der Antwort */
+      do {
         in_bytes = 0;
         FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
         FD_SET(fd, &rfds);
@@ -4427,21 +4347,18 @@ int reset_datenpuffer_usb(int do_reset)
         tv.tv_usec = 0;
         retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         zeitstempel();
-        if (retval == -1)
+        if (retval == -1) {
           perror("select(fd)");
-        else if (retval)
-        {
-#ifdef DEBUG
+        } else if (retval) {
+    #ifdef DEBUG
           fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-#endif
-          if (FD_ISSET(fd, &rfds))
-          {
+    #endif
+          if (FD_ISSET(fd, &rfds)) {
             ioctl(fd, FIONREAD, &in_bytes);
-#ifdef DEBUG
+    #ifdef DEBUG
             fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-#endif
-            if (in_bytes == 1)
-            {
+    #endif
+            if (in_bytes == 1) {
               result = read(fd, empfbuf, 1);
               /* printf("Vom DL erhaltene Reset-Bestaetigung: %x\n",empfbuf[0]); */
               fprintf(fp_varlogfile, "%s - %s -- Vom DL erhaltene Reset-Bestaetigung: %x.\n", sDatum, sZeit, empfbuf[0]);
@@ -4449,15 +4366,13 @@ int reset_datenpuffer_usb(int do_reset)
           }
         }
       } while (retry < 3 && in_bytes != 0);
-    }
-    else
+    } else {
       printf("Reset konnte nicht gesendet werden. Ergebnis = %d\n", result);
-  }
-  else
-  {
-    /* printf("Kein Data-Reset! \n"); */ /* reset-variable=%d \n",reset); */
-    fprintf(fp_varlogfile, "%s - %s -- Kein Data-Reset! \n", sDatum, sZeit);
-  }
+    }
+    } else {
+      /* printf("Kein Data-Reset! \n"); */ /* reset-variable=%d \n",reset); */
+      fprintf(fp_varlogfile, "%s - %s -- Kein Data-Reset! \n", sDatum, sZeit);
+    }
   return 1;
 }
 
