@@ -2555,6 +2555,8 @@ int datenlesen_A8(int anz_datensaetze){
     }
   }
   return i + 1 - fehlerhafte_ds;
+}
+
 /* Daten vom DL lesen - 2DL-Modus */
 int datenlesen_D1(int anz_datensaetze) {
   unsigned modTeiler;
