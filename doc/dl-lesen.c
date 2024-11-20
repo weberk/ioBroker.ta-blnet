@@ -212,6 +212,8 @@ int main(int argc, char *argv[]) {
       return -1;
   }
 
+  //  Firmware BL-Net:
+  //  fprintf(stderr, "Firmware: %d \n",get_modultyp());
   /* ************************************************************************ */
   /* Lesen des Kopfsatzes zur Ermittlung der Anzahl der zu lesenden Datensaetze */
   i = 1;
