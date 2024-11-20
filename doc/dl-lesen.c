@@ -119,7 +119,7 @@ FILE *fp_logfile = NULL, *fp_logfile_2 = NULL, *fp_logfile_3 = NULL, *fp_logfile
   *fp_varlogfile = NULL, *fp_csvfile = NULL; /* pointer IMMER initialisieren und vor benutzung pruefen */
 
 char dlport[13]; /* Uebergebener Parameter USB-Port */
-char LogFileName[8][255];
+char LogFileName[9][255];
 char varLogFile[22];
 char DirName[241];
 char sDatum[11], sZeit[11];
@@ -745,12 +745,12 @@ int open_logfile(char LogFile[], int geraet) {
   int i, tmp_erg = 0;
   i = -1; /* es ist kein Logfile geoeffnet (Wert -1) */
   /* bei neuer Logdatei der erste Datensatz: */
-  UCHAR kopf_winsol_1611[59] = {0x01, 0x02, 0x01, 0x03, 0xF0, 0x0F, 0x00, 0x07, 0xAA, 0xAA, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
-                                0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
-                                0xAA, 0x00, 0xFF, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00};
-  UCHAR kopf_winsol_61_3[59] = {0x01, 0x02, 0x01, 0x03, 0xF0, 0x0F, 0x00, 0x06, 0xAA, 0xAA, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
-                                0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
-                                0xAA, 0x00, 0xFF, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00};
+  UCHAR kopf_winsol_1611[59]={0x01, 0x02, 0x01, 0x03, 0xF0, 0x0F, 0x00, 0x07, 0xAA, 0xAA, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
+            0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
+            0xAA, 0x00, 0xFF, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00};
+  UCHAR kopf_winsol_61_3[59]={0x01, 0x02, 0x01, 0x03, 0xF0, 0x0F, 0x00, 0x06, 0xAA, 0xAA, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
+            0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00,
+            0xAA, 0x00, 0xFF, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00, 0xAA, 0x00};
 
   if (geraet == 1) {
     if ((fp_logfile = fopen(LogFile, "r")) == NULL) { /* wenn Logfile noch nicht existiert */
@@ -2017,10 +2017,8 @@ int copy_UVR2winsol_D1_1611(u_modus_D1 *dsatz_modus_d1, DS_Winsol *dsatz_winsol,
 }
 
 /* Kopieren der Daten UVR61-3(Modus 0xD1 - 2DL) in Winsol-Format-Struktur */
-int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz_winsol_uvr61_3 , int geraet)
-{
-  if (geraet == 1)
-  {
+int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz_winsol_uvr61_3, int geraet) {
+  if (geraet == 1) {
     dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.tag;
     dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.std;
     dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.datum_zeit.min;
@@ -2029,9 +2027,7 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_61_3_61_3.ausg_analog;
 
-    int ii = 0;
-    for (ii = 0; ii < 6; ii++)
-    {
+    for (int ii = 0; ii < 6; ii++) {
       dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][0];
       dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.sensT[ii][1];
     }
@@ -2049,17 +2045,13 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[2];
     dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.mwh1[3];
 
-    for (ii = 0; ii < 4; ii++)
-    {
+    for (int ii = 0; ii < 4; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii = 0; ii < 25; ii++)
-    {
+    for (int ii = 0; ii < 25; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
-  }
-  else if (uvr_typ == UVR61_3)
-  {
+  } else if (uvr_typ == UVR61_3) {
     dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.tag;
     dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.std;
     dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_61_3_61_3.Z_datum_zeit.min;
@@ -2068,9 +2060,7 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_61_3_61_3.Z_dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_61_3_61_3.Z_ausg_analog;
 
-    int ii = 0;
-    for (ii = 0; ii < 6; ii++)
-    {
+    for (int ii = 0; ii < 6; ii++) {
       dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][0];
       dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_61_3_61_3.Z_sensT[ii][1];
     }
@@ -2088,17 +2078,13 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[2];
     dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_61_3_61_3.Z_mwh1[3];
 
-    for (ii = 0; ii < 4; ii++)
-    {
+    for (int ii = 0; ii < 4; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii = 0; ii < 25; ii++)
-    {
+    for (int ii = 0; ii < 25; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
-  }
-  else if (uvr_typ == UVR1611)
-  {
+  } else if (uvr_typ == UVR1611) {
     dsatz_winsol_uvr61_3[0].tag = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.tag;
     dsatz_winsol_uvr61_3[0].std = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.std;
     dsatz_winsol_uvr61_3[0].min = dsatz_modus_d1[0].DS_1611_61_3.Z_datum_zeit.min;
@@ -2107,9 +2093,7 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].dza = dsatz_modus_d1[0].DS_1611_61_3.Z_dza;
     dsatz_winsol_uvr61_3[0].ausg_analog = dsatz_modus_d1[0].DS_1611_61_3.Z_ausg_analog;
 
-    int ii = 0;
-    for (ii = 0; ii < 6; ii++)
-    {
+    for (int ii = 0; ii < 6; ii++) {
       dsatz_winsol_uvr61_3[0].sensT[ii][0] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][0];
       dsatz_winsol_uvr61_3[0].sensT[ii][1] = dsatz_modus_d1[0].DS_1611_61_3.Z_sensT[ii][1];
     }
@@ -2127,12 +2111,10 @@ int copy_UVR2winsol_D1_61_3(u_modus_D1 *dsatz_modus_d1, DS_Winsol_UVR61_3 *dsatz
     dsatz_winsol_uvr61_3[0].mwh[2] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[2];
     dsatz_winsol_uvr61_3[0].mwh[3] = dsatz_modus_d1[0].DS_1611_61_3.Z_mwh1[3];
 
-    for (ii = 0; ii < 4; ii++)
-    {
+    for (int ii = 0; ii < 4; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt1[ii] = 0x0;
     }
-    for (ii = 0; ii < 25; ii++)
-    {
+    for (int ii = 0; ii < 25; ii++) {
       dsatz_winsol_uvr61_3[0].unbenutzt2[ii] = 0x0;
     }
   }
@@ -2928,8 +2910,7 @@ int datenlesen_D1(int anz_datensaetze) {
 }
 
 /* Daten vom DL lesen - CAN-Modus */
-int datenlesen_DC(int anz_datensaetze)
-{
+int datenlesen_DC(int anz_datensaetze) {
   unsigned modTeiler;
   int i = 0, j = 0, y = 0, merk_i = 0, fehlerhafte_ds = 0, result, lowbyte, middlebyte, merkmiddlebyte, tmp_erg = 0;
   int Bytes_for_0xDC = 524, monatswechsel = 0, anzahl_can_rahmen = 0, marker = 0, in_bytes = 0;
@@ -2937,24 +2918,24 @@ int datenlesen_DC(int anz_datensaetze)
   int Speicherueberlauf = 0; /* = 1 wenn Ringspeicher komplett voll und wird ueberschrieben */
   u_DS_CAN u_dsatz_can[1];
   DS_Winsol dsatz_winsol[8]; /* 8 Datensaetze moeglich */
-  DS_Winsol *puffer_dswinsol = &dsatz_winsol[0];
+  DS_Winsol * puffer_dswinsol = & dsatz_winsol[0];
   DS_CANBC dsatz_canbc[8];
-  DS_CANBC *puffer_dscanbc = &dsatz_canbc[0];
+  DS_CANBC * puffer_dscanbc = & dsatz_canbc[0];
 
   UCHAR pruefsumme = 0, merk_monat = 0;
   UCHAR sendbuf[6]; /*  sendebuffer fuer die Request-Commandos*/
   UCHAR empfbuf[18];
   UCHAR tmp_buf[525];
 
-#if DEBUG > 3
+  #if DEBUG > 3
   /*  ##### Debug 3-CAN-Rahmen ########  */
-  FILE *fp_logfile_debug = NULL;
+  FILE * fp_logfile_debug = NULL;
   char DebugFile[] = "debug.log";
-  FILE *fp_logfile_debug2 = NULL;
+  FILE * fp_logfile_debug2 = NULL;
   char DebugFile2[] = "debug2.log";
-  u_DS_CAN *puffer_u_dsatz_can = &u_dsatz_can[0];
+  u_DS_CAN * puffer_u_dsatz_can = & u_dsatz_can[0];
   /*  ##### Debug 3-CAN-Rahmen ########  */
-#endif
+  #endif
 
   modTeiler = 0x100;
   i = 0; /* Gesamtdurchlaufzaehler mit 0 initialisiert */
@@ -2964,28 +2945,26 @@ int datenlesen_DC(int anz_datensaetze)
   middlebyte = 0;
   merkmiddlebyte = middlebyte;
 
-#if DEBUG > 3
+  #if DEBUG > 3
   /*  ##### Debug 3-CAN-Rahmen ########  */
-  if ((fp_logfile_debug = fopen(DebugFile, "w")) == NULL) /* dann Neuerstellung der Logdatei */
-  {
+  if ((fp_logfile_debug = fopen(DebugFile, "w")) == NULL) {
+    /* dann Neuerstellung der Logdatei */
     printf("Debug-Datei %s konnte nicht erstellt werden\n", DebugFile);
   }
 
-  if ((fp_logfile_debug2 = fopen(DebugFile2, "w")) == NULL) /* dann Neuerstellung der Logdatei */
-  {
+  if ((fp_logfile_debug2 = fopen(DebugFile2, "w")) == NULL) {
+    /* dann Neuerstellung der Logdatei */
     printf("Debug2-Datei %s konnte nicht erstellt werden\n", DebugFile2);
   }
   /*  ##### Debug 3-CAN-Rahmen ########  */
-#endif
+  #endif
 
-  for (i = 1; i < 525; i++)
-  {
+  for (i = 1; i < 525; i++) {
     u_dsatz_can[0].all_bytes[i] = 0xFF;
   }
 
   sendbuf[0] = VERSIONSABFRAGE; /* Senden der Versionsabfrage */
-  if (usb_zugriff)
-  {
+  if (usb_zugriff) {
     close_usb();
     init_usb();
     fd_set rfds;
@@ -2995,36 +2974,34 @@ int datenlesen_DC(int anz_datensaetze)
     int retry_interval = 2;
 
     write_erg = write(fd, sendbuf, 1);
-    if (write_erg == 1) /* Lesen der Antwort*/
+    if (write_erg == 1) {
+      /* Lesen der Antwort */
       result = read(fd, empfbuf, 1);
+    }
     sendbuf[0] = KONFIGCAN;
     write_erg = write(fd, sendbuf, 1);
-    if (write_erg == 1) /* Lesen der Antwort*/
-    {
-      do
-      {
+    if (write_erg == 1) {
+      /* Lesen der Antwort */
+      do {
         in_bytes = 0;
-        FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
-        FD_SET(fd, &rfds);
+        FD_ZERO( & rfds); /* muss jedes Mal gesetzt werden */
+        FD_SET(fd, & rfds);
         tv.tv_sec = retry_interval; /* Wait up to five seconds. */
         tv.tv_usec = 0;
-        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
+        retval = select(fd + 1, & rfds, NULL, NULL, & tv);
         zeitstempel();
-        if (retval == -1)
+        if (retval == -1) {
           perror("select(fd)");
-        else if (retval)
-        {
-#ifdef DEBUG
-          fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-#endif
-          if (FD_ISSET(fd, &rfds))
-          {
-            ioctl(fd, FIONREAD, &in_bytes);
-#ifdef DEBUG
+        } else if (retval) {
+          #ifdef DEBUG
+          fprintf(stderr, "Data is available now. %d.%d\n", (int) tv.tv_sec, (int) tv.tv_usec);
+          #endif
+          if (FD_ISSET(fd, & rfds)) {
+            ioctl(fd, FIONREAD, & in_bytes);
+            #ifdef DEBUG
             fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-#endif
-            if (in_bytes == 18)
-            {
+            #endif
+            if (in_bytes == 18) {
               result = read(fd, empfbuf, 18); /* ?? */
               retry = 4;
             }
@@ -3033,61 +3010,60 @@ int datenlesen_DC(int anz_datensaetze)
       } while (retry < 3 && in_bytes != 0);
     }
   }
-  if (ip_zugriff)
-  {
-    if (!ip_first)
-    {
+  if (ip_zugriff) {
+    if (!ip_first) {
       sock = socket(PF_INET, SOCK_STREAM, 0);
-      if (sock == -1)
-      {
+      if (sock == -1) {
         perror("socket failed()");
         do_cleanup();
         return 2;
       }
-      if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-      {
+      if (connect(sock, (const struct sockaddr * ) & SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1) {
         perror("connect failed()");
         do_cleanup();
         return 3;
       }
     } /* if (!ip_first) */
     write_erg = send(sock, sendbuf, 1, 0);
-    if (write_erg == 1) /* Lesen der Antwort */
+    if (write_erg == 1) {
+      /* Lesen der Antwort */
       result = recv(sock, empfbuf, 1, 0);
+    }
 
     sendbuf[0] = KONFIGCAN;
     write_erg = send(sock, sendbuf, 1, 0);
-    if (write_erg == 1) /* Lesen der Antwort */
+    if (write_erg == 1) {
+      /* Lesen der Antwort */
       result = recv(sock, empfbuf, 18, 0);
+    }
   }
 
   anzahl_can_rahmen = empfbuf[0];
-#if DEBUG > 3
+  #if DEBUG > 3
   fprintf(stderr, "Anzahl CAN-Datenrahmen: %d. \n", anzahl_can_rahmen);
 
   /*  ##### Debug 3-CAN-Rahmen ########  */
   fprintf(fp_logfile_debug2, "Anzahl CAN-Datenrahmen: %d. \n", anzahl_can_rahmen);
-#endif
+  #endif
 
-  if (*start_adresse > 0 || *(start_adresse + 1) > 0 || *(start_adresse + 2) > 0)
+  if ( * start_adresse > 0 || * (start_adresse + 1) > 0 || * (start_adresse + 2) > 0) {
     Speicherueberlauf = 1; /* Der Ringspeicher im BL-Net ist voll */
+  }
 
   /* fuellen des Sendebuffer - 6 Byte */
   sendbuf[0] = DATENBEREICHLESEN;
   // Startadressen von Kopfsatzlesen:
-  sendbuf[1] = *start_adresse; /* Beginn des Datenbereiches (low vor high) */
-  sendbuf[2] = *(start_adresse + 1);
-  sendbuf[3] = *(start_adresse + 2);
+  sendbuf[1] = * start_adresse; /* Beginn des Datenbereiches (low vor high) */
+  sendbuf[2] = * (start_adresse + 1);
+  sendbuf[3] = * (start_adresse + 2);
   sendbuf[4] = 0x01; /* Anzahl der zu lesenden Rahmen */
 
-  switch (sendbuf[1]) // vorbelegen lowbyte bei Startadr. > 00 00 00
-  {
+  switch (sendbuf[1]) { // vorbelegen lowbyte bei Startadr. > 00 00 00
   case 0x00:
     lowbyte = 0;
     break;
   case 0x40:
-    switch (anzahl_can_rahmen)
-    {
+    switch (anzahl_can_rahmen) {
     case 1:
       lowbyte = 1;
       break;
@@ -3103,8 +3079,7 @@ int datenlesen_DC(int anz_datensaetze)
     }
     break;
   case 0x80:
-    switch (anzahl_can_rahmen)
-    {
+    switch (anzahl_can_rahmen) {
     case 1:
       lowbyte = 2;
       break;
@@ -3126,8 +3101,7 @@ int datenlesen_DC(int anz_datensaetze)
     }
     break;
   case 0xc0:
-    switch (anzahl_can_rahmen)
-    {
+    switch (anzahl_can_rahmen) {
     case 1:
       lowbyte = 3;
       break;
@@ -3144,57 +3118,52 @@ int datenlesen_DC(int anz_datensaetze)
     break;
   }
 
-#if DEBUG > 3
+  #if DEBUG > 3
   /*  ##### Debug 3-CAN-Rahmen ########  */
   fprintf(fp_logfile_debug2, "Anzahl Datensaetze: %d. \n", anz_datensaetze);
-#endif
+  #endif
 
-  for (i = 0; i < anz_datensaetze; i++)
-  {
+  for (i = 0; i < anz_datensaetze; i++) {
     sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
 
     /* DEBUG */
     // fprintf(stderr," CAN-Logging-Test: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n",i+1,sendbuf[1],sendbuf[2],sendbuf[3],*end_adresse,*(end_adresse+1),*(end_adresse+2));
 
-#if DEBUG > 3
+    #if DEBUG > 3
     /*  ##### Debug CAN-Rahmen ########  */
-    fprintf(fp_logfile_debug2, " CAN-Logging-Debug: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-#endif
+    fprintf(fp_logfile_debug2, " CAN-Logging-Debug: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], * end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+    #endif
 
-    if (usb_zugriff)
-    {
+    if (usb_zugriff) {
       fd_set rfds;
       struct timeval tv;
       int retval = 0;
       int retry = 0;
       int retry_interval = 2;
       write_erg = write(fd, sendbuf, 6);
-      if (write_erg == 6) /* Lesen der Antwort*/
-      {
-        do
-        {
+      if (write_erg == 6) {
+        /* Lesen der Antwort */
+        do {
           in_bytes = 0;
-          FD_ZERO(&rfds); /* muss jedes Mal gesetzt werden */
-          FD_SET(fd, &rfds);
+          FD_ZERO( & rfds); /* muss jedes Mal gesetzt werden */
+          FD_SET(fd, & rfds);
           tv.tv_sec = retry_interval; /* Wait up to five seconds. */
           tv.tv_usec = 0;
-          retval = select(fd + 1, &rfds, NULL, NULL, &tv);
+          retval = select(fd + 1, & rfds, NULL, NULL, & tv);
           zeitstempel();
-          if (retval == -1)
+          if (retval == -1) {
             perror("select(fd)");
-          else if (retval)
-          {
-#ifdef DEBUG
-            fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-#endif
-            if (FD_ISSET(fd, &rfds))
-            {
-              ioctl(fd, FIONREAD, &in_bytes);
-#ifdef DEBUG
+          } else if (retval) {
+            #ifdef DEBUG
+            fprintf(stderr, "Data is available now. %d.%d\n", (int) tv.tv_sec, (int) tv.tv_usec);
+            #endif
+            if (FD_ISSET(fd, & rfds)) {
+              ioctl(fd, FIONREAD, & in_bytes);
+              #ifdef DEBUG
               fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-#endif
-              if (in_bytes == Bytes_for_0xDC) /* 524 */
-              {
+              #endif
+              if (in_bytes == Bytes_for_0xDC) {
+                /* 524 */
                 result = read(fd, u_dsatz_can, Bytes_for_0xDC);
                 retry = 4;
               }
@@ -3203,19 +3172,16 @@ int datenlesen_DC(int anz_datensaetze)
         } while (retry < 3 && in_bytes != 0);
       }
     }
-    if (ip_zugriff)
-    {
-      if (!ip_first)
-      {
+
+    if (ip_zugriff) {
+      if (!ip_first) {
         sock = socket(PF_INET, SOCK_STREAM, 0);
-        if (sock == -1)
-        {
+        if (sock == -1) {
           perror("socket failed()");
           do_cleanup();
           return 2;
         }
-        if (connect(sock, (const struct sockaddr *)&SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1)
-        {
+        if (connect(sock, (const struct sockaddr * ) & SERVER_sockaddr_in, sizeof(SERVER_sockaddr_in)) == -1) {
           perror("connect failed()");
           do_cleanup();
           return 3;
@@ -3225,96 +3191,94 @@ int datenlesen_DC(int anz_datensaetze)
       result = 0;
       marker = 0;
       write_erg = send(sock, sendbuf, 6, 0);
-      if (write_erg == 6) /* Lesen der Antwort */
-      {
-        do
-        {
+      if (write_erg == 6) {
+        /* Lesen der Antwort */
+        do {
           result = recv(sock, tmp_buf, Bytes_for_0xDC, 0);
-          if (result > 0)
-          {
-            for (j = 0; j < result; j++)
+          if (result > 0) {
+            for (j = 0; j < result; j++) {
               u_dsatz_can[0].all_bytes[marker + j] = tmp_buf[j];
+            }
             marker = marker + result;
           }
         } while (marker < ((anzahl_can_rahmen * 61) + 3));
       }
     } /* if (ip_zugriff) */
 
-    if (uvr_typ == UVR1611)
+    if (uvr_typ == UVR1611) {
       pruefsumme = berechnepruefziffer_uvr1611_CAN(u_dsatz_can, anzahl_can_rahmen);
+    }
 
-    if (uvr_typ == UVR1611)
-    {
-      switch (anzahl_can_rahmen)
-      {
+    if (uvr_typ == UVR1611) {
+      switch (anzahl_can_rahmen) {
       case 1:
-        if (u_dsatz_can[0].DS_CAN_1.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_1.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 2:
-        if (u_dsatz_can[0].DS_CAN_2.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_2.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 3:
-        if (u_dsatz_can[0].DS_CAN_3.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_3.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 4:
-        if (u_dsatz_can[0].DS_CAN_4.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_4.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 5:
-        if (u_dsatz_can[0].DS_CAN_5.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_5.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 6:
-        if (u_dsatz_can[0].DS_CAN_6.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_6.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 7:
-        if (u_dsatz_can[0].DS_CAN_7.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_7.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       case 8:
-        if (u_dsatz_can[0].DS_CAN_8.pruefsum == pruefsumme)
+        if (u_dsatz_can[0].DS_CAN_8.pruefsum == pruefsumme) {
           pruefsum_check = 1;
+        }
         break;
       }
     }
-
-    if (pruefsum_check == 1)
-    {  /*Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-      if (i == 0) /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
-      {
-        if (uvr_typ == UVR1611)
-        {
-          tmp_erg = (erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen));
+    if (pruefsum_check == 1) {
+      /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
+      if (i == 0) {
+        /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
+        if (uvr_typ == UVR1611) {
+          tmp_erg = erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen);
           merk_monat = u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat;
         }
-        if (tmp_erg == 0)
-        {
+        if (tmp_erg == 0) {
           printf("Der Logfile-Name konnte nicht erzeugt werden!");
           exit(-1);
-        }
-        else
-        {
+        } else {
           // CAN_BC-------------------------------------------------------------------------------------------------------------------
           printf("Rahmen %d\n", kopf_DC[0].all_bytes[5]);
           int c = 0;
           int cc = 0;
           // int can_typ[8];
-          for (c = 0; c < kopf_DC[0].all_bytes[5]; c++)
-          {
+          for (c = 0; c < kopf_DC[0].all_bytes[5]; c++) {
             cc = c + 6;
             can_typ[c] = kopf_DC[0].all_bytes[cc];
             fprintf(stderr, " Typ%02x: %02X \n", c, can_typ[c]);
           }
           // CAN_BC-------------------------------------------------------------------------------------------------------------------
           int x;
-          for (x = 1; x <= anzahl_can_rahmen; x++)
-          {
-            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1)
-            {
+          for (x = 1; x <= anzahl_can_rahmen; x++) {
+            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1) {
               printf("Das LogFile %s kann nicht geoeffnet werden!\n", LogFileName[x]);
               exit(-1);
             }
@@ -3322,13 +3286,12 @@ int datenlesen_DC(int anz_datensaetze)
         }
       }
       /* Hat der Monat gewechselt? Wenn ja, neues LogFile erstellen. */
-      if (merk_monat != u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat)
+      if (merk_monat != u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat) {
         monatswechsel = 1;
+      }
 
-      if (monatswechsel == 1)
-      {
-        switch (anzahl_can_rahmen)
-        {
+      if (monatswechsel == 1) {
+        switch (anzahl_can_rahmen) {
         case 1:
           fclose(fp_logfile);
           break;
@@ -3385,20 +3348,16 @@ int datenlesen_DC(int anz_datensaetze)
 
         printf("Monatswechsel!\n");
 
-        if (uvr_typ == UVR1611)
-          tmp_erg = (erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen));
-        if (tmp_erg == 0)
-        {
+        if (uvr_typ == UVR1611) {
+          tmp_erg = erzeugeLogfileName_CAN(u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.monat, u_dsatz_can[0].DS_CAN_1.DS_CAN[0].datum_zeit.jahr, anzahl_can_rahmen);
+        }
+        if (tmp_erg == 0) {
           printf("Fehler beim Monatswechsel: Der Logfile-Name konnte nicht erzeugt werden!");
           exit(-1);
-        }
-        else
-        {
+        } else {
           int x;
-          for (x = 1; x <= anzahl_can_rahmen; x++)
-          {
-            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1)
-            {
+          for (x = 1; x <= anzahl_can_rahmen; x++) {
+            if (open_logfile_CAN(LogFileName[x], x, can_typ) == -1) {
               printf("Fehler beim Monatswechsel: Das LogFile %s kann nicht geoeffnet werden!\n", LogFileName[x]);
               exit(-1);
             }
@@ -3411,327 +3370,329 @@ int datenlesen_DC(int anz_datensaetze)
 
       /* uvr_typ == UVR1611 */
       /* gelesene Datensaetze dem Winsol-Format zuordnen und in Logdateien schreiben */
-      switch (anzahl_can_rahmen)
-      {
-        case 1:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_1.DS_CAN[0], &dsatz_winsol[0]);
+      switch (anzahl_can_rahmen) {
+      case 1:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_1.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        break;
+      case 2:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_2.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_2.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        break;
+      case 3:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_3.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_3.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_3.DS_CAN[2], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+        #if DEBUG > 3
+        /*  ##### Debug 3-CAN-Rahmen ########  */
+        tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
+        #endif
+        break;
+      case 4:
+        if (can_typ[0] == UVR1611) {
+          copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_4.DS_CAN[0], & dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          break;
-        case 2:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_2.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_2.DS_CAN[1], &dsatz_winsol[0]);
+        }
+        if (can_typ[0] == CAN_BC) {
+          copy_UVR2winsol_1611_CANBC( & u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[0], & dsatz_canbc[0]);
+          tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile);
+        }
+        if (can_typ[1] == UVR1611) {
+          copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_4.DS_CAN[1], & dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          break;
-        case 3:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[1], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_3.DS_CAN[2], &dsatz_winsol[0]);
+        }
+        if (can_typ[1] == CAN_BC) {
+          copy_UVR2winsol_1611_CANBC( & u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[1], & dsatz_canbc[0]);
+          tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_2);
+        }
+        if (can_typ[2] == UVR1611) {
+          copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_4.DS_CAN[2], & dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-#if DEBUG > 3
-          /*  ##### Debug 3-CAN-Rahmen ########  */
-          tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
-#endif
-          break;
-        case 4:
-          if (can_typ[0] == UVR1611)
-          {
-            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[0], &dsatz_winsol[0]);
-            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          }
-          if (can_typ[0] == CAN_BC)
-          {
-            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[0], &dsatz_canbc[0]);
-            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile);
-          }
-          if (can_typ[1] == UVR1611)
-          {
-            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[1], &dsatz_winsol[0]);
-            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          }
-          if (can_typ[1] == CAN_BC)
-          {
-            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[1], &dsatz_canbc[0]);
-            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_2);
-          }
-          if (can_typ[2] == UVR1611)
-          {
-            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[2], &dsatz_winsol[0]);
-            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-          }
-          if (can_typ[2] == CAN_BC)
-          {
-            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[2], &dsatz_canbc[0]);
-            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_3);
-          }
-          if (can_typ[3] == UVR1611)
-          {
-            copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_4.DS_CAN[3], &dsatz_winsol[0]);
-            tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
-          }
-          if (can_typ[3] == CAN_BC)
-          {
-            copy_UVR2winsol_1611_CANBC(&u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[3], &dsatz_canbc[0]);
-            tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_4);
-          }
-          break;
-        case 5:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[1], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[2], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[3], &dsatz_winsol[0]);
+        }
+        if (can_typ[2] == CAN_BC) {
+          copy_UVR2winsol_1611_CANBC( & u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[2], & dsatz_canbc[0]);
+          tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_3);
+        }
+        if (can_typ[3] == UVR1611) {
+          copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_4.DS_CAN[3], & dsatz_winsol[0]);
           tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_5.DS_CAN[4], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
-#if DEBUG > 3
-          tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
-#endif
-          break;
-        case 6:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[1], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[2], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[3], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[4], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_6.DS_CAN[5], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
-          break;
-        case 7:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[1], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[2], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[3], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[4], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[5], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_7.DS_CAN[6], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
-          break;
-        case 8:
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[0], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[1], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[2], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[3], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[4], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[5], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[6], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
-          copy_UVR2winsol_1611_CAN(&u_dsatz_can[0].DS_CAN_8.DS_CAN[7], &dsatz_winsol[0]);
-          tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_8);
-          break;
+        }
+        if (can_typ[3] == CAN_BC) {
+          copy_UVR2winsol_1611_CANBC( & u_dsatz_can[0].DS_CAN_BC_4.DS_CANBC[3], & dsatz_canbc[0]);
+          tmp_erg = fwrite(puffer_dscanbc, 59, 1, fp_logfile_4);
+        }
+        break;
+      case 5:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_5.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_5.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_5.DS_CAN[2], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_5.DS_CAN[3], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_5.DS_CAN[4], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+        #if DEBUG > 3
+        tmp_erg = fwrite(puffer_u_dsatz_can, marker, 1, fp_logfile_debug);
+        #endif
+        break;
+      case 6:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[2], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[3], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[4], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_6.DS_CAN[5], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+        break;
+      case 7:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[2], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[3], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[4], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[5], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_7.DS_CAN[6], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
+        break;
+      case 8:
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[0], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[1], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_2);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[2], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_3);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[3], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_4);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[4], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_5);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[5], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_6);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[6], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_7);
+        copy_UVR2winsol_1611_CAN( & u_dsatz_can[0].DS_CAN_8.DS_CAN[7], & dsatz_winsol[0]);
+        tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile_8);
+        break;
       }
 
-      if (((i % 100) == 0) && (i > 0))
+      if (((i % 100) == 0) && (i > 0)) {
         printf("%d Datensaetze geschrieben.\n", i);
+      }
 
-      if (*end_adresse == sendbuf[1] && *(end_adresse + 1) == sendbuf[2] && *(end_adresse + 2) == sendbuf[3])
+      if ( * end_adresse == sendbuf[1] && * (end_adresse + 1) == sendbuf[2] && * (end_adresse + 2) == sendbuf[3]) {
         break;
+      }
 
       /* Hochzaehlen der Startadressen */
-      if (lowbyte <= 2)
+      if (lowbyte <= 2) {
         lowbyte++;
-      else
-      {
+      } else {
         lowbyte = 0;
       }
 
       switch (anzahl_can_rahmen) {
+      case 1:
+        switch (lowbyte) {
+        case 0:
+          sendbuf[1] = 0x00;
+          middlebyte++;
+          break;
         case 1:
-          switch (lowbyte) {
-            case 0:
-              sendbuf[1] = 0x00;
-              middlebyte++;
-              break;
-            case 1:
-              sendbuf[1] = 0x40;
-              break;
-            case 2:
-              sendbuf[1] = 0x80;
-              break;
-            case 3:
-              sendbuf[1] = 0xc0;
-              break;
-          }
-          if (middlebyte > merkmiddlebyte) { /* das mittlere Byte muss erhoeht werden */
-            sendbuf[2] = sendbuf[2] + 0x02;
-            merkmiddlebyte = middlebyte;
-          }
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-            merkmiddlebyte = middlebyte;
-          }
+          sendbuf[1] = 0x40;
           break;
         case 2:
-          if (sendbuf[2] == 0xFE && sendbuf[1] == 0x80) { /* das highbyte muss erhoeht werden */
-            switch (lowbyte) {
-              case 0:
-                sendbuf[1] = 0x00;
-                middlebyte++;
-                break;
-              case 1:
-                sendbuf[1] = 0x80;
-                lowbyte = 3;
-                break;
-            }
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-            merkmiddlebyte = middlebyte;
-          } else {
-            switch (lowbyte) {
-              case 0:
-                sendbuf[1] = 0x00;
-                middlebyte++;
-                break;
-              case 1:
-                sendbuf[1] = 0x80;
-                lowbyte = 3;
-                break;
-            }
-            if (middlebyte > merkmiddlebyte) { /* das mittlere Byte muss erhoeht werden */
-              sendbuf[2] = sendbuf[2] + 0x02;
-              merkmiddlebyte = middlebyte;
-            }
-          }
+          sendbuf[1] = 0x80;
           break;
         case 3:
-          switch (lowbyte) {
-            case 0:
-              sendbuf[1] = 0x00;
-              break;
-            case 1:
-              sendbuf[1] = 0xc0;
-              break;
-            case 2:
-              sendbuf[1] = 0x80;
-              break;
-            case 3:
-              sendbuf[1] = 0x40;
-              break;
-          }
-          if (sendbuf[2] == 0xFE && sendbuf[1] != 0xc0) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          } else {
-            if (sendbuf[1] != 0xc0) {
-              sendbuf[2] = sendbuf[2] + 0x02;
-            }
-          }
+          sendbuf[1] = 0xc0;
           break;
-        case 4:
-          sendbuf[1] = 0x00;
+        }
+        if (middlebyte > merkmiddlebyte) {
+          /* das mittlere Byte muss erhoeht werden */
           sendbuf[2] = sendbuf[2] + 0x02;
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          }
-          break;
-        case 5:
+          merkmiddlebyte = middlebyte;
+        }
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+          merkmiddlebyte = middlebyte;
+        }
+        break;
+      case 2:
+        if (sendbuf[2] == 0xFE && sendbuf[1] == 0x80) {
+          /* das highbyte muss erhoeht werden */
           switch (lowbyte) {
-            case 0:
-              sendbuf[1] = 0x00;
-              break;
-            case 1:
-              sendbuf[1] = 0x40;
-              break;
-            case 2:
-              sendbuf[1] = 0x80;
-              break;
-            case 3:
-              sendbuf[1] = 0xc0;
-              break;
+          case 0:
+            sendbuf[1] = 0x00;
+            middlebyte++;
+            break;
+          case 1:
+            sendbuf[1] = 0x80;
+            lowbyte = 3;
+            break;
           }
-          if (y == 3) {
-            sendbuf[2] = sendbuf[2] + 0x04;
-            y++;
-          } else {
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+          merkmiddlebyte = middlebyte;
+        } else {
+          switch (lowbyte) {
+          case 0:
+            sendbuf[1] = 0x00;
+            middlebyte++;
+            break;
+          case 1:
+            sendbuf[1] = 0x80;
+            lowbyte = 3;
+            break;
+          }
+          if (middlebyte > merkmiddlebyte) {
+            /* das mittlere Byte muss erhoeht werden */
             sendbuf[2] = sendbuf[2] + 0x02;
-            y++;
+            merkmiddlebyte = middlebyte;
           }
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          }
+        }
+        break;
+      case 3:
+        switch (lowbyte) {
+        case 0:
+          sendbuf[1] = 0x00;
           break;
-        case 6:
-          switch (lowbyte) {
-            case 0:
-              sendbuf[1] = 0x00;
-              sendbuf[2] = sendbuf[2] + 0x04;
-              break;
-            case 1:
-              sendbuf[1] = 0x80;
-              sendbuf[2] = sendbuf[2] + 0x02;
-              lowbyte = 3;
-              break;
-          }
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          }
+        case 1:
+          sendbuf[1] = 0xc0;
           break;
-        case 7:
-          switch (lowbyte) {
-            case 0:
-              sendbuf[1] = 0x00;
-              break;
-            case 1:
-              sendbuf[1] = 0xc0;
-              break;
-            case 2:
-              sendbuf[1] = 0x80;
-              break;
-            case 3:
-              sendbuf[1] = 0x40;
-              break;
-          }
-          if (y == 0) {
+        case 2:
+          sendbuf[1] = 0x80;
+          break;
+        case 3:
+          sendbuf[1] = 0x40;
+          break;
+        }
+        if (sendbuf[2] == 0xFE && sendbuf[1] != 0xc0) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        } else {
+          if (sendbuf[1] != 0xc0) {
             sendbuf[2] = sendbuf[2] + 0x02;
-            y++;
-          } else {
-            sendbuf[2] = sendbuf[2] + 0x04;
-            y++;
           }
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          }
+        }
+        break;
+      case 4:
+        sendbuf[1] = 0x00;
+        sendbuf[2] = sendbuf[2] + 0x02;
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        }
+        break;
+      case 5:
+        switch (lowbyte) {
+        case 0:
+          sendbuf[1] = 0x00;
           break;
-        case 8:
+        case 1:
+          sendbuf[1] = 0x40;
+          break;
+        case 2:
+          sendbuf[1] = 0x80;
+          break;
+        case 3:
+          sendbuf[1] = 0xc0;
+          break;
+        }
+        if (y == 3) {
+          sendbuf[2] = sendbuf[2] + 0x04;
+          y++;
+        } else {
+          sendbuf[2] = sendbuf[2] + 0x02;
+          y++;
+        }
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        }
+        break;
+      case 6:
+        switch (lowbyte) {
+        case 0:
           sendbuf[1] = 0x00;
           sendbuf[2] = sendbuf[2] + 0x04;
-          if (sendbuf[2] >= 0xFE) { /* das highbyte muss erhoeht werden */
-            sendbuf[2] = 0x00;
-            sendbuf[3] = sendbuf[3] + 0x01;
-          }
           break;
+        case 1:
+          sendbuf[1] = 0x80;
+          sendbuf[2] = sendbuf[2] + 0x02;
+          lowbyte = 3;
+          break;
+        }
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        }
+        break;
+      case 7:
+        switch (lowbyte) {
+        case 0:
+          sendbuf[1] = 0x00;
+          break;
+        case 1:
+          sendbuf[1] = 0xc0;
+          break;
+        case 2:
+          sendbuf[1] = 0x80;
+          break;
+        case 3:
+          sendbuf[1] = 0x40;
+          break;
+        }
+        if (y == 0) {
+          sendbuf[2] = sendbuf[2] + 0x02;
+          y++;
+        } else {
+          sendbuf[2] = sendbuf[2] + 0x04;
+          y++;
+        }
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        }
+        break;
+      case 8:
+        sendbuf[1] = 0x00;
+        sendbuf[2] = sendbuf[2] + 0x04;
+        if (sendbuf[2] >= 0xFE) {
+          /* das highbyte muss erhoeht werden */
+          sendbuf[2] = 0x00;
+          sendbuf[3] = sendbuf[3] + 0x01;
+        }
+        break;
       }
-      
+
       if (y == 4) {
         y = 0;
       }
-      
+
       if (sendbuf[3] > 0x0F) { // "Speicherueberlauf" im BL-Net
         sendbuf[1] = 0x00;
         sendbuf[2] = 0x00;
@@ -3739,47 +3700,46 @@ int datenlesen_DC(int anz_datensaetze)
         Speicherueberlauf = 0;
       }
       if (Speicherueberlauf == 0) {
-        if (*(end_adresse + 2) == sendbuf[3] || *(end_adresse + 2) < sendbuf[3]) {
-          if (*(end_adresse + 1) == sendbuf[2]) {
-#if DEBUG > 3
+        if ( * (end_adresse + 2) == sendbuf[3] || * (end_adresse + 2) < sendbuf[3]) {
+          if ( * (end_adresse + 1) == sendbuf[2]) {
+            #if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
-            fprintf(fp_logfile_debug2, " Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-#endif
-            if (*end_adresse == sendbuf[1] || *end_adresse < sendbuf[1]) {
-#if DEBUG > 3
+            fprintf(fp_logfile_debug2, " Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], * end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+            #endif
+            if ( * end_adresse == sendbuf[1] || * end_adresse < sendbuf[1]) {
+              #if DEBUG > 3
               /*  ##### Debug 3-CAN-Rahmen ########  */
-              fprintf(fp_logfile_debug2, " Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-#endif
+              fprintf(fp_logfile_debug2, " Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], * end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+              #endif
               break;
             }
-          } else if (*(end_adresse + 1) < sendbuf[2]) {
-#if DEBUG > 3
+          } else if ( * (end_adresse + 1) < sendbuf[2]) {
+            #if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
-            fprintf(fp_logfile_debug2, " Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-#endif
+            fprintf(fp_logfile_debug2, " Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], * end_adresse, *(end_adresse + 1), *(end_adresse + 2));
+            #endif
             break;
           }
         }
       }
-      
+
       monatswechsel = 0;
-      } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
-      else {
-        if (merk_i < 5) {
-          i--; /* falsche Pruefziffer - also nochmals lesen */
-#ifdef DEBUG
-          fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-#endif
-          merk_i++; /* hochzaehlen bis 5 */
-        } else {
-          merk_i = 0;
-          fehlerhafte_ds++;
-          printf(" fehlerhafter3 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
-        }
+    } /* Ende: if (dsatz_uvr1611[0].pruefsum == pruefsumme) */
+    else {
+      if (merk_i < 5) {
+        i--; /* falsche Pruefziffer - also nochmals lesen */
+        #ifdef DEBUG
+        fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
+        #endif
+        merk_i++; /* hochzaehlen bis 5 */
+      } else {
+        merk_i = 0;
+        fehlerhafte_ds++;
+        printf(" fehlerhafter3 Datensatz - insgesamt:%d\n", fehlerhafte_ds);
       }
-      }
-      return i + 1 - fehlerhafte_ds;
-  //  return anz_datensaetze - fehlerhafte_ds;
+    }
+  }
+  return i + 1 - fehlerhafte_ds;
 }
 
 /* Berechnung der Pruefsumme des Kopfsatz Modus 0xD1 */
