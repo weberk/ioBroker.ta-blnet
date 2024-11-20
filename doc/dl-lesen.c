@@ -2712,14 +2712,14 @@ int datenlesen_D1(int anz_datensaetze) {
           if (retval == -1) {
             perror("select(fd)");
           } else if (retval) {
-    #ifdef DEBUG
+#ifdef DEBUG
             fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-    #endif
+#endif
             if (FD_ISSET(fd, &rfds)) {
               ioctl(fd, FIONREAD, &in_bytes);
-    #ifdef DEBUG
+#ifdef DEBUG
               fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-    #endif
+#endif
               if (in_bytes == Bytes_for_0xD1) { /* 127 */
                 result = read(fd, u_dsatz_uvr, Bytes_for_0xD1);
                 retry = 4;
@@ -2752,12 +2752,12 @@ int datenlesen_D1(int anz_datensaetze) {
     
     //**************************************************************************************** !!!!!!!!
     pruefsumme = berechnepruefziffer_modus_D1(&u_dsatz_uvr[0], result);
-    #if DEBUG > 3
+#if DEBUG > 3
     printf("Pruefsumme berechnet: %x in Byte %d erhalten %x\n", pruefsumme, result, u_dsatz_uvr[0].DS_alles.all_bytes[result - 1]);
-    #endif
+#endif
     
     if (u_dsatz_uvr[0].DS_alles.all_bytes[result - 1] == pruefsumme) { /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-    #if DEBUG > 4
+#if DEBUG > 4
       print_dsatz_uvr1611_content(u_dsatz_uvr);
       int zz;
       for (zz = 0; zz < result - 1; zz++) {
@@ -2765,7 +2765,7 @@ int datenlesen_D1(int anz_datensaetze) {
       }
       fprintf(stderr, "\nuvr_typ(1): 0x%x uvr_typ(2): 0x%x \n", uvr_typ, uvr_typ2);
       fprintf(stderr, "%2x \n", u_dsatz_uvr[0].DS_alles.all_bytes[59]);
-    #endif
+#endif
       if (i == 0) { /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
         if (uvr_typ == UVR1611) {
           tmp_erg = erzeugeLogfileName(u_dsatz_uvr[0].DS_1611_1611.datum_zeit.monat, u_dsatz_uvr[0].DS_1611_1611.datum_zeit.jahr);
@@ -2940,9 +2940,9 @@ int datenlesen_D1(int anz_datensaetze) {
     else {
       if (merk_i < 5) {
         i--; /* falsche Pruefziffer - also nochmals lesen */
-    #ifdef DEBUG
+#ifdef DEBUG
         fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-    #endif
+#endif
         merk_i++; /* hochzaehlen bis 5 */
       } else {
         merk_i = 0;
@@ -3769,22 +3769,22 @@ int datenlesen_DC(int anz_datensaetze)
       if (Speicherueberlauf == 0) {
         if (*(end_adresse + 2) == sendbuf[3] || *(end_adresse + 2) < sendbuf[3]) {
           if (*(end_adresse + 1) == sendbuf[2]) {
-      #if DEBUG > 3
+#if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
             fprintf(fp_logfile_debug2, " Mittel-Byte Abbruch: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-      #endif
+#endif
             if (*end_adresse == sendbuf[1] || *end_adresse < sendbuf[1]) {
-      #if DEBUG > 3
+#if DEBUG > 3
               /*  ##### Debug 3-CAN-Rahmen ########  */
               fprintf(fp_logfile_debug2, " Abbruch erreicht: %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-      #endif
+#endif
               break;
             }
           } else if (*(end_adresse + 1) < sendbuf[2]) {
-      #if DEBUG > 3
+#if DEBUG > 3
             /*  ##### Debug 3-CAN-Rahmen ########  */
             fprintf(fp_logfile_debug2, " Abbruch MittelByte-EA < MittelByte-SA : %04d. Startadresse: %x %x %x - Endadresse: %x %x %x\n", i + 1, sendbuf[1], sendbuf[2], sendbuf[3], *end_adresse, *(end_adresse + 1), *(end_adresse + 2));
-      #endif
+#endif
             break;
           }
         }
@@ -3795,9 +3795,9 @@ int datenlesen_DC(int anz_datensaetze)
       else {
         if (merk_i < 5) {
           i--; /* falsche Pruefziffer - also nochmals lesen */
-      #ifdef DEBUG
+#ifdef DEBUG
           fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-      #endif
+#endif
           merk_i++; /* hochzaehlen bis 5 */
         } else {
           merk_i = 0;
@@ -4350,14 +4350,14 @@ int reset_datenpuffer_usb(int do_reset)
         if (retval == -1) {
           perror("select(fd)");
         } else if (retval) {
-    #ifdef DEBUG
+#ifdef DEBUG
           fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-    #endif
+#endif
           if (FD_ISSET(fd, &rfds)) {
             ioctl(fd, FIONREAD, &in_bytes);
-    #ifdef DEBUG
+#ifdef DEBUG
             fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-    #endif
+#endif
             if (in_bytes == 1) {
               result = read(fd, empfbuf, 1);
               /* printf("Vom DL erhaltene Reset-Bestaetigung: %x\n",empfbuf[0]); */
