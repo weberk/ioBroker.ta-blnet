@@ -2233,14 +2233,14 @@ int datenlesen_A8(int anz_datensaetze){
         if (retval == -1) {
           perror("select(fd)");
         } else if (retval) {
-  #ifdef DEBUG
+#ifdef DEBUG
           fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-  #endif
+#endif
           if (FD_ISSET(fd, &rfds)) {
             ioctl(fd, FIONREAD, &in_bytes);
-  #ifdef DEBUG
+#ifdef DEBUG
             fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-  #endif
+#endif
             if (in_bytes == 1) {
               result = read(fd, empfbuf, 1);
               retry = 4;
@@ -2294,9 +2294,9 @@ int datenlesen_A8(int anz_datensaetze){
       break;
   }
   
-  #if DEBUG
+#if DEBUG
   fprintf(stderr, " Startadresse: %x %x %x\n", sendbuf[1], sendbuf[2], sendbuf[3]);
-  #endif
+#endif
   
   for (; i < anz_datensaetze; i++) {
     sendbuf[5] = (sendbuf[0] + sendbuf[1] + sendbuf[2] + sendbuf[3] + sendbuf[4]) % modTeiler; /* Pruefziffer */
@@ -2321,20 +2321,20 @@ int datenlesen_A8(int anz_datensaetze){
           if (retval == -1) {
             perror("select(fd)");
           } else if (retval) {
-  #ifdef DEBUG
+#ifdef DEBUG
             fprintf(stderr, "Data is available now. %d.%d\n", (int)tv.tv_sec, (int)tv.tv_usec);
-  #endif
+#endif
             if (FD_ISSET(fd, &rfds)) {
               ioctl(fd, FIONREAD, &in_bytes);
-  #ifdef DEBUG
+#ifdef DEBUG
               fprintf(stderr, "Bytes im Puffer: %d\n", in_bytes);
-  #endif
+#endif
               if (in_bytes == 65) {
                 result = read(fd, u_dsatz_uvr, Bytes_for_0xA8);
                 retry = 4;
-  #ifdef DEBUG
+#ifdef DEBUG
                 fprintf(stderr, "%s - Daten beim %d. Zugriff gelesen.\n", sZeit, durchlauf);
-  #endif
+#endif
               } else {
                 durchlauf++;
               }
@@ -2372,19 +2372,19 @@ int datenlesen_A8(int anz_datensaetze){
     if (uvr_typ == UVR61_3) {
       pruefsumme = berechnepruefziffer_uvr61_3(u_dsatz_uvr);
     }
-  #if DEBUG > 3
+#if DEBUG > 3
     if (uvr_typ == UVR1611) {
       fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n", i + 1, u_dsatz_uvr[0].DS_UVR1611.pruefsum, pruefsumme);
     }
     if (uvr_typ == UVR61_3) {
       fprintf(stderr, "%d. Datensatz - Pruefsumme gelesen: %x  berechnet: %x \n", i + 1, u_dsatz_uvr[0].DS_UVR61_3.pruefsum, pruefsumme);
     }
-  #endif
+#endif
   
     if (u_dsatz_uvr[0].DS_UVR1611.pruefsum == pruefsumme || u_dsatz_uvr[0].DS_UVR61_3.pruefsum == pruefsumme) { /* Aenderung: 02.09.06 - Hochzaehlen der Startadresse erst dann, wenn korrekt gelesen wurde (eventuell endlosschleife?) */
-  #if DEBUG > 4
+#if DEBUG > 4
       print_dsatz_uvr1611_content(u_dsatz_uvr);
-  #endif
+#endif
       if (i == 0) { /* erster Datenssatz wurde gelesen - Logfile oeffnen / erstellen */
         if (uvr_typ == UVR1611) {
           tmp_erg = (erzeugeLogfileName(u_dsatz_uvr[0].DS_UVR1611.datum_zeit.monat, u_dsatz_uvr[0].DS_UVR1611.datum_zeit.jahr));
@@ -2480,9 +2480,9 @@ int datenlesen_A8(int anz_datensaetze){
       // CAN_BC-------------------------------------------------------------------------------------------------------------------
       if (uvr_typ == CAN_BC) {
         tmp_erg = fwrite(puffer_dswinsol, 59, 1, fp_logfile);
-  #if DEBUG > 3
+#if DEBUG > 3
         printf("uvr_Typ CAN_BC\n");
-  #endif
+#endif
       }
       if (uvr_typ == UVR61_3) {
         tmp_erg = fwrite(puffer_dswinsol_uvr61_3, 59, 1, fp_logfile);
@@ -2545,9 +2545,9 @@ int datenlesen_A8(int anz_datensaetze){
     else {
       if (merk_i < 5) {
         i--; /* falsche Pruefziffer - also nochmals lesen */
-  #ifdef DEBUG
+#ifdef DEBUG
         fprintf(stderr, " falsche Pruefsumme - Versuch#%d\n", merk_i);
-  #endif
+#endif
         merk_i++; /* hochzaehlen bis 5 */
       } else {
         merk_i = 0;
