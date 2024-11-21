@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "messagebox": true,
     "news": {
+      "1.0.9": {
+        "en": "improved logging and introduced a new socket for each command",
+        "de": "verbesserte protokollierung und einführung einer neuen steckdose für jeden befehl",
+        "ru": "улучшенная регистрация и введен новый розетка для каждой команды",
+        "pt": "melhorou o registro e introduziu um novo soquete para cada comando",
+        "nl": "verbeterde logging en introduceerde een nieuwe socket voor elk commando",
+        "fr": "amélioration de l'enregistrement et introduction d'une nouvelle socket pour chaque commande",
+        "it": "migliorato logging e introdotto una nuova presa per ogni comando",
+        "es": "mejora de registro e introduce un nuevo socket para cada comando",
+        "pl": "ulepszone logowanie i wprowadzenie nowego gniazda dla każdego polecenia",
+        "uk": "удосконалено запис і введено новий гніздо для кожної команди",
+        "zh-cn": "改进记录并引入每个命令的新套接字"
+      },
       "1.0.8": {
         "en": "improving logging in order to analyse system using CAN bus\nadded retry for reading UVR HEADER in order to identify uvr_mode",
         "de": "verbesserung der Protokollierung, um das System mit CAN-Bus zu analysieren\nhinzugefügt Retry zum Lesen von UVR HEADER, um uvr_mode zu identifizieren",
