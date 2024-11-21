@@ -127,8 +127,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.8 (2024-11-21)
 
 -   improving logging in order to analyse system using CAN bus
 -   added retry for reading UVR HEADER in order to identify uvr_mode
