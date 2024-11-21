@@ -129,7 +129,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
 ### **WORK IN PROGRESS**
 - improved reading device info
-- 
+- fixed handling of negative temperatures
 ### 1.0.9 (2024-11-21)
 
 -   improved logging and introduced a new socket for each command

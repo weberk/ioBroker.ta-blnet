@@ -97,6 +97,13 @@ class Uvr16xxBlNet extends utils.Adapter {
                                         const unitBits = highByte & 0x70;
                                         let input = this.byte2short(lowByte, highByte & 0x0F);
                                         if (signBit) {
+                                            // Restore bits 4, 5, 6 with 1, since this is a negative number
+                                            input = input | 0xF000;
+                                            // Invert the bits
+                                            input = ~input;
+                                            // Add 1 to the inverted bits
+                                            input = input + 1;
+                                            // Set the value to negative
                                             input = -input;
                                         }
                                         if (unitBits === 0x20) { // °C
