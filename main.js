@@ -63,12 +63,13 @@ class Uvr16xxBlNet extends utils.Adapter {
                     // Set status for info.connection
                     this.log.debug("Setting connection status to: " + systemConfiguration.success);
                     await this.setState("info.connection", systemConfiguration.success, true);
+                    if (systemConfiguration.success === true) {
+                        // Declare objects
+                        await this.declareObjects(systemConfiguration);
 
-                    // Declare objects
-                    await this.declareObjects(systemConfiguration);
-
-                    this.initialized = true;
-                    this.log.debug("Initialization succeeded: ");
+                        this.initialized = true;
+                        this.log.debug("Initialization succeeded: ");
+                    }
                 } catch (error) {
                     this.log.error("Initialization failed: " + error);
                     return; // Lock polling if initialization fails
@@ -464,30 +465,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             // KopfsatzA8 kopf_A8[1];
             // KOPFSATZ_DC kopf_DC[1];
 
-            /* Data structure of the header from D-LOGG or BL-Net */
-            /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
-            // typedef struct {
-            //     UCHAR kennung;
-            //     UCHAR version;
-            //     UCHAR zeitstempel[3];
-            //     UCHAR satzlaengeGeraet1;
-            //     UCHAR satzlaengeGeraet2;
-            //     UCHAR startadresse[3];
-            //     UCHAR endadresse[3];
-            //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-            // } KopfsatzD1;
 
-            /* Data structure of the header from D-LOGG or BL-Net */
-            /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
-            // typedef struct {
-            //     UCHAR kennung;
-            //     UCHAR version;
-            //     UCHAR zeitstempel[3];
-            //     UCHAR satzlaengeGeraet1;
-            //     UCHAR startadresse[3];
-            //     UCHAR endadresse[3];
-            //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-            // } KopfsatzA8;
 
             // Define the offsets based on the C struct definitions
             const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
@@ -495,9 +473,32 @@ class Uvr16xxBlNet extends utils.Adapter {
             const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
 
             if (uvr_mode === 0xD1) {
+                /* Data structure of the header from D-LOGG or BL-Net */
+                /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
+                // typedef struct {
+                //     UCHAR kennung;
+                //     UCHAR version;
+                //     UCHAR zeitstempel[3];
+                //     UCHAR satzlaengeGeraet1;
+                //     UCHAR satzlaengeGeraet2;
+                //     UCHAR startadresse[3];
+                //     UCHAR endadresse[3];
+                //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
+                // } KopfsatzD1;
                 uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
                 uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             } else {
+                /* Data structure of the header from D-LOGG or BL-Net */
+                /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
+                // typedef struct {
+                //     UCHAR kennung;
+                //     UCHAR version;
+                //     UCHAR zeitstempel[3];
+                //     UCHAR satzlaengeGeraet1;
+                //     UCHAR startadresse[3];
+                //     UCHAR endadresse[3];
+                //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
+                // } KopfsatzA8;
                 uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             }
 
@@ -643,7 +644,6 @@ class Uvr16xxBlNet extends utils.Adapter {
                     if (uvrRecord) {
                         Object.assign(stateValues, uvrRecord);
                     }
-
                     this.log.debug("fetchStateValuesFromDevice successful.");
                     return stateValues; // Return the state values
                 } else {

@@ -127,6 +127,9 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- improved reading device info
+- 
 ### 1.0.9 (2024-11-21)
 
 -   improved logging and introduced a new socket for each command
