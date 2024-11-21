@@ -385,187 +385,195 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.debug("objects for metrics declared.");
     }
 
-    async readDeviceInfo() {
+    async sendCommand(command) {
+        const sleep = (ms) => {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        };
+
+        await sleep(2000); // Wait two seconds between commands
         return new Promise((resolve, reject) => {
-            const client = new net.Socket();
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
-            // Define constants
-            const VERSION_REQUEST = 0x81;
-            const HEADER_READ = 0xAA;
-            const FIRMWARE_REQUEST = 0x82;
-            const MODE_REQUEST = 0x21;
+            const client = new net.Socket();
 
-            const sendCommand = async (command) => {
-                return new Promise((resolve, reject) => {
-                    client.write(Buffer.from([command]), (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        client.once("data", (data) => {
-                            resolve(data);
-                        });
-                    });
-                });
-            };
+            client.connect(port, ipAddress, () => {
+                client.write(Buffer.from([command]));
+            });
 
-            client.connect(port, ipAddress, async () => {
-                try {
-                    let data;
-                    let uvr_mode;
-                    let uvr_type;
-                    let uvr2_type;
-
-                    // Send version request
-                    data = await sendCommand(VERSION_REQUEST);
-                    const module_id = data.toString("hex");
-                    this.log.debug("Received module ID of BL-NET: " + module_id);
-
-                    // Query UVR type
-                    data = await this.fetchDataBlockFromDevice(HEADER_READ);
-                    // Guess the uvr_modus based on the length of the data array
-                    const KOPFSATZ_D1_LENGTH = 14;
-                    const KOPFSATZ_A8_LENGTH = 13;
-                    const KOPFSATZ_DC_LENGTH = 21;
-                    //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
-                    let uvr_mode_str;
-                    switch (data.length) {
-                        case KOPFSATZ_D1_LENGTH:
-                            uvr_mode = 0xD1;
-                            uvr_mode_str = "2DL";
-                            break;
-                        case KOPFSATZ_A8_LENGTH:
-                            uvr_mode = 0xA8;
-                            uvr_mode_str = "1DL";
-                            break;
-                        case KOPFSATZ_DC_LENGTH:
-                            uvr_mode = 0xDC;
-                            uvr_mode_str = "CAN";
-                            break;
-                        default:
-                            throw new Error("Unknown data length: " + data.length);
-                    }
-                    this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
-
-                    // KopfsatzD1 kopf_D1[1];
-                    // KopfsatzA8 kopf_A8[1];
-                    // KOPFSATZ_DC kopf_DC[1];
-
-                    /* Data structure of the header from D-LOGG or BL-Net */
-                    /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
-                    // typedef struct {
-                    //     UCHAR kennung;
-                    //     UCHAR version;
-                    //     UCHAR zeitstempel[3];
-                    //     UCHAR satzlaengeGeraet1;
-                    //     UCHAR satzlaengeGeraet2;
-                    //     UCHAR startadresse[3];
-                    //     UCHAR endadresse[3];
-                    //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-                    // } KopfsatzD1;
-
-                    /* Data structure of the header from D-LOGG or BL-Net */
-                    /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
-                    // typedef struct {
-                    //     UCHAR kennung;
-                    //     UCHAR version;
-                    //     UCHAR zeitstempel[3];
-                    //     UCHAR satzlaengeGeraet1;
-                    //     UCHAR startadresse[3];
-                    //     UCHAR endadresse[3];
-                    //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-                    // } KopfsatzA8;
-
-                    // Define the offsets based on the C struct definitions
-                    const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
-                    const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
-                    const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
-                    //this.logHexDump(data); // Log hex dump of the data;
-
-                    if (uvr_mode === 0xD1) {
-                        uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                        uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                    } else {
-                        uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                    }
-
-                    if (uvr_mode === 0xDC) {
-                        uvr_type = 0x76; // CAN-Logging only with UVR1611
-                    }
-
-                    // Translate uvr_typ to string
-                    let uvr_type_str;
-                    switch (uvr_type) {
-                        case 0x5A:
-                            uvr_type_str = "UVR61-3";
-                            break;
-                        case 0x76:
-                            uvr_type_str = "UVR1611";
-                            break;
-                        default:
-                            uvr_type_str = "Unknown";
-                    }
-                    this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
-
-                    // Translate uvr_typ2 to string if it exists
-                    let uvr2_type_str;
-                    if (uvr2_type !== undefined) {
-                        switch (uvr2_type) {
-                            case 0x5A:
-                                uvr2_type_str = "UVR61-3";
-                                break;
-                            case 0x76:
-                                uvr2_type_str = "UVR1611";
-                                break;
-                            default:
-                                uvr2_type_str = "Unknown";
-                        }
-                        this.log.debug("Received UVR type 2 of BL-NET: " + uvr2_type_str);
-                    }
-
-                    // Send firmware version request
-                    data = await sendCommand(FIRMWARE_REQUEST);
-                    const firmwareVersion = (data.readUInt8(0) / 100).toString();
-                    this.log.debug("Received firmware version of BL-NET: " + firmwareVersion);
-
-                    // Send transmission mode request
-                    data = await sendCommand(MODE_REQUEST);
-                    const transmission_mode = data.readUInt8(0);
-                    this.log.debug("Received mode of BL-NET: " + transmission_mode);
-                    // encode transmission_mode to string
-                    let transmission_mode_str;
-                    switch (transmission_mode) {
-                        // case 0x90:
-                        //     transmission_mode_str = "Current Data - UVR61-3";
-                        //     break;
-                        case 0x80:
-                            transmission_mode_str = "Current Data"; //  - UVR1611
-                            break;
-                        default:
-                            transmission_mode_str = "Unknown";
-                    }
-                    this.log.debug("transmission_mode name: " + transmission_mode_str);
-                    resolve({
-                        uvr_mode: uvr_mode_str,
-                        uvr_type: uvr_type_str,
-                        uvr2_type: uvr2_type_str,
-                        module_id: "0x" + module_id.toUpperCase(),
-                        firmware_version: firmwareVersion,
-                        transmission_mode: transmission_mode_str
-                    });
-                } catch (error) {
-                    this.log.error("Error during communication with device: " + error);
-                    reject(error);
-                } finally {
-                    client.end();
-                }
+            client.on("data", (data) => {
+                client.destroy();
+                resolve(data);
             });
 
             client.on("error", (err) => {
-                this.log.error("Connection error: " + err);
+                client.destroy();
                 reject(err);
             });
+
+            client.on("close", () => {
+                reject(new Error("Connection closed unexpectedly"));
+            });
         });
+    }
+
+    async readDeviceInfo() {
+        // Define constants
+        const VERSION_REQUEST = 0x81;
+        const HEADER_READ = 0xAA;
+        const FIRMWARE_REQUEST = 0x82;
+        const MODE_REQUEST = 0x21;
+
+        try {
+            let data;
+            let uvr_mode;
+            let uvr_type;
+            let uvr2_type;
+
+            // Send version request
+            data = await this.sendCommand(VERSION_REQUEST);
+            const module_id = data.toString("hex");
+            this.log.debug("Received module ID of BL-NET: " + module_id);
+
+            // Query UVR type
+            data = await this.fetchDataBlockFromDevice(HEADER_READ);
+            // Guess the uvr_modus based on the length of the data array
+            const KOPFSATZ_D1_LENGTH = 14;
+            const KOPFSATZ_A8_LENGTH = 13;
+            const KOPFSATZ_DC_LENGTH = 21;
+            //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
+            let uvr_mode_str;
+            switch (data.length) {
+                case KOPFSATZ_D1_LENGTH:
+                    uvr_mode = 0xD1;
+                    uvr_mode_str = "2DL";
+                    break;
+                case KOPFSATZ_A8_LENGTH:
+                    uvr_mode = 0xA8;
+                    uvr_mode_str = "1DL";
+                    break;
+                case KOPFSATZ_DC_LENGTH:
+                    uvr_mode = 0xDC;
+                    uvr_mode_str = "CAN";
+                    break;
+                default:
+                    throw new Error("Unknown data length: " + data.length);
+            }
+            this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
+
+            // KopfsatzD1 kopf_D1[1];
+            // KopfsatzA8 kopf_A8[1];
+            // KOPFSATZ_DC kopf_DC[1];
+
+            /* Data structure of the header from D-LOGG or BL-Net */
+            /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
+            // typedef struct {
+            //     UCHAR kennung;
+            //     UCHAR version;
+            //     UCHAR zeitstempel[3];
+            //     UCHAR satzlaengeGeraet1;
+            //     UCHAR satzlaengeGeraet2;
+            //     UCHAR startadresse[3];
+            //     UCHAR endadresse[3];
+            //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
+            // } KopfsatzD1;
+
+            /* Data structure of the header from D-LOGG or BL-Net */
+            /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
+            // typedef struct {
+            //     UCHAR kennung;
+            //     UCHAR version;
+            //     UCHAR zeitstempel[3];
+            //     UCHAR satzlaengeGeraet1;
+            //     UCHAR startadresse[3];
+            //     UCHAR endadresse[3];
+            //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
+            // } KopfsatzA8;
+
+            // Define the offsets based on the C struct definitions
+            const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
+            const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
+            const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
+
+            if (uvr_mode === 0xD1) {
+                uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+                uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+            } else {
+                uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
+            }
+
+            if (uvr_mode === 0xDC) {
+                uvr_type = 0x76; // CAN-Logging only with UVR1611
+            }
+
+            // Translate uvr_typ to string
+            let uvr_type_str;
+            switch (uvr_type) {
+                case 0x5A:
+                    uvr_type_str = "UVR61-3";
+                    break;
+                case 0x76:
+                    uvr_type_str = "UVR1611";
+                    break;
+                default:
+                    uvr_type_str = "Unknown";
+            }
+            this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
+
+            // Translate uvr_typ2 to string if it exists
+            let uvr2_type_str;
+            if (uvr2_type !== undefined) {
+                switch (uvr2_type) {
+                    case 0x5A:
+                        uvr2_type_str = "UVR61-3";
+                        break;
+                    case 0x76:
+                        uvr2_type_str = "UVR1611";
+                        break;
+                    default:
+                        uvr2_type_str = "Unknown";
+                }
+                this.log.debug("Received UVR type 2 of BL-NET: " + uvr2_type_str);
+            }
+
+            // Send firmware version request
+            this.log.debug("Prereading firmware version of BL-NET");
+            data = await this.sendCommand(FIRMWARE_REQUEST);
+            this.log.debug("Reading firmware version of BL-NET");
+            const firmwareVersion = (data.readUInt8(0) / 100).toString();
+            this.log.debug("Received firmware version of BL-NET: " + firmwareVersion);
+
+            // Send transmission mode request
+            data = await this.sendCommand(MODE_REQUEST);
+            const transmission_mode = data.readUInt8(0);
+            this.log.debug("Received mode of BL-NET: " + transmission_mode);
+            // encode transmission_mode to string
+            let transmission_mode_str;
+            switch (transmission_mode) {
+                // case 0x90:
+                //     transmission_mode_str = "Current Data - UVR61-3";
+                //     break;
+                case 0x80:
+                    transmission_mode_str = "Current Data"; //  - UVR1611
+                    break;
+                default:
+                    transmission_mode_str = "Unknown";
+            }
+            this.log.debug("transmission_mode name: " + transmission_mode_str);
+
+            return {
+                uvr_mode: uvr_mode_str,
+                uvr_type: uvr_type_str,
+                uvr2_type: uvr2_type_str,
+                module_id: "0x" + module_id.toUpperCase(),
+                firmware_version: firmwareVersion,
+                transmission_mode: transmission_mode_str
+            };
+        } catch (error) {
+            this.log.error("Error during communication with device: " + error);
+            throw error;
+        } finally {
+            this.log.debug("End readDeviceInfo");
+        }
     }
 
     /**
@@ -576,43 +584,13 @@ class Uvr16xxBlNet extends utils.Adapter {
         return new Promise((resolve, reject) => {
             const maxRetries = 5; // Maximum number of retries
             let attempt = 0; // Current attempt
-            const ipAddress = this.config.ip_address; // IP address from the config
-            const port = this.config.port; // Port from the config
-
-            const sleep = (ms) => {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            };
-
-            const sendCommand = async (command) => {
-                await sleep(2000); // Wait two seconds between commands
-                return new Promise((resolve, reject) => {
-                    const client = new net.Socket();
-                    client.connect(port, ipAddress, () => {
-                        client.write(Buffer.from([command]), (err) => {
-                            if (err) {
-                                client.destroy();
-                                return reject(err);
-                            }
-                            client.once("data", (data) => {
-                                client.destroy();
-                                resolve(data);
-                            });
-                        });
-                    });
-
-                    client.on("error", (err) => {
-                        client.destroy();
-                        reject(err);
-                    });
-                });
-            };
 
             const attemptFetch = async () => {
                 while (attempt < maxRetries) {
+                    attempt++;
                     try {
-                        attempt++;
-                        this.log.debug("Attempt to send command: " + command + " as attempt: " + attempt);
-                        const data = await sendCommand(command);
+                        const data = await this.sendCommand(command);
+                        this.log.debug("Send command: " + command + " as attempt: " + attempt);
 
                         // Process the received data here
                         this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data

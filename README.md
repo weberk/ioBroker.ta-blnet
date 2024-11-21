@@ -127,6 +127,11 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   improved logging and introduced a new socket for each command
+
 ### 1.0.8 (2024-11-21)
 
 -   improving logging in order to analyse system using CAN bus
