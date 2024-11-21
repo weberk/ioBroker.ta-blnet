@@ -99,10 +99,10 @@ class Uvr16xxBlNet extends utils.Adapter {
                                         if (signBit) {
                                             // Restore bits 4, 5, 6 with 1, since this is a negative number
                                             input = input | 0xF000;
-                                            // Invert the bits
-                                            input = ~input;
+                                            // Invert the bits (ensure 16-bit operation)
+                                            input = (~input & 0xFFFF);
                                             // Add 1 to the inverted bits
-                                            input = input + 1;
+                                            input = (input + 1) & 0xFFFF;
                                             // Set the value to negative
                                             input = -input;
                                         }
