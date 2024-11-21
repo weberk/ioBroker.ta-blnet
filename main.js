@@ -422,7 +422,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     this.log.debug("Received module ID of BL-NET: " + module_id);
 
                     // Query UVR type
-                    data = await sendCommand(HEADER_READ);
+                    data = await this.fetchDataBlockFromDevice(HEADER_READ);
                     // Guess the uvr_modus based on the length of the data array
                     const KOPFSATZ_D1_LENGTH = 14;
                     const KOPFSATZ_A8_LENGTH = 13;
@@ -572,14 +572,12 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Fetches state values from the IoT device.
      * @returns {Promise<Object>} - A promise that resolves with the state values.
      */
-    async fetchStateValuesFromDevice() {
+    async fetchDataBlockFromDevice(command) {
         return new Promise((resolve, reject) => {
-            const stateValues = {};
             const maxRetries = 5; // Maximum number of retries
             let attempt = 0; // Current attempt
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
-            const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
 
             const sleep = (ms) => {
                 return new Promise(resolve => setTimeout(resolve, ms));
@@ -613,37 +611,18 @@ class Uvr16xxBlNet extends utils.Adapter {
                 while (attempt < maxRetries) {
                     try {
                         attempt++;
-                        this.log.debug("Attempt to send READ_CURRENT_DATA command: " + attempt);
-                        const data = await sendCommand(READ_CURRENT_DATA);
+                        this.log.debug("Attempt to send command: " + command + " as attempt: " + attempt);
+                        const data = await sendCommand(command);
 
                         // Process the received data here
-                        // case 0x90: transmission_mode_str = "Current Data - UVR61-3";
-                        // case 0x80: transmission_mode_str = "Current Data - UVR1611";
-                        // this.logHexDump(data); // Log hex dump of the data
-                        if (data[0] === 0x80) {
-                            // Process the response data
-                            const response = this.readBlock(data, 57);
-                            if (response) {
-                                // Parse the response and update stateValues
-                                const uvrRecord = this.parseUvrRecord(response);
-                                if (uvrRecord) {
-                                    Object.assign(stateValues, uvrRecord);
-                                }
-
-                                this.log.debug("fetchStateValuesFromDevice successful.");
-                                resolve(stateValues); // finalize the Promise value
-                                return; // Successfully, exit the loop
-                            } else {
-                                // ignore the non valid response
-                                this.log.debug("Invalid response from device");
-                                if (attempt >= maxRetries) {
-                                    reject(new Error("Max retries reached. Unable to communicate with device."));
-                                }
-                            }
+                        this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data
+                        if (data && data.length > 1) {
+                            resolve(data); // finalize the Promise value
+                            return; // Successfully, exit the loop
                         } else {
-                            // ignore the non expected response
-                            this.log.debug("Unexpected response from device");
-                            this.logHexDump(data); // Log hex dump of the data;
+                            // ignore the non expected short response
+                            this.log.debug("Invalid short response from device");
+                            //this.logHexDump(data); // Log hex dump of the data
                             if (attempt >= maxRetries) {
                                 reject(new Error("Max retries reached. Unable to communicate with device."));
                             }
@@ -657,9 +636,52 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
             };
 
-            this.log.debug("Initiate attempt to fetch state values from the IoT device");
+            this.log.debug("Initiate attempt to fetch data block from BL-NET");
             attemptFetch(); // Start with the first attempt
         });
+    }
+
+    /**
+     * Fetches state values from the IoT device.
+     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     */
+    async fetchStateValuesFromDevice() {
+        const stateValues = {};
+        const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
+        try {
+
+            const data = await this.fetchDataBlockFromDevice(READ_CURRENT_DATA);
+
+            // Process the received data here
+            // case 0x90: transmission_mode_str = "Current Data - UVR61-3";
+            // case 0x80: transmission_mode_str = "Current Data - UVR1611";
+            // this.logHexDump(data); // Log hex dump of the data
+            if (data[0] === 0x80) {
+                // Process the response data
+                const response = this.readBlock(data, 57);
+                if (response) {
+                    // Parse the response and update stateValues
+                    const uvrRecord = this.parseUvrRecord(response);
+                    if (uvrRecord) {
+                        Object.assign(stateValues, uvrRecord);
+                    }
+
+                    this.log.debug("fetchStateValuesFromDevice successful.");
+                    return stateValues; // Return the state values
+                } else {
+                    this.log.debug("Invalid response from device");
+                    this.log.debug("Unexpected data format");
+                    throw new Error("Invalid response from device");
+                }
+            } else {
+                // ignore the non expected response
+                this.log.debug("Unexpected data format");
+                this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data;
+                throw new Error("Unexpected data format");
+            }
+        } catch (error) {
+            this.log.error("Error during communication with device on attempt: " + error);
+        }
     }
 
     /**
@@ -683,15 +705,19 @@ class Uvr16xxBlNet extends utils.Adapter {
      *
      * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
      */
-    logHexDump(data) {
+    logHexDump(message, data) {
         let hexString = "";
-        for (let i = 0; i < data.length; i++) {
-            hexString += data[i].toString(16).padStart(2, "0") + " ";
-            if ((i + 1) % 16 === 0) {
-                hexString += "\n";
+        if (data) {
+            for (let i = 0; i < data.length; i++) {
+                hexString += data[i].toString(16).padStart(2, "0") + " ";
+                if ((i + 1) % 16 === 0) {
+                    hexString += "\n";
+                }
             }
+            this.log.debug(message + " - hex dump:\n" + hexString);
+        } else {
+            this.log.debug("no data to dump");
         }
-        this.log.debug("Hex dump:\n" + hexString);
     }
 
     /**

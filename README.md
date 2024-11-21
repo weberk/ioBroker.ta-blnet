@@ -127,6 +127,12 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   improving logging in order to analyse system using CAN bus
+-   added retry for reading UVR HEADER in order to identify uvr_mode
+
 ### 1.0.7 (2024-11-19)
 
 -   testing deployment via "npm run release"
