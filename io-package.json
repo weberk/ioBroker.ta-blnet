@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "messagebox": true,
     "news": {
+      "1.0.10": {
+        "en": "improved reading device info\nfixed handling of negative temperatures",
+        "de": "verbesserte lesegerät-info\nfeste handhabung negativer temperaturen",
+        "ru": "улучшенная информация об устройстве чтения\nфиксированная обработка отрицательных температур",
+        "pt": "informação melhorada do dispositivo de leitura\nmanipulação fixa de temperaturas negativas",
+        "nl": "verbeterde leesapparaatinformatie\nvaste behandeling van negatieve temperaturen",
+        "fr": "amélioration de l'information du périphérique de lecture\nmanipulation fixe des températures négatives",
+        "it": "informazioni del dispositivo di lettura migliorate\ngestione fissa delle temperature negative",
+        "es": "información mejorada del dispositivo de lectura\nmanejo fijo de temperaturas negativas",
+        "pl": "ulepszone informacje o urządzeniu do czytania\nstała obsługa ujemnych temperatur",
+        "uk": "поліпшена інформація про пристрій читання\nфіксована обробка негативних температур",
+        "zh-cn": "改进的读取设备信息\n固定处理负温度"
+      },
       "1.0.9": {
         "en": "improved logging and introduced a new socket for each command",
         "de": "verbesserte protokollierung und einführung einer neuen steckdose für jeden befehl",
