@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "messagebox": true,
     "news": {
+      "1.0.13": {
+        "en": "improved CAN bus mode reading",
+        "de": "verbesserte CAN-Busmodusmessung",
+        "ru": "улучшенный режим автобуса",
+        "pt": "melhor leitura do modo de ônibus CAN",
+        "nl": "verbeterde CAN bus modus lezen",
+        "fr": "meilleure lecture du mode de bus CAN",
+        "it": "migliore lettura della modalità CAN bus",
+        "es": "mejora del modo de autobús CAN",
+        "pl": "ulepszone czytanie magistrali CAN",
+        "uk": "покращений читання режиму CAN",
+        "zh-cn": "改进的 CAN 总线模式读取"
+      },
       "1.0.12": {
         "en": "lint fixes",
         "de": "lint fixes",
@@ -70,19 +83,6 @@
         "zh-cn": "改进记录,以便使用CAN总线分析系统\n添加读取 UVR HEAMEER 的重试, 以识别 urr_ mode"
       },
       "1.0.7": {
-        "en": "testing deployment via \"npm run release\"",
-        "de": "testeinsatz über \"npm run release\"",
-        "ru": "тестирование развертывания через \"npm run release\"",
-        "pt": "testando a implementação através da \"versão de liberação\"",
-        "nl": "testen implementatie via \"npm run release\"",
-        "fr": "test de déploiement via \"npm run release\"",
-        "it": "distribuzione di test tramite \"npm run release\"",
-        "es": "despliegue de pruebas a través de \"npm run release\"",
-        "pl": "testowanie rozmieszczenia poprzez \"npm uruchom\"",
-        "uk": "тестування розгортання через \"npm run release\"",
-        "zh-cn": "通过“ npm 运行释放” 测试部署"
-      },
-      "1.0.6": {
         "en": "testing deployment via \"npm run release\"",
         "de": "testeinsatz über \"npm run release\"",
         "ru": "тестирование развертывания через \"npm run release\"",
