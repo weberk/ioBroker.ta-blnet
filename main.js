@@ -408,8 +408,8 @@ class Uvr16xxBlNet extends utils.Adapter {
             const client = new net.Socket();
 
             client.connect(port, ipAddress, () => {
-                client.write(Buffer.from([command]));
-                this.log.debug("Sent command: 0x" + command[0].toString(16).toUpperCase());
+                client.write(Buffer.from(command));
+                this.log.debug("Sent command: 0x" + command[0].toString(16).toUpperCase() + " - " + command.length);
             });
 
             client.on("data", (data) => {
@@ -514,6 +514,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             if (this.uvr_mode === 0xDC) {
                 // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
+                // Max. number of data records from points-in-time or data links/sources when CAN data logging is used: 8
                 // struct {
                 //     UCHAR kennung;
                 //     UCHAR version;
@@ -560,10 +561,8 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
 
             // Send firmware version request
-            this.log.debug("Prereading firmware version of BL-NET");
             command = new Uint8Array([FIRMWARE_REQUEST]);
             data = await this.sendCommand(command);
-            this.log.debug("Reading firmware version of BL-NET");
             const firmwareVersion = (data.readUInt8(0) / 100).toString();
             this.log.debug("Received firmware version of BL-NET: " + firmwareVersion);
 
@@ -655,12 +654,13 @@ class Uvr16xxBlNet extends utils.Adapter {
         const CAN_FRAME_INDEX = 0x01; // i.e. first frame (up to 8)
 
         try {
-            let command;
-            if (this.uvr_mode === 0xDC) { // CAN
-                command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
-            } else { // DL
-                command = new Uint8Array([READ_CURRENT_DATA]);
-            }
+            // let command;
+            // if (this.uvr_mode === 0xDC) { // CAN
+            //     command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
+            // } else { // DL
+            //     command = new Uint8Array([READ_CURRENT_DATA]);
+            // }
+            const command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
             const data = await this.fetchDataBlockFromDevice(command);
 
             // Process the received data here
