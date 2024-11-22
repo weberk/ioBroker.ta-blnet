@@ -127,8 +127,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.11 (2024-11-22)
 
 -   improved CAN bus mode reading
 
