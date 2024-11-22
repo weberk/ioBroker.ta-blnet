@@ -450,9 +450,9 @@ class Uvr16xxBlNet extends utils.Adapter {
             command = new Uint8Array([HEADER_READ]);
             data = await this.fetchDataBlockFromDevice(command);
             // Guess the uvr_modus based on the length of the data array
-            const KOPFSATZ_A8_LENGTH = 13;
-            const KOPFSATZ_D1_LENGTH = 14;
-            const KOPFSATZ_DC_LENGTH = 14 - 21;
+            // const KOPFSATZ_A8_LENGTH = 13;
+            // const KOPFSATZ_D1_LENGTH = 14;
+            // const KOPFSATZ_DC_LENGTH = 14 - 21;
             //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
             let uvr_mode_str;
             this.uvr_mode = data[1];
