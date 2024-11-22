@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "messagebox": true,
     "news": {
+      "1.0.12": {
+        "en": "lint fixes",
+        "de": "lint fixes",
+        "ru": "lint фиксации",
+        "pt": "lint correções",
+        "nl": "plintfixes",
+        "fr": "corrections de linte",
+        "it": "sistema di fissaggio",
+        "es": "lint fixes",
+        "pl": "poprawki lint",
+        "uk": "застібка щілини",
+        "zh-cn": "线性修正"
+      },
       "1.0.11": {
         "en": "improved CAN bus mode reading",
         "de": "verbesserte CAN-Busmodusmessung",
@@ -81,19 +94,6 @@
         "pl": "testowanie rozmieszczenia poprzez \"npm uruchom\"",
         "uk": "тестування розгортання через \"npm run release\"",
         "zh-cn": "通过“ npm 运行释放” 测试部署"
-      },
-      "1.0.1": {
-        "en": "improve build and deploy",
-        "de": "aufbau und einsatz verbessern",
-        "ru": "улучшение строительства и развертывания",
-        "pt": "melhorar a construção e implantação",
-        "nl": "de bouw en implementatie verbeteren",
-        "fr": "améliorer la construction et le déploiement",
-        "it": "migliorare la costruzione e la distribuzione",
-        "es": "mejorar la construcción y el despliegue",
-        "pl": "poprawa budowy i rozmieszczenia",
-        "uk": "поліпшення побудови та розгортання",
-        "zh-cn": "改进建设和部署"
       }
     },
     "titleLang": {
