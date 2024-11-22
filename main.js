@@ -44,6 +44,9 @@ class Uvr16xxBlNet extends utils.Adapter {
         // create status for adapter initialization success
         this.initialized = false;
 
+        // memorize uvr_mode
+        this.uvr_mode = 0;
+
         // Start polling
         this.startPolling();
     }
@@ -406,6 +409,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             client.connect(port, ipAddress, () => {
                 client.write(Buffer.from([command]));
+                this.log.debug("Sent command: 0x" + command[0].toString(16).toUpperCase());
             });
 
             client.on("data", (data) => {
@@ -433,38 +437,37 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         try {
             let data;
-            let uvr_mode;
             let uvr_type;
             let uvr2_type;
-
+            let command;
             // Send version request
-            data = await this.sendCommand(VERSION_REQUEST);
+            command = new Uint8Array([VERSION_REQUEST]);
+            data = await this.sendCommand(command);
             const module_id = data.toString("hex");
             this.log.debug("Received module ID of BL-NET: " + module_id);
 
             // Query UVR type
-            data = await this.fetchDataBlockFromDevice(HEADER_READ);
+            command = new Uint8Array([HEADER_READ]);
+            data = await this.fetchDataBlockFromDevice(command);
             // Guess the uvr_modus based on the length of the data array
-            const KOPFSATZ_D1_LENGTH = 14;
             const KOPFSATZ_A8_LENGTH = 13;
-            const KOPFSATZ_DC_LENGTH = 21;
+            const KOPFSATZ_D1_LENGTH = 14;
+            const KOPFSATZ_DC_LENGTH = 14 - 21;
             //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
             let uvr_mode_str;
-            switch (data.length) {
-                case KOPFSATZ_D1_LENGTH:
-                    uvr_mode = 0xD1;
-                    uvr_mode_str = "2DL";
-                    break;
-                case KOPFSATZ_A8_LENGTH:
-                    uvr_mode = 0xA8;
+            this.uvr_mode = data[1];
+            switch (this.uvr_mode) {
+                case 0xA8:
                     uvr_mode_str = "1DL";
                     break;
-                case KOPFSATZ_DC_LENGTH:
-                    uvr_mode = 0xDC;
+                case 0xD1:
+                    uvr_mode_str = "2DL";
+                    break;
+                case 0xDC:
                     uvr_mode_str = "CAN";
                     break;
                 default:
-                    throw new Error("Unknown data length: " + data.length);
+                    throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16));
             }
             this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
 
@@ -479,7 +482,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
             const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
 
-            if (uvr_mode === 0xD1) {
+            if (this.uvr_mode === 0xD1) {
                 /* Data structure of the header from D-LOGG or BL-Net */
                 /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
                 // typedef struct {
@@ -509,7 +512,20 @@ class Uvr16xxBlNet extends utils.Adapter {
                 uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             }
 
-            if (uvr_mode === 0xDC) {
+            if (this.uvr_mode === 0xDC) {
+                // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
+                // struct {
+                //     UCHAR kennung;
+                //     UCHAR version;
+                //     UCHAR zeitstempel[3];
+                //     UCHAR anzahlCAN_Rahmen;
+                //     UCHAR satzlaengeRahmen1;
+                //     UCHAR ...;
+                //     UCHAR satzlaengeRahmen8;
+                //     UCHAR startadresse[3];
+                //     UCHAR endadresse[3];
+                //     UCHAR pruefsum;  /* Summe der Bytes mod 256 */
+                //   } DC_Rahmen8
                 uvr_type = 0x76; // CAN-Logging only with UVR1611
             }
 
@@ -545,15 +561,17 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             // Send firmware version request
             this.log.debug("Prereading firmware version of BL-NET");
-            data = await this.sendCommand(FIRMWARE_REQUEST);
+            command = new Uint8Array([FIRMWARE_REQUEST]);
+            data = await this.sendCommand(command);
             this.log.debug("Reading firmware version of BL-NET");
             const firmwareVersion = (data.readUInt8(0) / 100).toString();
             this.log.debug("Received firmware version of BL-NET: " + firmwareVersion);
 
             // Send transmission mode request
-            data = await this.sendCommand(MODE_REQUEST);
+            command = new Uint8Array([MODE_REQUEST]);
+            data = await this.sendCommand(command);
             const transmission_mode = data.readUInt8(0);
-            this.log.debug("Received mode of BL-NET: " + transmission_mode);
+            this.log.debug("Received mode of BL-NET: 0x" + transmission_mode.toString(16));
             // encode transmission_mode to string
             let transmission_mode_str;
             switch (transmission_mode) {
@@ -598,7 +616,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     attempt++;
                     try {
                         const data = await this.sendCommand(command);
-                        this.log.debug("Send command: " + command + " as attempt: " + attempt);
+                        this.log.debug("Send command as attempt: " + attempt);
 
                         // Process the received data here
                         this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data
@@ -634,9 +652,16 @@ class Uvr16xxBlNet extends utils.Adapter {
     async fetchStateValuesFromDevice() {
         const stateValues = {};
         const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
-        try {
+        const CAN_FRAME_INDEX = 0x01; // i.e. first frame (up to 8)
 
-            const data = await this.fetchDataBlockFromDevice(READ_CURRENT_DATA);
+        try {
+            let command;
+            if (this.uvr_mode === 0xDC) { // CAN
+                command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
+            } else { // DL
+                command = new Uint8Array([READ_CURRENT_DATA]);
+            }
+            const data = await this.fetchDataBlockFromDevice(command);
 
             // Process the received data here
             // case 0x90: transmission_mode_str = "Current Data - UVR61-3";

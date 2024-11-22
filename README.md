@@ -127,9 +127,15 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   improved CAN bus mode reading
+
 ### 1.0.10 (2024-11-21)
-- improved reading device info
-- fixed handling of negative temperatures
+
+-   improved reading device info
+-   fixed handling of negative temperatures
 
 ### 1.0.9 (2024-11-21)
 
