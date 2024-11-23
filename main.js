@@ -40,6 +40,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
+        this.log.info("config can_frame_index: " + this.config.can_frame_index);
 
         // create status for adapter initialization success
         this.initialized = false;
@@ -651,7 +652,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     async fetchStateValuesFromDevice() {
         const stateValues = {};
         const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
-        const CAN_FRAME_INDEX = 0x01; // i.e. first frame (up to 8)
+        const CAN_FRAME_INDEX = this.config.can_frame_index; // i.e. first frame (up to 8)
 
         try {
             // let command;

@@ -6,5 +6,6 @@
     "Enter the port number": "Entrez le numéro de port",
     "Poll Interval": "Intervalle de sondage",
     "Enter the polling interval in seconds": "Entrez l'intervalle d'interrogation en secondes",
-    "Enter the IP address or host name of the device": "Entrez l'adresse IP ou le nom d'hôte de l'appareil"
+    "Enter the IP address or host name of the device": "Entrez l'adresse IP ou le nom d'hôte de l'appareil",
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Entrez l'index de la trame de données (c'est-à-dire plusieurs appareils connectés au même BL-NET)"
 }

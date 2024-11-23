@@ -127,6 +127,11 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   added frame index to options
+
 ### 1.0.13 (2024-11-22)
 
 -   improved CAN bus mode reading

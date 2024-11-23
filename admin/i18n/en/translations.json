@@ -5,5 +5,6 @@
     "Port": "Port",
     "Enter the port number": "Enter the port number",
     "Poll Interval": "Poll Interval",
-    "Enter the polling interval in seconds": "Enter the polling interval in seconds"
+    "Enter the polling interval in seconds": "Enter the polling interval in seconds",
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)"
 }

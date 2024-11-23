@@ -6,5 +6,6 @@
     "Enter the port number": "Введіть номер порту",
     "Poll Interval": "Інтервал опитування",
     "Enter the polling interval in seconds": "Введіть інтервал опитування в секундах",
-    "Enter the IP address or host name of the device": "Введіть IP-адресу або ім’я хоста пристрою"
+    "Enter the IP address or host name of the device": "Введіть IP-адресу або ім’я хоста пристрою",
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Введіть індекс кадру даних (тобто кілька пристроїв, підключених до однієї мережі BL-NET)"
 }

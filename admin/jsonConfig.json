@@ -42,6 +42,19 @@
                     "md": 6,
                     "lg": 6,
                     "xl": 6
+                },
+                "can_frame_index": {
+                    "type": "number",
+                    "label": "Data Frame Index",
+                    "min": 1,
+                    "max": 8,
+                    "default": 30,
+                    "help": "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
                 }
             }
         }
