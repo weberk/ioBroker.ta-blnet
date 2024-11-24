@@ -633,7 +633,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Fetches a data block from the device by sending a specified command.
      * The method will retry up to a maximum number of attempts if the communication fails or if an invalid response is received.
      *
-     * @param {string} command - The command to be sent to the device.
+     * @param {Uint8Array} command - The command to be sent to the device.
      * @returns {Promise<Buffer>} - A promise that resolves with the data received from the device, or rejects with an error if the maximum number of retries is reached.
      * @throws {Error} - Throws an error if the maximum number of retries is reached without successful communication.
      */
@@ -682,11 +682,6 @@ class Uvr16xxBlNet extends utils.Adapter {
      *
      * @param {Uint8Array} response - The response data from the UVR1611 device.
      * @returns {Object} uvrRecord - The parsed UVR1611 record containing outputs, speed levels, inputs, and thermal energy counters.
-     * @returns {Object} uvrRecord.outputs - The state of the outputs (ON/OFF).
-     * @returns {Object} uvrRecord.speed_levels - The speed levels of the device.
-     * @returns {Object} uvrRecord.inputs - The input values.
-     * @returns {Object} uvrRecord.thermal_energy_counters_status - The status of the thermal energy counters (active/inactive).
-     * @returns {Object} uvrRecord.thermal_energy_counters - The thermal energy counters data including current heat power and total heat energy.
      */
     parseUvrRecord(response) {
         const uvrRecord = {
