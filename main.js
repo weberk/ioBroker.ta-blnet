@@ -20,6 +20,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
     constructor(options) {
+        // Call the parent constructor with the adapter name and options
         super({
             ...options,
             name: "uvr16xx-blnet",
@@ -42,10 +43,10 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config poll_interval: " + this.config.poll_interval);
         this.log.info("config can_frame_index: " + this.config.can_frame_index);
 
-        // create status for adapter initialization success
+        // Initialize the adapter's state
         this.initialized = false;
 
-        // memorize uvr_mode
+        // Memorize uvr_mode
         this.uvr_mode = 0;
 
         // Start polling
@@ -76,7 +77,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     }
                 } catch (error) {
                     this.log.error("Initialization failed: " + error);
-                    return; // Lock polling if initialization fails
+                    return; // Stop polling if initialization fails
                 }
             }
 
@@ -146,8 +147,8 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Performs a test read from the device to determine input units.
-     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the test read with success status, state values, device info, and units.
+     * Reads the system configuration from the device.
+     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
         let stateValues;
@@ -183,7 +184,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
             }
 
-            this.log.info("readDeviceInfo succeeded.");
+            this.log.info("readSystemConfiguration succeeded.");
             return {
                 success: true,
                 stateValues: stateValues,
@@ -191,7 +192,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 units: units
             };
         } catch (error) {
-            this.log.error("readDeviceInfo failed: " + error);
+            this.log.error("readSystemConfiguration failed: " + error);
             return {
                 success: false,
                 stateValues: {},
@@ -223,211 +224,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             default:
                 return "unknown"; // Unknown unit
         }
-    }
-
-    /**
-     * Declare objects in ioBroker based on the provided units.
-     * @param {Object} systemConfiguration - The systemConfiguration determined from the device info reading.
-     */
-    async declareObjects(systemConfiguration) {
-        const units = systemConfiguration.units;
-        const deviceInfo = systemConfiguration.deviceInfo;
-
-        // Check if deviceInfo is defined
-        if (deviceInfo) {
-            // Declare device information
-            for (const [key, value] of Object.entries(deviceInfo)) {
-                await this.setObjectNotExistsAsync("info." + key, {
-                    type: "state",
-                    common: {
-                        name: key,
-                        type: "string",
-                        role: "indicator",
-                        read: true,
-                        write: false,
-                        def: value // Set initial value
-                    },
-                    native: {},
-                });
-                await this.setState("info." + key, {
-                    val: value,
-                    ack: true
-                });
-            }
-        } else {
-            this.log.error("deviceInfo is undefined or null");
-        }
-        // Declare outputs
-        const outputs = {
-            "A01": "OFF", // Byte 1, Bit 0
-            "A02": "OFF", // Byte 1, Bit 1
-            "A03": "OFF", // Byte 1, Bit 2
-            "A04": "OFF", // Byte 1, Bit 3
-            "A05": "OFF", // Byte 1, Bit 4
-            "A06": "OFF", // Byte 1, Bit 5
-            "A07": "OFF", // Byte 1, Bit 6
-            "A08": "OFF", // Byte 1, Bit 7
-            "A09": "OFF", // Byte 2, Bit 0
-            "A10": "OFF", // Byte 2, Bit 1
-            "A11": "OFF", // Byte 2, Bit 2
-            "A12": "OFF", // Byte 2, Bit 3
-            "A13": "OFF" // Byte 2, Bit 4
-        };
-
-        for (const key of Object.keys(outputs)) {
-            await this.setObjectNotExistsAsync("outputs." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "string",
-                    role: "indicator",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare speed levels
-        const speedLevels = {
-            "DzA1": 0, // Speed level 1
-            "DzA2": 30, // Speed level 2
-            "DzA6": 14, // Speed level 6
-            "DzA7": 158 // Speed level 7
-        };
-
-        for (const key of Object.keys(speedLevels)) {
-            await this.setObjectNotExistsAsync("speed_levels." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare inputs
-        const inputs = {
-            "S01": 6.2, // i.e collector temperature in °C
-            "S02": 67.6, // i.e Buffer 1 top temperature in °C
-            "S03": 36.1, // i.e Buffer 2 bottom temperature in °C
-            "S04": 34.1, // i.e Hot water temperature in °C
-            "S05": 24.7, // i.e Solar return primary temperature in °C
-            "S06": 41.3, // i.e Solar flow secondary temperature in °C
-            "S07": 25.4, // i.e Solar flow primary temperature in °C
-            "S08": 67.1, // i.e Buffer 1 top 2 temperature in °C
-            "S09": 51.1, // i.e Buffer 1 middle temperature in °C
-            "S10": 36.7, // i.e Boiler return temperature in °C
-            "S11": 53.3, // i.e Circulation return temperature in °C
-            "S12": 7.9, // i.e Outer wall temperature in °C
-            "S13": 43.5, // i.e Heating circuit 1 flow temperature in °C
-            "S14": 69.1, // i.e Boiler flow temperature in °C
-            "S15": 0, // i.e Not used
-            "S16": 0 // i.e Solar flow rate in l/h
-        };
-
-        for (const key of Object.keys(inputs)) {
-            await this.setObjectNotExistsAsync("inputs." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    unit: units[key], // Set unit based on test read
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare thermal energy counters status
-        const thermalEnergyCountersStatus = {
-            "wmz1": "active", // Thermal energy counter 1 status
-            "wmz2": "inactive" // Thermal energy counter 2 status
-        };
-
-        for (const key of Object.keys(thermalEnergyCountersStatus)) {
-            await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "string",
-                    role: "indicator",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare thermal energy counters
-        const thermalEnergyCounters = {
-            "current_heat_power1": 0, // Current heat power 1 in kW
-            "total_heat_energy1": 61214, // Total heat energy 1 in kWh
-            "current_heat_power2": 576768, // Current heat power 2 in kW
-            "total_heat_energy2": 771 // Total heat energy 2 in kWh
-        };
-
-        for (const key of Object.keys(thermalEnergyCounters)) {
-            let unit;
-            if (key.startsWith("current_heat_power")) {
-                unit = "kW";
-            } else if (key.startsWith("total_heat_energy")) {
-                unit = "kWh";
-            }
-
-            await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    unit: unit,
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-        this.log.debug("objects for metrics declared.");
-    }
-
-    async sendCommand(command) {
-        const sleep = (ms) => {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        };
-
-        await sleep(2000); // Wait two seconds between commands
-        return new Promise((resolve, reject) => {
-            const ipAddress = this.config.ip_address; // IP address from the config
-            const port = this.config.port; // Port from the config
-            const client = new net.Socket();
-
-            client.connect(port, ipAddress, () => {
-                client.write(Buffer.from(command));
-                this.logHexDump("Sent command", command); // Log hex dump of the command
-
-            });
-
-            client.on("data", (data) => {
-                client.destroy();
-                resolve(data);
-            });
-
-            client.on("error", (err) => {
-                client.destroy();
-                reject(err);
-            });
-
-            client.on("close", () => {
-                reject(new Error("Connection closed unexpectedly"));
-            });
-        });
     }
 
     async readDeviceInfo() {
@@ -604,46 +400,175 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Fetches state values from the IoT device.
-     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     * Declare objects in ioBroker based on the provided units.
+     * @param {Object} systemConfiguration - The systemConfiguration determined from the device info reading.
      */
-    async fetchDataBlockFromDevice(command) {
-        return new Promise((resolve, reject) => {
-            const maxRetries = 5; // Maximum number of retries
-            let attempt = 0; // Current attempt
+    async declareObjects(systemConfiguration) {
+        const units = systemConfiguration.units;
+        const deviceInfo = systemConfiguration.deviceInfo;
 
-            const attemptFetch = async () => {
-                while (attempt < maxRetries) {
-                    attempt++;
-                    try {
-                        const data = await this.sendCommand(command);
-                        this.log.debug("Send command as attempt: " + attempt);
+        // Check if deviceInfo is defined
+        if (deviceInfo) {
+            // Declare device information
+            for (const [key, value] of Object.entries(deviceInfo)) {
+                await this.setObjectNotExistsAsync("info." + key, {
+                    type: "state",
+                    common: {
+                        name: key,
+                        type: "string",
+                        role: "indicator",
+                        read: true,
+                        write: false,
+                        def: value // Set initial value
+                    },
+                    native: {},
+                });
+                await this.setState("info." + key, {
+                    val: value,
+                    ack: true
+                });
+            }
+        } else {
+            this.log.error("deviceInfo is undefined or null");
+        }
+        // Declare outputs
+        const outputs = {
+            "A01": "OFF", // Byte 1, Bit 0
+            "A02": "OFF", // Byte 1, Bit 1
+            "A03": "OFF", // Byte 1, Bit 2
+            "A04": "OFF", // Byte 1, Bit 3
+            "A05": "OFF", // Byte 1, Bit 4
+            "A06": "OFF", // Byte 1, Bit 5
+            "A07": "OFF", // Byte 1, Bit 6
+            "A08": "OFF", // Byte 1, Bit 7
+            "A09": "OFF", // Byte 2, Bit 0
+            "A10": "OFF", // Byte 2, Bit 1
+            "A11": "OFF", // Byte 2, Bit 2
+            "A12": "OFF", // Byte 2, Bit 3
+            "A13": "OFF" // Byte 2, Bit 4
+        };
 
-                        // Process the received data here
-                        this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data
-                        if (data && data.length > 1) {
-                            resolve(data); // finalize the Promise value
-                            return; // Successfully, exit the loop
-                        } else {
-                            // ignore the non expected short response
-                            this.log.debug("Invalid short response from device");
-                            //this.logHexDump(data); // Log hex dump of the data
-                            if (attempt >= maxRetries) {
-                                reject(new Error("Max retries reached. Unable to communicate with device."));
-                            }
-                        }
-                    } catch (error) {
-                        this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
-                        if (attempt >= maxRetries) {
-                            reject(new Error("Max retries reached. Unable to communicate with device."));
-                        }
-                    }
-                }
-            };
+        for (const key of Object.keys(outputs)) {
+            await this.setObjectNotExistsAsync("outputs." + key, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "string",
+                    role: "indicator",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
 
-            this.log.debug("Initiate attempt to fetch data block from BL-NET");
-            attemptFetch(); // Start with the first attempt
-        });
+        // Declare speed levels
+        const speedLevels = {
+            "DzA1": 0, // Speed level 1
+            "DzA2": 30, // Speed level 2
+            "DzA6": 14, // Speed level 6
+            "DzA7": 158 // Speed level 7
+        };
+
+        for (const key of Object.keys(speedLevels)) {
+            await this.setObjectNotExistsAsync("speed_levels." + key, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare inputs
+        const inputs = {
+            "S01": 6.2, // i.e collector temperature in °C
+            "S02": 67.6, // i.e Buffer 1 top temperature in °C
+            "S03": 36.1, // i.e Buffer 2 bottom temperature in °C
+            "S04": 34.1, // i.e Hot water temperature in °C
+            "S05": 24.7, // i.e Solar return primary temperature in °C
+            "S06": 41.3, // i.e Solar flow secondary temperature in °C
+            "S07": 25.4, // i.e Solar flow primary temperature in °C
+            "S08": 67.1, // i.e Buffer 1 top 2 temperature in °C
+            "S09": 51.1, // i.e Buffer 1 middle temperature in °C
+            "S10": 36.7, // i.e Boiler return temperature in °C
+            "S11": 53.3, // i.e Circulation return temperature in °C
+            "S12": 7.9, // i.e Outer wall temperature in °C
+            "S13": 43.5, // i.e Heating circuit 1 flow temperature in °C
+            "S14": 69.1, // i.e Boiler flow temperature in °C
+            "S15": 0, // i.e Not used
+            "S16": 0 // i.e Solar flow rate in l/h
+        };
+
+        for (const key of Object.keys(inputs)) {
+            await this.setObjectNotExistsAsync("inputs." + key, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value",
+                    unit: units[key], // Set unit based on test read
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare thermal energy counters status
+        const thermalEnergyCountersStatus = {
+            "wmz1": "active", // Thermal energy counter 1 status
+            "wmz2": "inactive" // Thermal energy counter 2 status
+        };
+
+        for (const key of Object.keys(thermalEnergyCountersStatus)) {
+            await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "string",
+                    role: "indicator",
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+
+        // Declare thermal energy counters
+        const thermalEnergyCounters = {
+            "current_heat_power1": 0, // Current heat power 1 in kW
+            "total_heat_energy1": 61214, // Total heat energy 1 in kWh
+            "current_heat_power2": 576768, // Current heat power 2 in kW
+            "total_heat_energy2": 771 // Total heat energy 2 in kWh
+        };
+
+        for (const key of Object.keys(thermalEnergyCounters)) {
+            let unit;
+            if (key.startsWith("current_heat_power")) {
+                unit = "kW";
+            } else if (key.startsWith("total_heat_energy")) {
+                unit = "kWh";
+            }
+
+            await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
+                type: "state",
+                common: {
+                    name: key,
+                    type: "number",
+                    role: "value",
+                    unit: unit,
+                    read: true,
+                    write: false,
+                },
+                native: {},
+            });
+        }
+        this.log.debug("objects for metrics declared.");
     }
 
     /**
@@ -691,6 +616,82 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
+     * Fetches state values from the IoT device.
+     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     */
+    async fetchDataBlockFromDevice(command) {
+        return new Promise((resolve, reject) => {
+            const maxRetries = 5; // Maximum number of retries
+            let attempt = 0; // Current attempt
+
+            const attemptFetch = async () => {
+                while (attempt < maxRetries) {
+                    attempt++;
+                    try {
+                        const data = await this.sendCommand(command);
+                        this.log.debug("Send command as attempt: " + attempt);
+
+                        // Process the received data here
+                        this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data
+                        if (data && data.length > 1) {
+                            resolve(data); // finalize the Promise value
+                            return; // Successfully, exit the loop
+                        } else {
+                            // ignore the non expected short response
+                            this.log.debug("Invalid short response from device");
+                            //this.logHexDump(data); // Log hex dump of the data
+                            if (attempt >= maxRetries) {
+                                reject(new Error("Max retries reached. Unable to communicate with device."));
+                            }
+                        }
+                    } catch (error) {
+                        this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
+                        if (attempt >= maxRetries) {
+                            reject(new Error("Max retries reached. Unable to communicate with device."));
+                        }
+                    }
+                }
+            };
+
+            this.log.debug("Initiate attempt to fetch data block from BL-NET");
+            attemptFetch(); // Start with the first attempt
+        });
+    }
+
+    async sendCommand(command) {
+        const sleep = (ms) => {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        };
+
+        await sleep(2000); // Wait two seconds between commands
+        return new Promise((resolve, reject) => {
+            const ipAddress = this.config.ip_address; // IP address from the config
+            const port = this.config.port; // Port from the config
+            const client = new net.Socket();
+
+            client.connect(port, ipAddress, () => {
+                client.write(Buffer.from(command));
+                this.logHexDump("Sent command", command); // Log hex dump of the command
+
+            });
+
+            client.on("data", (data) => {
+                client.destroy();
+                resolve(data);
+            });
+
+            client.on("error", (err) => {
+                client.destroy();
+                reject(err);
+            });
+
+            client.on("close", () => {
+                reject(new Error("Connection closed unexpectedly"));
+            });
+        });
+    }
+
+    /**
      * Reads a block of data of the specified length from the given data array.
      *
      * @param {Uint8Array} data - The data array to read from.
@@ -704,26 +705,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             return block;
         }
         return null;
-    }
-
-    /**
-     * Logs a hexadecimal dump of the provided data.
-     *
-     * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
-     */
-    logHexDump(message, data) {
-        let hexString = "";
-        if (data) {
-            for (let i = 0; i < data.length; i++) {
-                hexString += data[i].toString(16).padStart(2, "0") + " ";
-                if ((i + 1) % 16 === 0) {
-                    hexString += "\n";
-                }
-            }
-            this.log.debug(message + " - hex dump:\n" + hexString.toUpperCase());
-        } else {
-            this.log.debug("no data to dump");
-        }
     }
 
     /**
@@ -863,6 +844,26 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
         return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
+    }
+
+    /**
+     * Logs a hexadecimal dump of the provided data.
+     *
+     * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
+     */
+    logHexDump(message, data) {
+        let hexString = "";
+        if (data) {
+            for (let i = 0; i < data.length; i++) {
+                hexString += data[i].toString(16).padStart(2, "0") + " ";
+                if ((i + 1) % 16 === 0) {
+                    hexString += "\n";
+                }
+            }
+            this.log.debug(message + " - hex dump:\n" + hexString.toUpperCase());
+        } else {
+            this.log.debug("no data to dump");
+        }
     }
 
     /**
