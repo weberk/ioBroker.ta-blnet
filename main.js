@@ -678,15 +678,15 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Parses the UVR1611 response and extracts various data points into a structured object.
+     * Parses the UVR1611 response and extracts various data points into a structured record.
      *
      * @param {Uint8Array} response - The response data from the UVR1611 device.
-     * @returns {Object} An object containing parsed data including outputs, speed levels, inputs, thermal energy counters status, and thermal energy counters.
-     * @returns {Object.outputs} - The state of the outputs (A01 to A13) as "ON" or "OFF".
-     * @returns {Object.speed_levels} - The speed levels (DzA1, DzA2, DzA6, DzA7).
-     * @returns {Object.inputs} - The input values (S01 to S16).
-     * @returns {Object.thermal_energy_counters_status} - The status of the thermal energy counters (wmz1, wmz2) as "active" or "inactive".
-     * @returns {Object.thermal_energy_counters} - The thermal energy counters data including current heat power and total heat energy for wmz1 and wmz2.
+     * @returns {Object} uvrRecord - The parsed UVR1611 record containing outputs, speed levels, inputs, and thermal energy counters.
+     * @returns {Object} uvrRecord.outputs - The state of the outputs (ON/OFF).
+     * @returns {Object} uvrRecord.speed_levels - The speed levels of the device.
+     * @returns {Object} uvrRecord.inputs - The input values.
+     * @returns {Object} uvrRecord.thermal_energy_counters_status - The status of the thermal energy counters (active/inactive).
+     * @returns {Object} uvrRecord.thermal_energy_counters - The thermal energy counters data including current heat power and total heat energy.
      */
     parseUvrRecord(response) {
         const uvrRecord = {
@@ -794,7 +794,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     /**
      * Sends a command to a specified IP address and port, waits for a response, and returns the response data.
      * 
-     * @param {Buffer} command - The command to be sent as a Buffer.
+     * @param {Uint8Array} command - The command to be sent as a Uint8Array.
      * @returns {Promise<Buffer>} - A promise that resolves with the response data as a Buffer.
      * @throws {Error} - Throws an error if the connection is closed unexpectedly or if there is a connection error.
      */
@@ -928,11 +928,6 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Handles state changes.
-     *
-     * @param {string} id - The ID of the state that changed.
-     * @param {Object} state - The state object.
-     * @param {any} state.val - The new value of the state.
-     * @param {boolean} state.ack - Indicates if the state change was acknowledged.
      */
     onStateChange(id, state) {
         if (state) {
