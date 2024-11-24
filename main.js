@@ -49,6 +49,9 @@ class Uvr16xxBlNet extends utils.Adapter {
         // Memorize uvr_mode
         this.uvr_mode = 0;
 
+        // Memorize the current timeout ID; later used for clearing the timeout
+        this.currentTimeoutId = null;
+
         // Start polling
         this.startPolling();
     }
@@ -795,7 +798,10 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     async sendCommand(command) {
         const sleep = (ms) => {
-            return new Promise(resolve => setTimeout(resolve, ms));
+            return new Promise(resolve => {
+                const timeoutId = setTimeout(resolve, ms);
+                this.currentTimeoutId = timeoutId; // Store the timeout ID
+            });
         };
 
         await sleep(2000); // Wait two seconds between commands
@@ -811,15 +817,18 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             client.on("data", (data) => {
                 client.destroy();
+                this.clearCurrentTimeout(); // Clear the timeout when data is received
                 resolve(data);
             });
 
             client.on("error", (err) => {
                 client.destroy();
+                this.clearCurrentTimeout(); // Clear the timeout on error
                 reject(err);
             });
 
             client.on("close", () => {
+                this.clearCurrentTimeout(); // Clear the timeout on close
                 reject(new Error("Connection closed unexpectedly"));
             });
         });
@@ -884,7 +893,15 @@ class Uvr16xxBlNet extends utils.Adapter {
             this.log.debug("no data to dump");
         }
     }
-
+    /**
+     * Clears the current timeout if it exists.
+     */
+    clearCurrentTimeout() {
+        if (this.currentTimeoutId) {
+            clearTimeout(this.currentTimeoutId);
+            this.currentTimeoutId = null;
+        }
+    }
     /**
      * This method is called when the adapter is unloaded.
      * It clears the polling interval if it exists and then calls the provided callback.
@@ -897,12 +914,14 @@ class Uvr16xxBlNet extends utils.Adapter {
             if (this.pollingInterval) {
                 clearInterval(this.pollingInterval);
             }
-
+            // Clear the current timeout
+            this.clearCurrentTimeout();
             callback();
         } catch (e) {
             callback();
         }
     }
+
 
     // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
     // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
