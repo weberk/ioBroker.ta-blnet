@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "messagebox": true,
     "news": {
+      "1.0.15": {
+        "en": "refactorings and improved code documentation",
+        "de": "refactorings und verbesserte codedokumentation",
+        "ru": "рефакторинг и совершенствование кодовой документации",
+        "pt": "refatorações e melhor documentação de código",
+        "nl": "refactorings en verbeterde codedocumentatie",
+        "fr": "refacturation et amélioration de la documentation du code",
+        "it": "refactorings e documentazione di codice migliorata",
+        "es": "refactorings and improved code documentation",
+        "pl": "remonty i ulepszona dokumentacja kodowa",
+        "uk": "рефакторинги та вдосконалення документації з кодом",
+        "zh-cn": "重新设计和改进的代码文档"
+      },
       "1.0.14": {
         "en": "added frame index to options",
         "de": "hinzufügen von frame index zu optionen",
@@ -81,19 +94,6 @@
         "pl": "ulepszone logowanie i wprowadzenie nowego gniazda dla każdego polecenia",
         "uk": "удосконалено запис і введено новий гніздо для кожної команди",
         "zh-cn": "改进记录并引入每个命令的新套接字"
-      },
-      "1.0.8": {
-        "en": "improving logging in order to analyse system using CAN bus\nadded retry for reading UVR HEADER in order to identify uvr_mode",
-        "de": "verbesserung der Protokollierung, um das System mit CAN-Bus zu analysieren\nhinzugefügt Retry zum Lesen von UVR HEADER, um uvr_mode zu identifizieren",
-        "ru": "улучшение лесозаготовок для анализа системы с использованием автобуса CAN\nдобавлена ретрия для чтения UVR HEADER для идентификации uvr_mode",
-        "pt": "melhorar o log para analisar o sistema usando o CAN bus\nnova tentativa de leitura UVR HEADER para identificar uvr_mode",
-        "nl": "verbeteren van de logging om het systeem te analyseren met behulp van CAN bus\ntoegevoegd opnieuw proberen voor het lezen van UVR-HEDER om uvr_mode te identificeren",
-        "fr": "améliorer l'enregistrement pour analyser le système en utilisant le bus CAN\najout de réessayer pour lire UVR HEADER afin d'identifier uvr_mode",
-        "it": "migliorare la registrazione al fine di analizzare il sistema utilizzando CAN bus\nretry aggiunto per la lettura UVR HEADER al fine di identificare uvr_mode",
-        "es": "mejorar el registro para analizar el sistema mediante autobuses CAN\nañadida retry para leer UVR HEADER con el fin de identificar uvr_mode",
-        "pl": "ulepszanie logowania w celu analizy systemu za pomocą magistrali CAN\ndodano ponownie do odczytu UVR HEADER w celu identyfikacji trybu uvr _ mode",
-        "uk": "для аналізу системи за допомогою автобуса CAN\nдодана птиця для читання UVR HEADER для визначення uvr_mode",
-        "zh-cn": "改进记录,以便使用CAN总线分析系统\n添加读取 UVR HEAMEER 的重试, 以识别 urr_ mode"
       }
     },
     "titleLang": {
