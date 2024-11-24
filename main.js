@@ -229,11 +229,11 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Reads device information from the BL-NET device.
-     * 
+     *
      * This method sends various commands to the device to retrieve information such as
      * module ID, UVR mode, UVR type, firmware version, and transmission mode. It processes
      * the received data and returns an object containing these details.
-     * 
+     *
      * @returns {Promise<Object>} An object containing the device information:
      * - {string} uvr_mode - The UVR mode (e.g., "1DL", "2DL", "CAN").
      * - {string} uvr_type - The UVR type (e.g., "UVR61-3", "UVR1611").
@@ -241,7 +241,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      * - {string} module_id - The module ID of the BL-NET device.
      * - {string} firmware_version - The firmware version of the BL-NET device.
      * - {string} transmission_mode - The transmission mode (e.g., "Current Data").
-     * 
+     *
      * @throws {Error} If there is an error during communication with the device.
      */
     async readDeviceInfo() {
@@ -585,10 +585,10 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Fetches state values from the device.
-     * 
+     *
      * This method sends a command to the device to read the current data and processes the response.
      * It parses the response data and updates the state values accordingly.
-     * 
+     *
      * @async
      * @returns {Promise<Object>} A promise that resolves to an object containing the state values.
      * @throws {Error} If there is an error during communication with the device or if the response format is unexpected.
@@ -788,7 +788,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
     /**
      * Sends a command to a specified IP address and port, waits for a response, and returns the response data.
-     * 
+     *
      * @param {Uint8Array} command - The command to be sent as a Uint8Array.
      * @returns {Promise<Buffer>} - A promise that resolves with the response data as a Buffer.
      * @throws {Error} - Throws an error if the connection is closed unexpectedly or if there is a connection error.
