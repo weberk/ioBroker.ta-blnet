@@ -410,7 +410,8 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             client.connect(port, ipAddress, () => {
                 client.write(Buffer.from(command));
-                this.log.debug("Sent command: 0x" + command[0].toString(16).toUpperCase() + " - " + command.length);
+                this.logHexDump("Sent command", command); // Log hex dump of the command
+
             });
 
             client.on("data", (data) => {
@@ -652,16 +653,10 @@ class Uvr16xxBlNet extends utils.Adapter {
     async fetchStateValuesFromDevice() {
         const stateValues = {};
         const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
-        const CAN_FRAME_INDEX = this.config.can_frame_index; // i.e. first frame (up to 8)
+        const can_frame_index = this.config.can_frame_index; // i.e. first frame (up to 8)
 
         try {
-            // let command;
-            // if (this.uvr_mode === 0xDC) { // CAN
-            //     command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
-            // } else { // DL
-            //     command = new Uint8Array([READ_CURRENT_DATA]);
-            // }
-            const command = new Uint8Array([READ_CURRENT_DATA, CAN_FRAME_INDEX]);
+            const command = new Uint8Array([READ_CURRENT_DATA, can_frame_index]);
             const data = await this.fetchDataBlockFromDevice(command);
 
             // Process the received data here
@@ -725,7 +720,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     hexString += "\n";
                 }
             }
-            this.log.debug(message + " - hex dump:\n" + hexString);
+            this.log.debug(message + " - hex dump:\n" + hexString.toUpperCase());
         } else {
             this.log.debug("no data to dump");
         }
