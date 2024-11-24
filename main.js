@@ -76,7 +76,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                         await this.declareObjects(systemConfiguration);
 
                         this.initialized = true;
-                        this.log.debug("Initialization succeeded: ");
+                        this.log.debug("Initialization succeeded.");
                     }
                 } catch (error) {
                     this.log.error("Initialization failed: " + error);
