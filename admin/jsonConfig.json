@@ -23,8 +23,10 @@
                 "port": {
                     "type": "number",
                     "label": "Port",
-                    "default": 400000,
+                    "default": 40000,
                     "help": "Enter the port number",
+                    "min": 1024,
+                    "max": 49151,
                     "xs": 6,
                     "sm": 6,
                     "md": 6,

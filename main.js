@@ -101,6 +101,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                                         const signBit = highByte & 0x80;
                                         const unitBits = highByte & 0x70;
                                         let input = this.byte2short(lowByte, highByte & 0x0F);
+                                        // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
                                         if (signBit) {
                                             // Restore bits 4, 5, 6 with 1, since this is a negative number
                                             input = input | 0xF000;
@@ -226,6 +227,23 @@ class Uvr16xxBlNet extends utils.Adapter {
         }
     }
 
+    /**
+     * Reads device information from the BL-NET device.
+     * 
+     * This method sends various commands to the device to retrieve information such as
+     * module ID, UVR mode, UVR type, firmware version, and transmission mode. It processes
+     * the received data and returns an object containing these details.
+     * 
+     * @returns {Promise<Object>} An object containing the device information:
+     * - {string} uvr_mode - The UVR mode (e.g., "1DL", "2DL", "CAN").
+     * - {string} uvr_type - The UVR type (e.g., "UVR61-3", "UVR1611").
+     * - {string} uvr2_type - The second UVR type if available (e.g., "UVR61-3", "UVR1611").
+     * - {string} module_id - The module ID of the BL-NET device.
+     * - {string} firmware_version - The firmware version of the BL-NET device.
+     * - {string} transmission_mode - The transmission mode (e.g., "Current Data").
+     * 
+     * @throws {Error} If there is an error during communication with the device.
+     */
     async readDeviceInfo() {
         // Define constants
         const VERSION_REQUEST = 0x81;
@@ -242,17 +260,23 @@ class Uvr16xxBlNet extends utils.Adapter {
             command = new Uint8Array([VERSION_REQUEST]);
             data = await this.sendCommand(command);
             const module_id = data.toString("hex");
-            this.log.debug("Received module ID of BL-NET: " + module_id);
+            this.log.debug("Received module ID of BL-NET: 0x" + module_id.toUpperCase());
 
             // Query UVR type
             command = new Uint8Array([HEADER_READ]);
             data = await this.fetchDataBlockFromDevice(command);
-            // Guess the uvr_modus based on the length of the data array
+            // Guess the uvr_mode based on the length of the data array
             // const KOPFSATZ_A8_LENGTH = 13;
             // const KOPFSATZ_D1_LENGTH = 14;
             // const KOPFSATZ_DC_LENGTH = 14 - 21;
             //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
             let uvr_mode_str;
+            // typedef struct {
+            //     UCHAR kennung;
+            //     UCHAR version; <--- uvr_mode
+            // ...
+            // } KopfsatzD1;
+
             this.uvr_mode = data[1];
             switch (this.uvr_mode) {
                 case 0xA8:
@@ -269,20 +293,14 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
             this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
 
-            // KopfsatzD1 kopf_D1[1];
-            // KopfsatzA8 kopf_A8[1];
-            // KOPFSATZ_DC kopf_DC[1];
-
-
-
             // Define the offsets based on the C struct definitions
             const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
             const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
             const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
 
             if (this.uvr_mode === 0xD1) {
+                // Mode 0xD1 - Length 14 bytes
                 /* Data structure of the header from D-LOGG or BL-Net */
-                /* Mode 0xD1 - Length 14 bytes - KopfsatzD1 - */
                 // typedef struct {
                 //     UCHAR kennung;
                 //     UCHAR version;
@@ -296,6 +314,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
                 uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             } else {
+                // Mode 0xA8 - Length 13 bytes
                 /* Data structure of the header from D-LOGG or BL-Net */
                 /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
                 // typedef struct {
@@ -311,6 +330,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
 
             if (this.uvr_mode === 0xDC) {
+                // CAN-Logging only with UVR1611
                 // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
                 // Max. number of data records from points-in-time or data links/sources when CAN data logging is used: 8
                 // struct {
@@ -325,10 +345,10 @@ class Uvr16xxBlNet extends utils.Adapter {
                 //     UCHAR endadresse[3];
                 //     UCHAR pruefsum;  /* Summe der Bytes mod 256 */
                 //   } DC_Rahmen8
-                uvr_type = 0x76; // CAN-Logging only with UVR1611
+                uvr_type = 0x76;
             }
 
-            // Translate uvr_typ to string
+            // Translate uvr_type to string
             let uvr_type_str;
             switch (uvr_type) {
                 case 0x5A:
@@ -342,7 +362,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
             this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
 
-            // Translate uvr_typ2 to string if it exists
+            // Translate uvr2_type to string if it exists
             let uvr2_type_str;
             if (uvr2_type !== undefined) {
                 switch (uvr2_type) {
@@ -367,21 +387,8 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Send transmission mode request
             command = new Uint8Array([MODE_REQUEST]);
             data = await this.sendCommand(command);
-            const transmission_mode = data.readUInt8(0);
-            this.log.debug("Received mode of BL-NET: 0x" + transmission_mode.toString(16));
-            // encode transmission_mode to string
-            let transmission_mode_str;
-            switch (transmission_mode) {
-                // case 0x90:
-                //     transmission_mode_str = "Current Data - UVR61-3";
-                //     break;
-                case 0x80:
-                    transmission_mode_str = "Current Data"; //  - UVR1611
-                    break;
-                default:
-                    transmission_mode_str = "Unknown";
-            }
-            this.log.debug("transmission_mode name: " + transmission_mode_str);
+            const transmission_mode = data.readUInt8(0).toString(16).toUpperCase();
+            this.log.debug("Received mode of BL-NET: 0x" + transmission_mode);
 
             return {
                 uvr_mode: uvr_mode_str,
@@ -389,7 +396,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                 uvr2_type: uvr2_type_str,
                 module_id: "0x" + module_id.toUpperCase(),
                 firmware_version: firmwareVersion,
-                transmission_mode: transmission_mode_str
+                transmission_mode: transmission_mode
             };
         } catch (error) {
             this.log.error("Error during communication with device: " + error);
@@ -400,8 +407,13 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Declare objects in ioBroker based on the provided units.
-     * @param {Object} systemConfiguration - The systemConfiguration determined from the device info reading.
+     * Declares various objects (device information, outputs, speed levels, inputs, thermal energy counters status, and thermal energy counters)
+     * based on the provided system configuration.
+     *
+     * @param {Object} systemConfiguration - The system configuration object.
+     * @param {Object} systemConfiguration.units - The units for the inputs.
+     * @param {Object} systemConfiguration.deviceInfo - The device information.
+     * @returns {Promise<void>} - A promise that resolves when all objects have been declared.
      */
     async declareObjects(systemConfiguration) {
         const units = systemConfiguration.units;
@@ -511,7 +523,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     name: key,
                     type: "number",
                     role: "value",
-                    unit: units[key], // Set unit based on test read
+                    unit: units[key], // Set unit based on system configuration
                     read: true,
                     write: false,
                 },
@@ -572,8 +584,14 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Fetches state values from the IoT device.
-     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     * Fetches state values from the device.
+     * 
+     * This method sends a command to the device to read the current data and processes the response.
+     * It parses the response data and updates the state values accordingly.
+     * 
+     * @async
+     * @returns {Promise<Object>} A promise that resolves to an object containing the state values.
+     * @throws {Error} If there is an error during communication with the device or if the response format is unexpected.
      */
     async fetchStateValuesFromDevice() {
         const stateValues = {};
@@ -585,9 +603,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             const data = await this.fetchDataBlockFromDevice(command);
 
             // Process the received data here
-            // case 0x90: transmission_mode_str = "Current Data - UVR61-3";
-            // case 0x80: transmission_mode_str = "Current Data - UVR1611";
-            // this.logHexDump(data); // Log hex dump of the data
             if (data[0] === 0x80) {
                 // Process the response data
                 const response = this.readBlock(data, 57);
@@ -601,23 +616,26 @@ class Uvr16xxBlNet extends utils.Adapter {
                     return stateValues; // Return the state values
                 } else {
                     this.log.debug("Invalid response from device");
-                    this.log.debug("Unexpected data format");
                     throw new Error("Invalid response from device");
                 }
             } else {
-                // ignore the non expected response
+                // Unexpected response
                 this.log.debug("Unexpected data format");
-                this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data;
+                this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data
                 throw new Error("Unexpected data format");
             }
         } catch (error) {
-            this.log.error("Error during communication with device on attempt: " + error);
+            this.log.error("Error during communication with device: " + error);
         }
     }
 
     /**
-     * Fetches state values from the IoT device.
-     * @returns {Promise<Object>} - A promise that resolves with the state values.
+     * Fetches a data block from the device by sending a specified command.
+     * The method will retry up to a maximum number of attempts if the communication fails or if an invalid response is received.
+     *
+     * @param {string} command - The command to be sent to the device.
+     * @returns {Promise<Buffer>} - A promise that resolves with the data received from the device, or rejects with an error if the maximum number of retries is reached.
+     * @throws {Error} - Throws an error if the maximum number of retries is reached without successful communication.
      */
     async fetchDataBlockFromDevice(command) {
         return new Promise((resolve, reject) => {
@@ -629,17 +647,18 @@ class Uvr16xxBlNet extends utils.Adapter {
                     attempt++;
                     try {
                         const data = await this.sendCommand(command);
-                        this.log.debug("Send command as attempt: " + attempt);
+                        this.log.debug("Sent command as attempt: " + attempt);
 
-                        // Process the received data here
-                        this.logHexDump("fetchDataBlockFromDevice", data); // Log hex dump of the data
                         if (data && data.length > 1) {
-                            resolve(data); // finalize the Promise value
-                            return; // Successfully, exit the loop
+                            resolve(data); // Successfully, exit the loop
+                            // Log hex dump of the data
+                            this.logHexDump("fetchDataBlockFromDevice", data);
+                            return;
                         } else {
-                            // ignore the non expected short response
+                            // Ignore the non-expected short response
                             this.log.debug("Invalid short response from device");
-                            //this.logHexDump(data); // Log hex dump of the data
+                            // Log hex dump of the data
+                            this.logHexDump("fetchDataBlockFromDevice", data);
                             if (attempt >= maxRetries) {
                                 reject(new Error("Max retries reached. Unable to communicate with device."));
                             }
@@ -658,65 +677,16 @@ class Uvr16xxBlNet extends utils.Adapter {
         });
     }
 
-    async sendCommand(command) {
-        const sleep = (ms) => {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        };
-
-        await sleep(2000); // Wait two seconds between commands
-        return new Promise((resolve, reject) => {
-            const ipAddress = this.config.ip_address; // IP address from the config
-            const port = this.config.port; // Port from the config
-            const client = new net.Socket();
-
-            client.connect(port, ipAddress, () => {
-                client.write(Buffer.from(command));
-                this.logHexDump("Sent command", command); // Log hex dump of the command
-
-            });
-
-            client.on("data", (data) => {
-                client.destroy();
-                resolve(data);
-            });
-
-            client.on("error", (err) => {
-                client.destroy();
-                reject(err);
-            });
-
-            client.on("close", () => {
-                reject(new Error("Connection closed unexpectedly"));
-            });
-        });
-    }
-
     /**
-     * Reads a block of data of the specified length from the given data array.
+     * Parses the UVR1611 response and extracts various data points into a structured object.
      *
-     * @param {Uint8Array} data - The data array to read from.
-     * @param {number} length - The length of the block to read.
-     * @returns {Uint8Array|null} The block of data if the length is sufficient, otherwise null.
-     */
-    readBlock(data, length) {
-        if (data.length >= length) {
-            const block = data.slice(0, length);
-            //this.logHexDump(block);
-            return block;
-        }
-        return null;
-    }
-
-    /**
-     * Parses the UVR record from the given response.
-     *
-     * @param {Uint8Array} response - The response data to parse.
-     * @returns {Object} The parsed UVR record.
-     * @property {Object} outputs - The outputs status.
-     * @property {Object} speed_levels - The speed levels.
-     * @property {Object} inputs - The inputs.
-     * @property {Object} thermal_energy_counters_status - The status of thermal energy counters.
-     * @property {Object} thermal_energy_counters - The thermal energy counters.
+     * @param {Uint8Array} response - The response data from the UVR1611 device.
+     * @returns {Object} An object containing parsed data including outputs, speed levels, inputs, thermal energy counters status, and thermal energy counters.
+     * @returns {Object.outputs} - The state of the outputs (A01 to A13) as "ON" or "OFF".
+     * @returns {Object.speed_levels} - The speed levels (DzA1, DzA2, DzA6, DzA7).
+     * @returns {Object.inputs} - The input values (S01 to S16).
+     * @returns {Object.thermal_energy_counters_status} - The status of the thermal energy counters (wmz1, wmz2) as "active" or "inactive".
+     * @returns {Object.thermal_energy_counters} - The thermal energy counters data including current heat power and total heat energy for wmz1 and wmz2.
      */
     parseUvrRecord(response) {
         const uvrRecord = {
@@ -727,7 +697,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             thermal_energy_counters: {}
         };
 
-        // Example parsing logic based on UvrRecord.java
         // Outputs
         const output = this.byte2short(response[33], response[34]);
         uvrRecord.outputs["A01"] = (output & 0x01) ? "ON" : "OFF";
@@ -823,7 +792,61 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Converts two bytes into a short integer.
+     * Sends a command to a specified IP address and port, waits for a response, and returns the response data.
+     * 
+     * @param {Buffer} command - The command to be sent as a Buffer.
+     * @returns {Promise<Buffer>} - A promise that resolves with the response data as a Buffer.
+     * @throws {Error} - Throws an error if the connection is closed unexpectedly or if there is a connection error.
+     */
+    async sendCommand(command) {
+        const sleep = (ms) => {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        };
+
+        await sleep(2000); // Wait two seconds between commands
+        return new Promise((resolve, reject) => {
+            const ipAddress = this.config.ip_address; // IP address from the config
+            const port = this.config.port; // Port from the config
+            const client = new net.Socket();
+
+            client.connect(port, ipAddress, () => {
+                client.write(Buffer.from(command));
+                this.logHexDump("Sent command", command); // Log hex dump of the command
+            });
+
+            client.on("data", (data) => {
+                client.destroy();
+                resolve(data);
+            });
+
+            client.on("error", (err) => {
+                client.destroy();
+                reject(err);
+            });
+
+            client.on("close", () => {
+                reject(new Error("Connection closed unexpectedly"));
+            });
+        });
+    }
+
+    /**
+     * Reads a block of data of the specified length from the given data array.
+     *
+     * @param {Uint8Array} data - The data array to read from.
+     * @param {number} length - The length of the block to read.
+     * @returns {Uint8Array|null} The block of data if the data array is long enough, otherwise null.
+     */
+    readBlock(data, length) {
+        if (data.length >= length) {
+            const block = data.slice(0, length);
+            return block;
+        }
+        return null;
+    }
+
+    /**
+     * Converts two bytes (low and high) into a short integer.
      *
      * @param {number} lo - The low byte.
      * @param {number} hi - The high byte.
@@ -836,11 +859,11 @@ class Uvr16xxBlNet extends utils.Adapter {
     /**
      * Converts four bytes into a 32-bit integer.
      *
-     * @param {number} lo_lo - The least significant byte.
-     * @param {number} lo_hi - The second least significant byte.
-     * @param {number} hi_lo - The third least significant byte.
-     * @param {number} hi_hi - The most significant byte.
-     * @returns {number} The 32-bit integer formed by the four bytes.
+     * @param {number} lo_lo - The least significant byte of the lower 16 bits.
+     * @param {number} lo_hi - The most significant byte of the lower 16 bits.
+     * @param {number} hi_lo - The least significant byte of the upper 16 bits.
+     * @param {number} hi_hi - The most significant byte of the upper 16 bits.
+     * @returns {number} The 32-bit integer formed by combining the four bytes.
      */
     byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
         return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
@@ -849,7 +872,8 @@ class Uvr16xxBlNet extends utils.Adapter {
     /**
      * Logs a hexadecimal dump of the provided data.
      *
-     * @param {Uint8Array} data - The data to be converted to a hexadecimal string and logged.
+     * @param {string} message - The message to log before the hex dump.
+     * @param {Buffer | Uint8Array} data - The data to be converted to a hex dump.
      */
     logHexDump(message, data) {
         let hexString = "";
@@ -867,10 +891,10 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
     /**
-     * Cleans up resources when the adapter is unloaded.
+     * This method is called when the adapter is unloaded.
+     * It clears the polling interval if it exists and then calls the provided callback.
      *
-     * @param {Function} callback - The callback function to call after cleanup.
-     * @throws Will call the callback function in case of an error.
+     * @param {Function} callback - The callback function to be called after the unload process.
      */
     onUnload(callback) {
         try {
@@ -878,11 +902,6 @@ class Uvr16xxBlNet extends utils.Adapter {
             if (this.pollingInterval) {
                 clearInterval(this.pollingInterval);
             }
-            // Here you must clear all timeouts or intervals that may still be active
-            // clearTimeout(timeout1);
-            // clearTimeout(timeout2);
-            // ...
-            // clearInterval(interval1);
 
             callback();
         } catch (e) {
@@ -908,9 +927,12 @@ class Uvr16xxBlNet extends utils.Adapter {
     // }
 
     /**
-     * Handles changes to subscribed states.
+     * Handles state changes.
+     *
      * @param {string} id - The ID of the state that changed.
-     * @param {ioBroker.State | null | undefined} state - The new state value or null if the state was deleted.
+     * @param {Object} state - The state object.
+     * @param {any} state.val - The new value of the state.
+     * @param {boolean} state.ack - Indicates if the state change was acknowledged.
      */
     onStateChange(id, state) {
         if (state) {
