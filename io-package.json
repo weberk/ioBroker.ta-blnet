@@ -56,19 +56,6 @@
         "uk": "застібка щілини",
         "zh-cn": "线性修正"
       },
-      "1.0.11": {
-        "en": "improved CAN bus mode reading",
-        "de": "verbesserte CAN-Busmodusmessung",
-        "ru": "улучшенный режим автобуса",
-        "pt": "melhor leitura do modo de ônibus CAN",
-        "nl": "verbeterde CAN bus modus lezen",
-        "fr": "meilleure lecture du mode de bus CAN",
-        "it": "migliore lettura della modalità CAN bus",
-        "es": "mejora del modo de autobús CAN",
-        "pl": "ulepszone czytanie magistrali CAN",
-        "uk": "покращений читання режиму CAN",
-        "zh-cn": "改进的 CAN 总线模式读取"
-      },
       "1.0.10": {
         "en": "improved reading device info\nfixed handling of negative temperatures",
         "de": "verbesserte lesegerät-info\nfeste handhabung negativer temperaturen",
