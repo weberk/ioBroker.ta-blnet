@@ -228,23 +228,22 @@ class Uvr16xxBlNet extends utils.Adapter {
             data = await this.sendCommand(command);
             const module_id = data.toString("hex");
             this.log.debug("Received module ID of BL-NET: 0x" + module_id.toUpperCase());
-
             // Query UVR type
             command = new Uint8Array([HEADER_READ]);
             data = await this.fetchDataBlockFromDevice(command);
             // Guess the uvr_mode based on the length of the data array
-            // const KOPFSATZ_A8_LENGTH = 13;
-            // const KOPFSATZ_D1_LENGTH = 14;
-            // const KOPFSATZ_DC_LENGTH = 14 - 21;
+            // const HEADER_A8_FRAME_LENGTH = 13;
+            // const HEADER_D1_FRAME_LENGTH = 14;
+            // const HEADER_DC_FRAME_LENGTH = 14 - 21;
             //  0xA8 (1DL) / 0xD1 (2DL) / 0xDC (CAN) */
             let uvr_mode_str;
             // typedef struct {
-            //     UCHAR kennung;
+            //     UCHAR identifier;
             //     UCHAR version; <--- uvr_mode
             // ...
-            // } KopfsatzD1;
+            // } Header_FRAME;
 
-            this.uvr_mode = data[1];
+            this.uvr_mode = data[1]; // identifier
             switch (this.uvr_mode) {
                 case 0xA8:
                     uvr_mode_str = "1DL";
@@ -253,7 +252,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     uvr_mode_str = "2DL";
                     break;
                 case 0xDC:
-                    uvr_mode_str = data[5] /*anzahlCAN_Rahmen*/ + "CAN";
+                    uvr_mode_str = data[5] + "CAN"; // number of CAN frames
                     break;
                 default:
                     throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16));
@@ -269,30 +268,30 @@ class Uvr16xxBlNet extends utils.Adapter {
                 // Mode 0xD1 - Length 14 bytes
                 /* Data structure of the header from D-LOGG or BL-Net */
                 // typedef struct {
-                //     UCHAR kennung;
+                //     UCHAR identifier;
                 //     UCHAR version;
-                //     UCHAR zeitstempel[3];
-                //     UCHAR satzlaengeGeraet1;
-                //     UCHAR satzlaengeGeraet2;
-                //     UCHAR startadresse[3];
-                //     UCHAR endadresse[3];
-                //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-                // } KopfsatzD1;
+                //     UCHAR timestamp[3];
+                //     UCHAR recordLengthDevice1;
+                //     UCHAR recordLengthDevice2;
+                //     UCHAR startAddress[3];
+                //     UCHAR endAddress[3];
+                //     UCHAR checksum;  /* Sum of bytes mod 256 */
+                // } Header_D1_FRAME;
                 uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
                 uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             } else {
                 // Mode 0xA8 - Length 13 bytes
                 /* Data structure of the header from D-LOGG or BL-Net */
-                /* Mode 0xA8 - Length 13 bytes - KopfsatzA8 - */
+                /* Mode 0xA8 - Length 13 bytes - HeaderA8 - */
                 // typedef struct {
-                //     UCHAR kennung;
+                //     UCHAR identifier;
                 //     UCHAR version;
-                //     UCHAR zeitstempel[3];
-                //     UCHAR satzlaengeGeraet1;
-                //     UCHAR startadresse[3];
-                //     UCHAR endadresse[3];
-                //     UCHAR pruefsum;  /* Sum of bytes mod 256 */
-                // } KopfsatzA8;
+                //     UCHAR timestamp[3];
+                //     UCHAR recordLengthDevice1;
+                //     UCHAR startAddress[3];
+                //     UCHAR endAddress[3];
+                //     UCHAR checksum;  /* Sum of bytes mod 256 */
+                // } Header_A8_FRAME;
                 uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
             }
 
@@ -301,17 +300,17 @@ class Uvr16xxBlNet extends utils.Adapter {
                 // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
                 // Max. number of data records from points-in-time or data links/sources when CAN data logging is used: 8
                 // struct {
-                //     UCHAR kennung;
+                //     UCHAR identifier;
                 //     UCHAR version;
-                //     UCHAR zeitstempel[3];
-                //     UCHAR anzahlCAN_Rahmen;
-                //     UCHAR satzlaengeRahmen1;
+                //     UCHAR timestamp[3];
+                //     UCHAR numberOfCANFrames;
+                //     UCHAR recordLengthFrame1;
                 //     UCHAR ...;
-                //     UCHAR satzlaengeRahmen8;
-                //     UCHAR startadresse[3];
-                //     UCHAR endadresse[3];
-                //     UCHAR pruefsum;  /* Summe der Bytes mod 256 */
-                //   } DC_Rahmen8
+                //     UCHAR recordLengthFrame8;
+                //     UCHAR startAddress[3];
+                //     UCHAR endAddress[3];
+                //     UCHAR checksum;  /* Sum of bytes mod 256 */
+                //   } HEADER_DC_Frame8
                 uvr_type = 0x76;
             }
 
