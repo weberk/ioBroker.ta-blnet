@@ -127,6 +127,12 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   improved reading of flow rate
+-   code refactoring
+
 ### 1.0.15 (2024-11-24)
 
 -   refactorings and improved code documentation

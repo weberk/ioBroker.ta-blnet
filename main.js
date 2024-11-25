@@ -52,6 +52,14 @@ class Uvr16xxBlNet extends utils.Adapter {
         // Memorize the current timeout ID; later used for clearing the timeout
         this.currentTimeoutId = null;
 
+        // memorize systemConfiguration
+        this.systemConfiguration = {
+            success: false,
+            stateValues: {},
+            deviceInfo: {},
+            units: {}
+        };
+
         // Start polling
         this.startPolling();
     }
@@ -66,14 +74,18 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Perform an initialization read attempt, if failed do not start polling
             if (!this.initialized) {
                 try {
-                    const systemConfiguration = await this.readSystemConfiguration();
+                    this.systemConfiguration = await this.readSystemConfiguration();
 
                     // Set status for info.connection
-                    this.log.debug("Setting connection status to: " + systemConfiguration.success);
-                    await this.setState("info.connection", systemConfiguration.success, true);
-                    if (systemConfiguration.success === true) {
+                    this.log.debug("Setting connection status to: " + this.systemConfiguration.success);
+                    if (this.systemConfiguration) {
+                        if (this.systemConfiguration) {
+                            await this.setState("info.connection", this.systemConfiguration.success, true);
+                        }
+                    }
+                    if (this.systemConfiguration.success === true) {
                         // Declare objects
-                        await this.declareObjects(systemConfiguration);
+                        await this.declareOrUpdateObjects(this.systemConfiguration);
 
                         this.initialized = true;
                         this.log.debug("Initialization succeeded.");
@@ -87,61 +99,13 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Perform polling operations only if initialization was successful
             if (this.initialized) {
                 try {
-                    const stateValues = await this.fetchStateValuesFromDevice();
-                    await this.setState("info.connection", true, true);
-
-                    for (const [key, value] of Object.entries(stateValues)) {
-                        if (typeof value === "object" && value !== null) {
-                            for (const [subKey, subValue] of Object.entries(value)) {
-                                const stateKey = key + "." + subKey;
-                                let finalValue = subValue;
-
-                                // Process input values: filter bits 4-6 and handle sign bit
-                                if (key === "inputs") {
-                                    if (typeof subValue === "number") {
-                                        const highByte = subValue >> 8;
-                                        const lowByte = subValue & 0xFF;
-                                        const signBit = highByte & 0x80;
-                                        const unitBits = highByte & 0x70;
-                                        let input = this.byte2short(lowByte, highByte & 0x0F);
-                                        // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
-                                        if (signBit) {
-                                            // Restore bits 4, 5, 6 with 1, since this is a negative number
-                                            input = input | 0xF000;
-                                            // Invert the bits (ensure 16-bit operation)
-                                            input = (~input & 0xFFFF);
-                                            // Add 1 to the inverted bits
-                                            input = (input + 1) & 0xFFFF;
-                                            // Set the value to negative
-                                            input = -input;
-                                        }
-                                        if (unitBits === 0x20) { // °C
-                                            finalValue = input / 10.0; // Assuming input is in tenths of degrees
-                                        } else {
-                                            finalValue = input;
-                                        }
-                                        this.log.debug("Setting state " + stateKey + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
-                                    } else {
-                                        this.log.error("Invalid subValue structure for " + stateKey + ": " + JSON.stringify(subValue));
-                                    }
-                                }
-
-                                // Update the state in ioBroker
-                                await this.setState(stateKey, {
-                                    val: finalValue,
-                                    ack: true
-                                });
-                            }
-                        } else {
-                            this.log.debug("Setting state " + key + " to value " + value);
-                            // Update the state in ioBroker
-                            await this.setState(key, {
-                                val: value,
-                                ack: true
-                            });
-                        }
+                    if (this.systemConfiguration) {
+                        this.systemConfiguration.stateValues = await this.fetchStateValuesFromDevice();
+                        await this.setState("info.connection", this.systemConfiguration.success, true);
+                        // Update objects
+                        await this.declareOrUpdateObjects(this.systemConfiguration);
                     }
-                    this.log.info("Polled state values from the IoT device");
+                    this.log.info("Polled state values from BL-NET");
                 } catch (error) {
                     await this.setState("info.connection", false, true);
                     this.log.error("Error polling state values: " + error);
@@ -416,11 +380,13 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Object} systemConfiguration - The system configuration object.
      * @param {Object} systemConfiguration.units - The units for the inputs.
      * @param {Object} systemConfiguration.deviceInfo - The device information.
+     * @param {Object} systemConfiguration.stateValues - The state values containing uvrRecords.
      * @returns {Promise<void>} - A promise that resolves when all objects have been declared.
      */
-    async declareObjects(systemConfiguration) {
+    async declareOrUpdateObjects(systemConfiguration) {
         const units = systemConfiguration.units;
         const deviceInfo = systemConfiguration.deviceInfo;
+        const stateValues = systemConfiguration.stateValues;
 
         // Check if deviceInfo is defined
         if (deviceInfo) {
@@ -446,143 +412,176 @@ class Uvr16xxBlNet extends utils.Adapter {
         } else {
             this.log.error("deviceInfo is undefined or null");
         }
-        // Declare outputs
-        const outputs = {
-            "A01": "OFF", // Byte 1, Bit 0
-            "A02": "OFF", // Byte 1, Bit 1
-            "A03": "OFF", // Byte 1, Bit 2
-            "A04": "OFF", // Byte 1, Bit 3
-            "A05": "OFF", // Byte 1, Bit 4
-            "A06": "OFF", // Byte 1, Bit 5
-            "A07": "OFF", // Byte 1, Bit 6
-            "A08": "OFF", // Byte 1, Bit 7
-            "A09": "OFF", // Byte 2, Bit 0
-            "A10": "OFF", // Byte 2, Bit 1
-            "A11": "OFF", // Byte 2, Bit 2
-            "A12": "OFF", // Byte 2, Bit 3
-            "A13": "OFF" // Byte 2, Bit 4
-        };
 
-        for (const key of Object.keys(outputs)) {
-            await this.setObjectNotExistsAsync("outputs." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "string",
-                    role: "indicator",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare speed levels
-        const speedLevels = {
-            "DzA1": 0, // Speed level 1
-            "DzA2": 30, // Speed level 2
-            "DzA6": 14, // Speed level 6
-            "DzA7": 158 // Speed level 7
-        };
-
-        for (const key of Object.keys(speedLevels)) {
-            await this.setObjectNotExistsAsync("speed_levels." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare inputs
-        const inputs = {
-            "S01": 6.2, // i.e collector temperature in °C
-            "S02": 67.6, // i.e Buffer 1 top temperature in °C
-            "S03": 36.1, // i.e Buffer 2 bottom temperature in °C
-            "S04": 34.1, // i.e Hot water temperature in °C
-            "S05": 24.7, // i.e Solar return primary temperature in °C
-            "S06": 41.3, // i.e Solar flow secondary temperature in °C
-            "S07": 25.4, // i.e Solar flow primary temperature in °C
-            "S08": 67.1, // i.e Buffer 1 top 2 temperature in °C
-            "S09": 51.1, // i.e Buffer 1 middle temperature in °C
-            "S10": 36.7, // i.e Boiler return temperature in °C
-            "S11": 53.3, // i.e Circulation return temperature in °C
-            "S12": 7.9, // i.e Outer wall temperature in °C
-            "S13": 43.5, // i.e Heating circuit 1 flow temperature in °C
-            "S14": 69.1, // i.e Boiler flow temperature in °C
-            "S15": 0, // i.e Not used
-            "S16": 0 // i.e Solar flow rate in l/h
-        };
-
-        for (const key of Object.keys(inputs)) {
-            await this.setObjectNotExistsAsync("inputs." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    unit: units[key], // Set unit based on system configuration
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare thermal energy counters status
-        const thermalEnergyCountersStatus = {
-            "wmz1": "active", // Thermal energy counter 1 status
-            "wmz2": "inactive" // Thermal energy counter 2 status
-        };
-
-        for (const key of Object.keys(thermalEnergyCountersStatus)) {
-            await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "string",
-                    role: "indicator",
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-        }
-
-        // Declare thermal energy counters
-        const thermalEnergyCounters = {
-            "current_heat_power1": 0, // Current heat power 1 in kW
-            "total_heat_energy1": 61214, // Total heat energy 1 in kWh
-            "current_heat_power2": 576768, // Current heat power 2 in kW
-            "total_heat_energy2": 771 // Total heat energy 2 in kWh
-        };
-
-        for (const key of Object.keys(thermalEnergyCounters)) {
-            let unit;
-            if (key.startsWith("current_heat_power")) {
-                unit = "kW";
-            } else if (key.startsWith("total_heat_energy")) {
-                unit = "kWh";
+        // Check if stateValues is defined
+        if (stateValues) {
+            // Declare outputs
+            if (stateValues.outputs) {
+                for (const [key, value] of Object.entries(stateValues.outputs)) {
+                    await this.setObjectNotExistsAsync("outputs." + key, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "string",
+                            role: "indicator",
+                            read: true,
+                            write: false,
+                        },
+                        native: {},
+                    });
+                    await this.setState("outputs." + key, {
+                        val: value,
+                        ack: true
+                    });
+                }
+            } else {
+                this.log.error("stateValues.outputs is undefined or null");
             }
 
-            await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
-                type: "state",
-                common: {
-                    name: key,
-                    type: "number",
-                    role: "value",
-                    unit: unit,
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
+            // Declare speed levels
+            if (stateValues.speed_levels) {
+                for (const [key, value] of Object.entries(stateValues.speed_levels)) {
+                    await this.setObjectNotExistsAsync("speed_levels." + key, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "number",
+                            role: "value",
+                            read: true,
+                            write: false,
+                        },
+                        native: {},
+                    });
+                    await this.setState("speed_levels." + key, {
+                        val: value,
+                        ack: true
+                    });
+                }
+            } else {
+                this.log.error("stateValues.speed_levels is undefined or null");
+            }
+
+            // Declare inputs
+            if (stateValues.inputs) {
+                for (const [key, value] of Object.entries(stateValues.inputs)) {
+                    await this.setObjectNotExistsAsync("inputs." + key, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "number",
+                            role: "value",
+                            unit: units[key], // Set unit based on system configuration
+                            read: true,
+                            write: false,
+                        },
+                        native: {},
+                    });
+                    // Process input values: filter bits 4-6 and handle sign bit
+                    let finalValue;
+                    if (typeof value === "number") {
+                        const highByte = value >> 8;
+                        const lowByte = value & 0xFF;
+                        const signBit = highByte & 0x80;
+                        const unitBits = highByte & 0x70;
+                        let input = this.byte2short(lowByte, highByte & 0x0F);
+                        // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
+                        if (signBit) {
+                            // Restore bits 4, 5, 6 with 1, since this is a negative number
+                            input = input | 0xF000;
+                            // Invert the bits (ensure 16-bit operation)
+                            input = (~input & 0xFFFF);
+                            // Add 1 to the inverted bits
+                            input = (input + 1) & 0xFFFF;
+                            // Set the value to negative
+                            input = -input;
+                        }
+                        switch (unitBits) {
+                            case 0x20: // TYPE_TEMP
+                                finalValue = input / 10.0;
+                                break;
+                            case 0x30: // TYPE_VOLUME:
+                                finalValue = input * 4.0;
+                                break;
+                            case 0x10: // TYPE_DIGITAL:
+                                finalValue = (value & 0x8000) ? 1 : 0;
+                                break;
+                            case 0x70: // TYPE_RAS:
+                                finalValue = (input & 0x1FF) / 10.0;
+                                break;
+                            default:
+                                finalValue = input;
+                        }
+                        this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
+                    } else {
+                        this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(value));
+                    }
+
+                    await this.setState("inputs." + key, {
+                        val: finalValue,
+                        ack: true
+                    });
+                }
+            } else {
+                this.log.error("stateValues.inputs is undefined or null");
+            }
+
+            // Declare thermal energy counters status
+            if (stateValues.thermal_energy_counters_status) {
+                for (const [key, value] of Object.entries(stateValues.thermal_energy_counters_status)) {
+                    await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "string",
+                            role: "indicator",
+                            read: true,
+                            write: false,
+                        },
+                        native: {},
+                    });
+                    await this.setState("thermal_energy_counters_status." + key, {
+                        val: value,
+                        ack: true
+                    });
+                }
+            } else {
+                this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
+            }
+
+            // Declare thermal energy counters
+            if (stateValues.thermal_energy_counters) {
+                for (const [key, value] of Object.entries(stateValues.thermal_energy_counters)) {
+                    let unit;
+                    if (key.startsWith("current_heat_power")) {
+                        unit = "kW";
+                    } else if (key.startsWith("total_heat_energy")) {
+                        unit = "kWh";
+                    }
+
+                    await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "number",
+                            role: "value",
+                            unit: unit,
+                            read: true,
+                            write: false,
+                        },
+                        native: {},
+                    });
+                    await this.setState("thermal_energy_counters." + key, {
+                        val: value,
+                        ack: true
+                    });
+                }
+            } else {
+                this.log.error("stateValues.thermal_energy_counters is undefined or null");
+            }
+        } else {
+            this.log.error("stateValues is undefined or null");
         }
+
         this.log.debug("objects for metrics declared.");
     }
 
@@ -817,18 +816,15 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             client.on("data", (data) => {
                 client.destroy();
-                this.clearCurrentTimeout(); // Clear the timeout when data is received
                 resolve(data);
             });
 
             client.on("error", (err) => {
                 client.destroy();
-                this.clearCurrentTimeout(); // Clear the timeout on error
                 reject(err);
             });
 
             client.on("close", () => {
-                this.clearCurrentTimeout(); // Clear the timeout on close
                 reject(new Error("Connection closed unexpectedly"));
             });
         });
@@ -880,12 +876,15 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Buffer | Uint8Array} data - The data to be converted to a hex dump.
      */
     logHexDump(message, data) {
-        let hexString = "";
+        let hexString = "  ";
         if (data) {
             for (let i = 0; i < data.length; i++) {
                 hexString += data[i].toString(16).padStart(2, "0") + " ";
                 if ((i + 1) % 16 === 0) {
                     hexString += "\n";
+                }
+                if ((i + 1) % 8 === 0) {
+                    hexString += "  ";
                 }
             }
             this.log.debug(message + " - hex dump:\n" + hexString.toUpperCase());
@@ -893,15 +892,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             this.log.debug("no data to dump");
         }
     }
-    /**
-     * Clears the current timeout if it exists.
-     */
-    clearCurrentTimeout() {
-        if (this.currentTimeoutId) {
-            clearTimeout(this.currentTimeoutId);
-            this.currentTimeoutId = null;
-        }
-    }
+
     /**
      * This method is called when the adapter is unloaded.
      * It clears the polling interval if it exists and then calls the provided callback.
@@ -914,8 +905,13 @@ class Uvr16xxBlNet extends utils.Adapter {
             if (this.pollingInterval) {
                 clearInterval(this.pollingInterval);
             }
-            // Clear the current timeout
-            this.clearCurrentTimeout();
+
+            // Clear current timeout if it exists
+            if (this.currentTimeoutId) {
+                clearTimeout(this.currentTimeoutId);
+                this.currentTimeoutId = null;
+            }
+
             callback();
         } catch (e) {
             callback();
