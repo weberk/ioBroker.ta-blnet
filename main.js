@@ -253,7 +253,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     uvr_mode_str = "2DL";
                     break;
                 case 0xDC:
-                    uvr_mode_str = "CAN";
+                    uvr_mode_str = data[5] /*anzahlCAN_Rahmen*/ + "CAN";
                     break;
                 default:
                     throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16));
