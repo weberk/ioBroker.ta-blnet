@@ -681,12 +681,12 @@ class Uvr16xxBlNet extends utils.Adapter {
     static CURRENT_DATA_UVR61_3 = {
         IDENTIFIER: 0,
         SENSORS: {
-            T01: [1, 2],
-            T02: [3, 4],
-            T03: [5, 6],
-            T04: [7, 8],
-            T05: [9, 10],
-            T06: [11, 12]
+            S01: [1, 2],
+            S02: [3, 4],
+            S03: [5, 6],
+            S04: [7, 8],
+            S05: [9, 10],
+            S06: [11, 12]
         },
         OUTPUTS: {
             OUTPUT_BYTE1: 13
@@ -708,44 +708,67 @@ class Uvr16xxBlNet extends utils.Adapter {
     static CURRENT_DATA_UVR1611 = {
         IDENTIFIER: 0,
         SENSORS: {
-            T01: [1, 2],
-            T02: [3, 4],
-            T03: [5, 6],
-            T04: [7, 8],
-            T05: [9, 10],
-            T06: [11, 12],
-            T07: [13, 14],
-            T08: [15, 16],
-            T09: [17, 18],
-            T10: [19, 20],
-            T11: [21, 22],
-            T12: [23, 24],
-            T13: [25, 26],
-            T14: [27, 28],
-            T15: [29, 30],
-            T16: [31, 32]
+            S01: [1, 2],
+            S02: [3, 4],
+            S03: [5, 6],
+            S04: [7, 8],
+            S05: [9, 10],
+            S06: [11, 12],
+            S07: [13, 14],
+            S08: [15, 16],
+            S09: [17, 18],
+            S10: [19, 20],
+            S11: [21, 22],
+            S12: [23, 24],
+            S13: [25, 26],
+            S14: [27, 28],
+            S15: [29, 30],
+            S16: [31, 32]
         },
         OUTPUTS: {
-            OUTPUT_BYTE1: 33,
-            OUTPUT_BYTE2: 34
+            A01: [33, 0x01],
+            A02: [33, 0x02],
+            A03: [33, 0x04],
+            A04: [33, 0x08],
+            A05: [33, 0x10],
+            A06: [33, 0x20],
+            A07: [33, 0x40],
+            A08: [33, 0x80],
+            A09: [34, 0x01],
+            A10: [34, 0x02],
+            A11: [34, 0x04],
+            A12: [34, 0x08],
+            A13: [34, 0x10]
         },
         SPEED_LEVELS: {
-            SPEED: [35, 36, 37, 38]
+            DzA1: 35,
+            DzA2: 36,
+            DzA6: 37,
+            DzA7: 38
         },
-        HEAT_METER_STATUS: 39,
-        SOLAR1: {
-            POWER: [40, 41, 42, 43],
-            KWH: [44, 45],
-            MWH: [46, 47]
-        },
-        SOLAR2: {
-            POWER: [48, 49, 50, 51],
-            KWH: [52, 53],
-            MWH: [54, 55]
+        THERMAL_ENERGY_COUNTERS: {
+            HEAT_METER_STATUS: {
+                wmz1: [39, 0x01],
+                wmz2: [39, 0x02]
+            },
+            SOLAR1: {
+                CURRENT_HEAT_POWER1: [40, 41, 42, 43],
+                TOTAL_HEAT_ENERGY1: {
+                    KWH: [44, 45],
+                    MWH: [46, 47]
+                }
+            },
+            SOLAR2: {
+                CURRENT_HEAT_POWER2: [48, 49, 50, 51],
+                TOTAL_HEAT_ENERGY2: {
+                    KWH: [52, 53],
+                    MWH: [54, 55]
+                }
+            }
         },
         CHECKSUM: 56
     };
-    
+
     /**
      * Parses the UVR1611 response and extracts various data points into a structured record.
      *
@@ -760,104 +783,94 @@ class Uvr16xxBlNet extends utils.Adapter {
             thermal_energy_counters_status: {},
             thermal_energy_counters: {}
         };
-    
+
         const indexes = this.constructor.CURRENT_DATA_UVR1611;
-    
+
         // Outputs
-        const output = this.byte2short(response[indexes.OUTPUTS.OUTPUT_BYTE1], response[indexes.OUTPUTS.OUTPUT_BYTE2]);
-        uvrRecord.outputs["A01"] = (output & 0x01) ? "ON" : "OFF";
-        uvrRecord.outputs["A02"] = (output & 0x02) ? "ON" : "OFF";
-        uvrRecord.outputs["A03"] = (output & 0x04) ? "ON" : "OFF";
-        uvrRecord.outputs["A04"] = (output & 0x08) ? "ON" : "OFF";
-        uvrRecord.outputs["A05"] = (output & 0x10) ? "ON" : "OFF";
-        uvrRecord.outputs["A06"] = (output & 0x20) ? "ON" : "OFF";
-        uvrRecord.outputs["A07"] = (output & 0x40) ? "ON" : "OFF";
-        uvrRecord.outputs["A08"] = (output & 0x80) ? "ON" : "OFF";
-        uvrRecord.outputs["A09"] = (output & 0x100) ? "ON" : "OFF";
-        uvrRecord.outputs["A10"] = (output & 0x200) ? "ON" : "OFF";
-        uvrRecord.outputs["A11"] = (output & 0x400) ? "ON" : "OFF";
-        uvrRecord.outputs["A12"] = (output & 0x800) ? "ON" : "OFF";
-        uvrRecord.outputs["A13"] = (output & 0x1000) ? "ON" : "OFF";
-    
+        for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
+            uvrRecord.outputs[key] = (response[value[0]] & value[1]) ? "ON" : "OFF";
+        }
+
         // Log outputs
         this.log.debug("Outputs: " + JSON.stringify(uvrRecord.outputs));
-    
+
         // Speed levels
-        uvrRecord.speed_levels["DzA1"] = response[indexes.SPEED_LEVELS.SPEED[0]];
-        uvrRecord.speed_levels["DzA2"] = response[indexes.SPEED_LEVELS.SPEED[1]];
-        uvrRecord.speed_levels["DzA6"] = response[indexes.SPEED_LEVELS.SPEED[2]];
-        uvrRecord.speed_levels["DzA7"] = response[indexes.SPEED_LEVELS.SPEED[3]];
-    
+        for (const [key, value] of Object.entries(indexes.SPEED_LEVELS)) {
+            uvrRecord.speed_levels[key] = response[value];
+        }
+
         // Log speed levels
         this.log.debug("Speed levels: " + JSON.stringify(uvrRecord.speed_levels));
-    
+
         // Inputs
         for (const [key, value] of Object.entries(indexes.SENSORS)) {
             uvrRecord.inputs[key] = this.byte2short(response[value[0]], response[value[1]]);
         }
-    
+
         // Log inputs
         this.log.debug("Inputs: " + JSON.stringify(uvrRecord.inputs));
-    
+
         // Thermal energy counters status
-        const wmz = response[indexes.HEAT_METER_STATUS];
-        uvrRecord.thermal_energy_counters_status["wmz1"] = (wmz & 0x1) ? "active" : "inactive";
-        uvrRecord.thermal_energy_counters_status["wmz2"] = (wmz & 0x2) ? "active" : "inactive";
-    
+        const wmz_all = response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]];
+        for (const [key, value] of Object.entries(indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS)) {
+            const wmz = response[value[0]];
+            uvrRecord.thermal_energy_counters_status[key] = (wmz & value[1]) ? "active" : "inactive";
+        }
+
         // Log thermal energy counters status
         this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
-    
+
         // Thermal energy counters
-        if (wmz & 0x1) {
-            const lowLow1 = response[indexes.SOLAR1.POWER[0]];
-            const lowHigh1 = response[indexes.SOLAR1.POWER[1]];
-            const highLow1 = response[indexes.SOLAR1.POWER[2]];
-            const highHigh1 = response[indexes.SOLAR1.POWER[3]];
-    
+        if (wmz_all & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
+            const lowLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]];
+            const lowHigh1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]];
+            const highLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]];
+            const highHigh1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]];
+
             const hundredths1 = (lowLow1 * 10) / 256;
             let power1 = (10 * this.byte2int(lowHigh1, highLow1, highHigh1, 0) + hundredths1) / 100;
-    
+
             // Check for negative sign bit
             if (highHigh1 > 32767) {
                 power1 = (10 * (this.byte2int(lowHigh1, highLow1, highHigh1, 0) - 65536) - hundredths1) / 100;
             }
-    
+
             uvrRecord.thermal_energy_counters["current_heat_power1"] = power1;
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[indexes.SOLAR1.KWH[0]], response[indexes.SOLAR1.KWH[1]]) / 10.0 +
-                this.byte2short(response[indexes.SOLAR1.MWH[0]], response[indexes.SOLAR1.MWH[1]]) * 1000.0;
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 +
+                this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0;
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
         }
-    
-        if (wmz & 0x2) {
-            const lowLow2 = response[indexes.SOLAR2.POWER[0]];
-            const lowHigh2 = response[indexes.SOLAR2.POWER[1]];
-            const highLow2 = response[indexes.SOLAR2.POWER[2]];
-            const highHigh2 = response[indexes.SOLAR2.POWER[3]];
-    
+
+        if (wmz_all & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
+            const lowLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]];
+            const lowHigh2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]];
+            const highLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]];
+            const highHigh2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]];
+
             const hundredths2 = (lowLow2 * 10) / 256;
             let power2 = (10 * this.byte2int(lowHigh2, highLow2, highHigh2, 0) + hundredths2) / 100;
-    
+
             // Check for negative sign bit
             if (highHigh2 > 32767) {
                 power2 = (10 * (this.byte2int(lowHigh2, highLow2, highHigh2, 0) - 65536) - hundredths2) / 100;
             }
-    
+
             uvrRecord.thermal_energy_counters["current_heat_power2"] = power2;
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[indexes.SOLAR2.KWH[0]], response[indexes.SOLAR2.KWH[1]]) / 10.0 +
-                this.byte2short(response[indexes.SOLAR2.MWH[0]], response[indexes.SOLAR2.MWH[1]]) * 1000.0;
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 +
+                this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0;
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
         }
-    
+
         // Log thermal energy counters
         this.log.debug("Thermal energy counters: " + JSON.stringify(uvrRecord.thermal_energy_counters));
-    
+
         return uvrRecord;
     }
-    
+
     /**
      * Sends a command to a specified IP address and port, waits for a response, and returns the response data.
      *
