@@ -1,189 +1,199 @@
 {
-    "common": {
-        "name": "uvr16xx-blnet",
-        "version": "1.0.16",
-        "messagebox": true,
-        "news": {
-            "1.0.16": {
-                "en": "improved reading of flow rate\ncode refactoring",
-                "de": "verbesserung des durchflusses\ncode refactoring",
-                "ru": "улучшение показателей расхода\nrefactor",
-                "pt": "melhor leitura da taxa de fluxo\nrefactoring de código",
-                "nl": "verbeterde meting van het debiet\ncode refactoring",
-                "fr": "une meilleure lecture du débit\nrefactoration du code",
-                "it": "lettura migliorata della portata\ncodifica refactoring",
-                "es": "mejor lectura de la tasa de flujo\ncambio de código",
-                "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
-                "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
-                "zh-cn": "改进流量读取率\n代码重构"
-            },
-            "1.0.15": {
-                "en": "refactorings and improved code documentation",
-                "de": "refactorings und verbesserte codedokumentation",
-                "ru": "рефакторинг и совершенствование кодовой документации",
-                "pt": "refatorações e melhor documentação de código",
-                "nl": "refactorings en verbeterde codedocumentatie",
-                "fr": "refacturation et amélioration de la documentation du code",
-                "it": "refactorings e documentazione di codice migliorata",
-                "es": "refactorings and improved code documentation",
-                "pl": "remonty i ulepszona dokumentacja kodowa",
-                "uk": "рефакторинги та вдосконалення документації з кодом",
-                "zh-cn": "重新设计和改进的代码文档"
-            },
-            "1.0.14": {
-                "en": "added frame index to options",
-                "de": "hinzufügen von frame index zu optionen",
-                "ru": "добавленный кадровый индекс к опционам",
-                "pt": "índice de quadro adicionado às opções",
-                "nl": "frame-index toegevoegd aan opties",
-                "fr": "indice de cadre ajouté aux options",
-                "it": "indice frame aggiunto alle opzioni",
-                "es": "índice de marco añadido a las opciones",
-                "pl": "dodany indeks ramki do opcji",
-                "uk": "доданий індекс кадрів до опцій",
-                "zh-cn": "在选项中添加框架索引"
-            },
-            "1.0.13": {
-                "en": "improved CAN bus mode reading",
-                "de": "verbesserte CAN-Busmodusmessung",
-                "ru": "улучшенный режим автобуса",
-                "pt": "melhor leitura do modo de ônibus CAN",
-                "nl": "verbeterde CAN bus modus lezen",
-                "fr": "meilleure lecture du mode de bus CAN",
-                "it": "migliore lettura della modalità CAN bus",
-                "es": "mejora del modo de autobús CAN",
-                "pl": "ulepszone czytanie magistrali CAN",
-                "uk": "покращений читання режиму CAN",
-                "zh-cn": "改进的 CAN 总线模式读取"
-            },
-            "1.0.12": {
-                "en": "lint fixes",
-                "de": "lint fixes",
-                "ru": "lint фиксации",
-                "pt": "lint correções",
-                "nl": "plintfixes",
-                "fr": "corrections de linte",
-                "it": "sistema di fissaggio",
-                "es": "lint fixes",
-                "pl": "poprawki lint",
-                "uk": "застібка щілини",
-                "zh-cn": "线性修正"
-            },
-            "1.0.10": {
-                "en": "improved reading device info\nfixed handling of negative temperatures",
-                "de": "verbesserte lesegerät-info\nfeste handhabung negativer temperaturen",
-                "ru": "улучшенная информация об устройстве чтения\nфиксированная обработка отрицательных температур",
-                "pt": "informação melhorada do dispositivo de leitura\nmanipulação fixa de temperaturas negativas",
-                "nl": "verbeterde leesapparaatinformatie\nvaste behandeling van negatieve temperaturen",
-                "fr": "amélioration de l'information du périphérique de lecture\nmanipulation fixe des températures négatives",
-                "it": "informazioni del dispositivo di lettura migliorate\ngestione fissa delle temperature negative",
-                "es": "información mejorada del dispositivo de lectura\nmanejo fijo de temperaturas negativas",
-                "pl": "ulepszone informacje o urządzeniu do czytania\nstała obsługa ujemnych temperatur",
-                "uk": "поліпшена інформація про пристрій читання\nфіксована обробка негативних температур",
-                "zh-cn": "改进的读取设备信息\n固定处理负温度"
-            },
-            "1.0.9": {
-                "en": "improved logging and introduced a new socket for each command",
-                "de": "verbesserte protokollierung und einführung einer neuen steckdose für jeden befehl",
-                "ru": "улучшенная регистрация и введен новый розетка для каждой команды",
-                "pt": "melhorou o registro e introduziu um novo soquete para cada comando",
-                "nl": "verbeterde logging en introduceerde een nieuwe socket voor elk commando",
-                "fr": "amélioration de l'enregistrement et introduction d'une nouvelle socket pour chaque commande",
-                "it": "migliorato logging e introdotto una nuova presa per ogni comando",
-                "es": "mejora de registro e introduce un nuevo socket para cada comando",
-                "pl": "ulepszone logowanie i wprowadzenie nowego gniazda dla każdego polecenia",
-                "uk": "удосконалено запис і введено новий гніздо для кожної команди",
-                "zh-cn": "改进记录并引入每个命令的新套接字"
-            }
-        },
-        "titleLang": {
-            "en": "TA UVR16xx & BL-NET",
-            "de": "TA UVR16xx & BL-NET",
-            "ru": "ТА UVR16xx и BL-NET",
-            "pt": "TA UVR16xx e BL-NET",
-            "nl": "TA UVR16xx & BL-NET",
-            "fr": "TA UVR16xx et BL-NET",
-            "it": "TA UVR16xx e BL-NET",
-            "es": "TA UVR16xx y BL-NET",
-            "pl": "TA UVR16xx i BL-NET",
-            "uk": "TA UVR16xx & BL-NET",
-            "zh-cn": "TA UVR16xx 和 BL-NET"
-        },
-        "desc": {
-            "en": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.",
-            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVR16xx-Controllers von Technische Alternative über BL-NET.",
-            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVR16xx от Technische Alternative с использованием BL-NET.",
-            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVR16xx da Technische Alternative usando BL-NET.",
-            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVR16xx-controller van Technische Alternative met behulp van BL-NET.",
-            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVR16xx de Technische Alternative via BL-NET.",
-            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVR16xx di Technische Alternative tramite BL-NET.",
-            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVR16xx de Technische Alternative utilizando BL-NET.",
-            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVR16xx firmy Technische Alternative za pomocą BL-NET.",
-            "uk": "Адаптер ioBroker для читання входів і виходів контролера UVR16xx від Technische Alternative за допомогою BL-NET.",
-            "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 UVR16xx 控制器的输入和输出的 ioBroker 适配器。"
-        },
-        "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
-        "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
-        "licenseInformation": {
-            "type": "free",
-            "license": "MIT"
-        },
-        "platform": "Javascript/Node.js",
-        "icon": "uvr16xx-blnet.png",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx-blnet/main/admin/uvr16xx-blnet.png",
-        "readme": "https://github.com/weberk/ioBroker.uvr16xx-blnet/blob/main/README.md",
-        "loglevel": "info",
-        "tier": 3,
-        "mode": "daemon",
-        "type": "climate-control",
-        "compact": true,
-        "connectionType": "local",
-        "dataSource": "poll",
-        "adminUI": {
-            "config": "json"
-        },
-        "supportCustoms": false,
-        "eraseOnUpload": true,
-        "dependencies": [
-            {
-                "js-controller": ">=6.0.11"
-            }
-        ],
-        "globalDependencies": [
-            {
-                "admin": ">=7.0.23"
-            }
-        ]
+  "common": {
+    "name": "uvr16xx-blnet",
+    "version": "1.0.17",
+    "messagebox": true,
+    "news": {
+      "1.0.17": {
+        "en": "added number of CAN frames to uvr_mode_str\nimproved recognition of retry necessity on 'keep patient' messages from BL-NET",
+        "de": "anzahl der CAN-Rahmen zu uvr_mode_str\nverbesserte Erkennung der Retry-Notwendigkeit auf \"keep patient\"-Nachrichten von BL-NET",
+        "ru": "добавленное количество рам CAN к uvr_mode_str\nулучшенное признание необходимости ретри на сообщения «получить пациента» от BL-NET",
+        "pt": "número adicionado de quadros CAN para uvr_mode_str\nmelhor reconhecimento da necessidade de retificação em mensagens de \"paciente de manutenção\" do BL-NET",
+        "nl": "aantal CAN-frames toegevoegd aan uvr_mode_str\nverbeterde erkenning van de noodzaak opnieuw te proberen op \"houd de patiënt\" berichten van BL-NET",
+        "fr": "ajout du nombre d'images CAN à uvr_mode_str\nune meilleure reconnaissance de la nécessité de maintenir les messages « patients » de BL-NET",
+        "it": "numero aggiunto di cornici CAN a uvr_mode_str\nmiglioramento del riconoscimento della necessità di riprova sui messaggi del \"paziente di mantenimento\" di BL-NET",
+        "es": "número añadido de marcos CAN a uvr_mode_str\nmejor reconocimiento de la necesidad de reingresar en los mensajes de \"paciente alto\" de BL-NET",
+        "pl": "dodana liczba klatek CAN do uvr _ mode _ str\nlepsze rozpoznanie konieczności ponownego rozpoznania wiadomości \"zachować pacjenta\" z BL- NET",
+        "uk": "додано кількість кадрів CAN до uvr_mode_str\nпокращене визнання необхідності птиху на повідомленнях «клімату пацієнта» від BL-NET",
+        "zh-cn": "将 CAN 框架添加到 urr_ mode_ str 中\n在BL-NET的“保留病人”信息上,对重复的必要性的认识得到提高"
+      },
+      "1.0.16": {
+        "en": "improved reading of flow rate\ncode refactoring",
+        "de": "verbesserung des durchflusses\ncode refactoring",
+        "ru": "улучшение показателей расхода\nrefactor",
+        "pt": "melhor leitura da taxa de fluxo\nrefactoring de código",
+        "nl": "verbeterde meting van het debiet\ncode refactoring",
+        "fr": "une meilleure lecture du débit\nrefactoration du code",
+        "it": "lettura migliorata della portata\ncodifica refactoring",
+        "es": "mejor lectura de la tasa de flujo\ncambio de código",
+        "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
+        "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
+        "zh-cn": "改进流量读取率\n代码重构"
+      },
+      "1.0.15": {
+        "en": "refactorings and improved code documentation",
+        "de": "refactorings und verbesserte codedokumentation",
+        "ru": "рефакторинг и совершенствование кодовой документации",
+        "pt": "refatorações e melhor documentação de código",
+        "nl": "refactorings en verbeterde codedocumentatie",
+        "fr": "refacturation et amélioration de la documentation du code",
+        "it": "refactorings e documentazione di codice migliorata",
+        "es": "refactorings and improved code documentation",
+        "pl": "remonty i ulepszona dokumentacja kodowa",
+        "uk": "рефакторинги та вдосконалення документації з кодом",
+        "zh-cn": "重新设计和改进的代码文档"
+      },
+      "1.0.14": {
+        "en": "added frame index to options",
+        "de": "hinzufügen von frame index zu optionen",
+        "ru": "добавленный кадровый индекс к опционам",
+        "pt": "índice de quadro adicionado às opções",
+        "nl": "frame-index toegevoegd aan opties",
+        "fr": "indice de cadre ajouté aux options",
+        "it": "indice frame aggiunto alle opzioni",
+        "es": "índice de marco añadido a las opciones",
+        "pl": "dodany indeks ramki do opcji",
+        "uk": "доданий індекс кадрів до опцій",
+        "zh-cn": "在选项中添加框架索引"
+      },
+      "1.0.13": {
+        "en": "improved CAN bus mode reading",
+        "de": "verbesserte CAN-Busmodusmessung",
+        "ru": "улучшенный режим автобуса",
+        "pt": "melhor leitura do modo de ônibus CAN",
+        "nl": "verbeterde CAN bus modus lezen",
+        "fr": "meilleure lecture du mode de bus CAN",
+        "it": "migliore lettura della modalità CAN bus",
+        "es": "mejora del modo de autobús CAN",
+        "pl": "ulepszone czytanie magistrali CAN",
+        "uk": "покращений читання режиму CAN",
+        "zh-cn": "改进的 CAN 总线模式读取"
+      },
+      "1.0.12": {
+        "en": "lint fixes",
+        "de": "lint fixes",
+        "ru": "lint фиксации",
+        "pt": "lint correções",
+        "nl": "plintfixes",
+        "fr": "corrections de linte",
+        "it": "sistema di fissaggio",
+        "es": "lint fixes",
+        "pl": "poprawki lint",
+        "uk": "застібка щілини",
+        "zh-cn": "线性修正"
+      },
+      "1.0.10": {
+        "en": "improved reading device info\nfixed handling of negative temperatures",
+        "de": "verbesserte lesegerät-info\nfeste handhabung negativer temperaturen",
+        "ru": "улучшенная информация об устройстве чтения\nфиксированная обработка отрицательных температур",
+        "pt": "informação melhorada do dispositivo de leitura\nmanipulação fixa de temperaturas negativas",
+        "nl": "verbeterde leesapparaatinformatie\nvaste behandeling van negatieve temperaturen",
+        "fr": "amélioration de l'information du périphérique de lecture\nmanipulation fixe des températures négatives",
+        "it": "informazioni del dispositivo di lettura migliorate\ngestione fissa delle temperature negative",
+        "es": "información mejorada del dispositivo de lectura\nmanejo fijo de temperaturas negativas",
+        "pl": "ulepszone informacje o urządzeniu do czytania\nstała obsługa ujemnych temperatur",
+        "uk": "поліпшена інформація про пристрій читання\nфіксована обробка негативних температур",
+        "zh-cn": "改进的读取设备信息\n固定处理负温度"
+      }
     },
-    "native": {
-        "ip_address": "192.168.2.77",
-        "port": 40000,
-        "poll_interval": 30,
-        "can_frame_index": 1
+    "titleLang": {
+      "en": "TA UVR16xx & BL-NET",
+      "de": "TA UVR16xx & BL-NET",
+      "ru": "ТА UVR16xx и BL-NET",
+      "pt": "TA UVR16xx e BL-NET",
+      "nl": "TA UVR16xx & BL-NET",
+      "fr": "TA UVR16xx et BL-NET",
+      "it": "TA UVR16xx e BL-NET",
+      "es": "TA UVR16xx y BL-NET",
+      "pl": "TA UVR16xx i BL-NET",
+      "uk": "TA UVR16xx & BL-NET",
+      "zh-cn": "TA UVR16xx 和 BL-NET"
     },
-    "objects": [],
-    "instanceObjects": [
-        {
-            "_id": "info",
-            "type": "channel",
-            "common": {
-                "name": "Information"
-            },
-            "native": {}
-        },
-        {
-            "_id": "info.connection",
-            "type": "state",
-            "common": {
-                "role": "indicator.connected",
-                "name": "Device or service connected",
-                "type": "boolean",
-                "read": true,
-                "write": false,
-                "def": false
-            },
-            "native": {}
-        }
+    "desc": {
+      "en": "An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.",
+      "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVR16xx-Controllers von Technische Alternative über BL-NET.",
+      "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVR16xx от Technische Alternative с использованием BL-NET.",
+      "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVR16xx da Technische Alternative usando BL-NET.",
+      "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVR16xx-controller van Technische Alternative met behulp van BL-NET.",
+      "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVR16xx de Technische Alternative via BL-NET.",
+      "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVR16xx di Technische Alternative tramite BL-NET.",
+      "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVR16xx de Technische Alternative utilizando BL-NET.",
+      "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVR16xx firmy Technische Alternative za pomocą BL-NET.",
+      "uk": "Адаптер ioBroker для читання входів і виходів контролера UVR16xx від Technische Alternative за допомогою BL-NET.",
+      "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 UVR16xx 控制器的输入和输出的 ioBroker 适配器。"
+    },
+    "authors": [
+      "Klaus Weber <klausatweberesprit@gmail.com>"
+    ],
+    "keywords": [
+      "BL-NET",
+      "UVR1611",
+      "UVR16x2",
+      "solar",
+      "BUSO",
+      "Technische",
+      "Alternative"
+    ],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "uvr16xx-blnet.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx-blnet/main/admin/uvr16xx-blnet.png",
+    "readme": "https://github.com/weberk/ioBroker.uvr16xx-blnet/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "climate-control",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "supportCustoms": false,
+    "eraseOnUpload": true,
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.0.23"
+      }
     ]
+  },
+  "native": {
+    "ip_address": "192.168.2.77",
+    "port": 40000,
+    "poll_interval": 30,
+    "can_frame_index": 1
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Device or service connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
 }

@@ -127,8 +127,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.17 (2024-11-26)
 
 -   added number of CAN frames to uvr_mode_str
 -   improved recognition of retry necessity on 'keep patient' messages from BL-NET
