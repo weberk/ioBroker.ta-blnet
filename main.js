@@ -650,7 +650,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                         const data = await this.sendCommand(command);
                         this.log.debug("Sent command as attempt: " + attempt);
 
-                        if (data && data.length > 1) {
+                        if (data && data.length > 3) { // Treat responses like "BA 02 BC" as invalid, infact 0x=02 means to retry after 2 seconds
                             resolve(data); // Successfully, exit the loop
                             // Log hex dump of the data
                             this.logHexDump("fetchDataBlockFromDevice", data);

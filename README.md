@@ -131,6 +131,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 ### **WORK IN PROGRESS**
 
 -   added number of CAN frames to uvr_mode_str
+-   improved recognition of retry necessity on 'keep patient' messages from BL-NET
 
 ### 1.0.16 (2024-11-25)
 
