@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "uvr16xx-blnet",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "messagebox": true,
     "news": {
+      "1.0.18": {
+        "en": "introduced multiple data_frame_reading and population of multiple devices in adapter object tree",
+        "de": "mehrere data_frame_reading und die population mehrerer geräte in adapter-objektbaum",
+        "ru": "введено несколько data_frame_reading и популяция нескольких устройств в дереве объектов адаптера",
+        "pt": "introduziu vários data_frame_reading e população de vários dispositivos na árvore do objeto do adaptador",
+        "nl": "introduceerde meerdere data_frame_reading en populatie van meerdere apparaten in adapter object boom",
+        "fr": "introduit plusieurs data_frame_reading et la population de plusieurs périphériques dans l'arborescence des objets adaptateur",
+        "it": "introdotto più data_frame_reading e la popolazione di più dispositivi nell'albero dell'oggetto dell'adattatore",
+        "es": "introducido múltiples data_frame_reading y población de múltiples dispositivos en el árbol del objeto del adaptador",
+        "pl": "wprowadziła wiele danych _ frame _ reading i populacja wielu urządzeń w drzewie obiektów adaptera",
+        "uk": "введений кілька даних_frame_reading і населення декількох пристроїв в дерево об'єктів адаптера",
+        "zh-cn": "在适配对象树中引入多个数据_帧_读取和多个设备的组合"
+      },
       "1.0.17": {
         "en": "added number of CAN frames to uvr_mode_str\nimproved recognition of retry necessity on 'keep patient' messages from BL-NET",
         "de": "anzahl der CAN-Rahmen zu uvr_mode_str\nverbesserte Erkennung der Retry-Notwendigkeit auf \"keep patient\"-Nachrichten von BL-NET",
@@ -81,19 +94,6 @@
         "pl": "poprawki lint",
         "uk": "застібка щілини",
         "zh-cn": "线性修正"
-      },
-      "1.0.10": {
-        "en": "improved reading device info\nfixed handling of negative temperatures",
-        "de": "verbesserte lesegerät-info\nfeste handhabung negativer temperaturen",
-        "ru": "улучшенная информация об устройстве чтения\nфиксированная обработка отрицательных температур",
-        "pt": "informação melhorada do dispositivo de leitura\nmanipulação fixa de temperaturas negativas",
-        "nl": "verbeterde leesapparaatinformatie\nvaste behandeling van negatieve temperaturen",
-        "fr": "amélioration de l'information du périphérique de lecture\nmanipulation fixe des températures négatives",
-        "it": "informazioni del dispositivo di lettura migliorate\ngestione fissa delle temperature negative",
-        "es": "información mejorada del dispositivo de lectura\nmanejo fijo de temperaturas negativas",
-        "pl": "ulepszone informacje o urządzeniu do czytania\nstała obsługa ujemnych temperatur",
-        "uk": "поліпшена інформація про пристрій читання\nфіксована обробка негативних температур",
-        "zh-cn": "改进的读取设备信息\n固定处理负温度"
       }
     },
     "titleLang": {

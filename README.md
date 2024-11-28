@@ -127,8 +127,7 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.18 (2024-11-28)
 
 -   introduced multiple data_frame_reading and population of multiple devices in adapter object tree
 
