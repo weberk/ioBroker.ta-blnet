@@ -791,7 +791,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             thermal_energy_counters: {}
         };
 
-        const indexes = this.constructor.CURRENT_DATA_UVR1611;
+        const indexes = Uvr16xxBlNet.CURRENT_DATA_UVR1611;
 
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {

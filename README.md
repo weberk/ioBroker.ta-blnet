@@ -127,6 +127,11 @@ Please refer to the [`dev-server` documentation](https://github.com/ioBroker/dev
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   introduced multiple data_frame_reading and population of multiple devices in adapter object tree
+
 ### 1.0.17 (2024-11-26)
 
 -   added number of CAN frames to uvr_mode_str
