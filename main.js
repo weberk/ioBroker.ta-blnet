@@ -30,6 +30,24 @@ class Uvr16xxBlNet extends utils.Adapter {
         // this.on("objectChange", this.onObjectChange.bind(this)); // Uncomment to bind the onObjectChange method
         // this.on("message", this.onMessage.bind(this)); // Uncomment to bind the onMessage method
         this.on("unload", this.onUnload.bind(this)); // Bind the onUnload method
+        // Initialize the adapter's state
+        this.initialized = false;
+
+        // Memorize uvr_mode
+        this.uvr_mode = 0;
+
+        // Memorize the current timeout ID; later used for clearing the timeout
+        this.currentTimeoutId = null;
+
+        this.numberOfDataFrames = 0; // Number of data frames to process
+
+        // memorize systemConfiguration
+        this.systemConfiguration = {
+            success: false,
+            stateValues: {},
+            deviceInfo: {},
+            units: {}
+        };
     }
 
     /**
@@ -43,22 +61,6 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config poll_interval: " + this.config.poll_interval);
         this.log.info("config can_frame_index: " + this.config.can_frame_index);
 
-        // Initialize the adapter's state
-        this.initialized = false;
-
-        // Memorize uvr_mode
-        this.uvr_mode = 0;
-
-        // Memorize the current timeout ID; later used for clearing the timeout
-        this.currentTimeoutId = null;
-
-        // memorize systemConfiguration
-        this.systemConfiguration = {
-            success: false,
-            stateValues: {},
-            deviceInfo: {},
-            units: {}
-        };
 
         // Start polling
         this.startPolling();
@@ -78,14 +80,10 @@ class Uvr16xxBlNet extends utils.Adapter {
 
                     // Set status for info.connection
                     this.log.debug("Setting connection status to: " + this.systemConfiguration.success);
-                    if (this.systemConfiguration) {
-                        if (this.systemConfiguration) {
-                            await this.setState("info.connection", this.systemConfiguration.success, true);
-                        }
-                    }
+                    await this.setState("info.connection", this.systemConfiguration.success, true);
                     if (this.systemConfiguration.success === true) {
                         // Declare objects
-                        await this.declareOrUpdateObjects(this.systemConfiguration);
+                        await this.declareOrUpdateObjects();
 
                         this.initialized = true;
                         this.log.debug("Initialization succeeded.");
@@ -99,12 +97,14 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Perform polling operations only if initialization was successful
             if (this.initialized) {
                 try {
-                    if (this.systemConfiguration) {
-                        this.systemConfiguration.stateValues = await this.fetchStateValuesFromDevice();
-                        await this.setState("info.connection", this.systemConfiguration.success, true);
-                        // Update objects
-                        await this.declareOrUpdateObjects(this.systemConfiguration);
+                    const stateValuesArray = []; // Create a local array
+                    for (let i = 0; i < this.numberOfDataFrames; i++) {
+                        stateValuesArray.push(await this.fetchStateValuesFromDevice(i + 1));
                     }
+                    this.systemConfiguration.stateValues = stateValuesArray; // Assign the local array to systemConfiguration
+                    await this.setState("info.connection", this.systemConfiguration.success, true);
+                    // Update objects
+                    await this.declareOrUpdateObjects();
                     this.log.info("Polled state values from BL-NET");
                 } catch (error) {
                     await this.setState("info.connection", false, true);
@@ -119,7 +119,6 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
-        let stateValues;
         let deviceInfo;
 
         // Try to read some metadata on the device
@@ -130,42 +129,50 @@ class Uvr16xxBlNet extends utils.Adapter {
             this.log.debug("readDeviceInfo function error: " + error);
             return {
                 success: false,
-                stateValues: {},
+                stateValues: [],
                 deviceInfo: {},
-                units: {}
+                units: []
             };
         }
 
         try {
-            stateValues = await this.fetchStateValuesFromDevice();
-            const units = {};
+            const stateValuesArray = []; // Create a local array
+            const unitsArray = []; // Create a local array for units
+            for (let i = 0; i < this.numberOfDataFrames; i++) {
+                const stateValues = await this.fetchStateValuesFromDevice(i + 1);
+                stateValuesArray.push(stateValues); // Add the current state values to the array
 
-            // Determine units based on bits 4-6 of the high byte for inputs
-            for (const [key, value] of Object.entries(stateValues.inputs)) {
-                if (typeof value === "number") {
-                    const highByte = value >> 8;
-                    const unitBits = highByte & 0x70;
-                    const unit = this.determineUnit(unitBits);
-                    units[key] = unit;
-                } else {
-                    this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
+                // Determine units based on bits 4-6 of the high byte for inputs
+                const current_units = {}; // Create a local object for units
+                for (const [key, value] of Object.entries(stateValues.inputs)) {
+                    if (typeof value === "number") {
+                        const highByte = value >> 8;
+                        const unitBits = highByte & 0x70;
+                        const unit = this.determineUnit(unitBits);
+                        current_units[key] = unit;
+                    } else {
+                        this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
+                    }
                 }
+                // Add the current units to the units array
+                unitsArray.push(current_units);
             }
+            this.systemConfiguration.stateValues = stateValuesArray; // Assign the local array to systemConfiguration
 
             this.log.info("readSystemConfiguration succeeded.");
             return {
                 success: true,
-                stateValues: stateValues,
+                stateValues: stateValuesArray,
                 deviceInfo: deviceInfo,
-                units: units
+                units: unitsArray
             };
         } catch (error) {
             this.log.error("readSystemConfiguration failed: " + error);
             return {
                 success: false,
-                stateValues: {},
+                stateValues: [],
                 deviceInfo: {},
-                units: {}
+                units: []
             };
         }
     }
@@ -193,7 +200,6 @@ class Uvr16xxBlNet extends utils.Adapter {
                 return "unknown"; // Unknown unit
         }
     }
-
     /**
      * Reads device information from the BL-NET device.
      *
@@ -203,8 +209,8 @@ class Uvr16xxBlNet extends utils.Adapter {
      *
      * @returns {Promise<Object>} An object containing the device information:
      * - {string} uvr_mode - The UVR mode (e.g., "1DL", "2DL", "CAN").
-     * - {string} uvr_type - The UVR type (e.g., "UVR61-3", "UVR1611").
-     * - {string} uvr2_type - The second UVR type if available (e.g., "UVR61-3", "UVR1611").
+     * - {Array<string>} uvr_type_str - The UVR type(s) as strings (e.g., ["UVR61-3", "UVR1611"]).
+     * - {Array<number>} uvr_type_code - The UVR type(s) as numbers.
      * - {string} module_id - The module ID of the BL-NET device.
      * - {string} firmware_version - The firmware version of the BL-NET device.
      * - {string} transmission_mode - The transmission mode (e.g., "Current Data").
@@ -217,11 +223,11 @@ class Uvr16xxBlNet extends utils.Adapter {
         const HEADER_READ = 0xAA;
         const FIRMWARE_REQUEST = 0x82;
         const MODE_REQUEST = 0x21;
+        const devices = [];
 
         try {
             let data;
-            let uvr_type;
-            let uvr2_type;
+            const uvr_type_code = [];
             let command;
             // Send version request
             command = new Uint8Array([VERSION_REQUEST]);
@@ -243,105 +249,92 @@ class Uvr16xxBlNet extends utils.Adapter {
             // ...
             // } Header_FRAME;
 
+            // Define the offsets based on the C struct definitions
+            const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
+            const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
+            const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
+            const HEADER_DC_DEVICE1_LENGTH_OFFSET = 6;
+            // Mode 0xD1 - Length 14 bytes
+            /* Data structure of the header from D-LOGG or BL-Net */
+            // typedef struct {
+            //     UCHAR identifier;
+            //     UCHAR version;
+            //     UCHAR timestamp[3];
+            //     UCHAR recordLengthDevice1;
+            //     UCHAR recordLengthDevice2;
+            //     UCHAR startAddress[3];
+            //     UCHAR endAddress[3];
+            //     UCHAR checksum;  /* Sum of bytes mod 256 */
+            // } Header_D1_FRAME;
+            // Mode 0xA8 - Length 13 bytes
+            /* Data structure of the header from D-LOGG or BL-Net */
+            /* Mode 0xA8 - Length 13 bytes - HeaderA8 - */
+            // typedef struct {
+            //     UCHAR identifier;
+            //     UCHAR version;
+            //     UCHAR timestamp[3];
+            //     UCHAR recordLengthDevice1;
+            //     UCHAR startAddress[3];
+            //     UCHAR endAddress[3];
+            //     UCHAR checksum;  /* Sum of bytes mod 256 */
+            // } Header_A8_FRAME;
+            // CAN-Logging only with UVR1611
+            // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
+            // Max. number of data records from points-in-time or data links/sources when CAN data logging is used: 8
+            // struct {
+            //     UCHAR identifier;
+            //     UCHAR version;
+            //     UCHAR timestamp[3];
+            //     UCHAR numberOfCANFrames;
+            //     UCHAR recordLengthFrame1;
+            //     UCHAR ...;
+            //     UCHAR recordLengthFrame8;
+            //     UCHAR startAddress[3];
+            //     UCHAR endAddress[3];
+            //     UCHAR checksum;  /* Sum of bytes mod 256 */
+            //   } HEADER_DC_Frame8
             this.uvr_mode = data[1]; // identifier
             switch (this.uvr_mode) {
                 case 0xA8:
                     uvr_mode_str = "1DL";
+                    this.numberOfDataFrames = 1;
+                    uvr_type_code.push(data[HEADER_A8_DEVICE1_LENGTH_OFFSET]);
                     break;
                 case 0xD1:
                     uvr_mode_str = "2DL";
+                    this.numberOfDataFrames = 2;
+                    uvr_type_code.push(data[HEADER_D1_DEVICE1_LENGTH_OFFSET]);
+                    uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET]);
                     break;
                 case 0xDC:
-                    uvr_mode_str = data[5] + "CAN"; // number of CAN frames
+                    uvr_mode_str = this.numberOfDataFrames + "CAN";
+                    this.numberOfDataFrames = data[5];
+                    for (let i = 0; i < this.numberOfDataFrames; i++) {
+                        uvr_type_code.push(data[HEADER_DC_DEVICE1_LENGTH_OFFSET + i]);
+                    }
                     break;
                 default:
                     throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16));
             }
             this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
 
-            // Define the offsets based on the C struct definitions
-            const HEADER_D1_DEVICE1_LENGTH_OFFSET = 5;
-            const HEADER_D1_DEVICE2_LENGTH_OFFSET = 6;
-            const HEADER_A8_DEVICE1_LENGTH_OFFSET = 5;
 
-            if (this.uvr_mode === 0xD1) {
-                // Mode 0xD1 - Length 14 bytes
-                /* Data structure of the header from D-LOGG or BL-Net */
-                // typedef struct {
-                //     UCHAR identifier;
-                //     UCHAR version;
-                //     UCHAR timestamp[3];
-                //     UCHAR recordLengthDevice1;
-                //     UCHAR recordLengthDevice2;
-                //     UCHAR startAddress[3];
-                //     UCHAR endAddress[3];
-                //     UCHAR checksum;  /* Sum of bytes mod 256 */
-                // } Header_D1_FRAME;
-                uvr_type = data[HEADER_D1_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-                uvr2_type = data[HEADER_D1_DEVICE2_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-            } else {
-                // Mode 0xA8 - Length 13 bytes
-                /* Data structure of the header from D-LOGG or BL-Net */
-                /* Mode 0xA8 - Length 13 bytes - HeaderA8 - */
-                // typedef struct {
-                //     UCHAR identifier;
-                //     UCHAR version;
-                //     UCHAR timestamp[3];
-                //     UCHAR recordLengthDevice1;
-                //     UCHAR startAddress[3];
-                //     UCHAR endAddress[3];
-                //     UCHAR checksum;  /* Sum of bytes mod 256 */
-                // } Header_A8_FRAME;
-                uvr_type = data[HEADER_A8_DEVICE1_LENGTH_OFFSET]; // 0x5A -> UVR61-3; 0x76 -> UVR1611
-            }
 
-            if (this.uvr_mode === 0xDC) {
-                // CAN-Logging only with UVR1611
-                // You can log either from the DL bus (max. 2 data lines) or from the CAN bus (max. 8 data records).
-                // Max. number of data records from points-in-time or data links/sources when CAN data logging is used: 8
-                // struct {
-                //     UCHAR identifier;
-                //     UCHAR version;
-                //     UCHAR timestamp[3];
-                //     UCHAR numberOfCANFrames;
-                //     UCHAR recordLengthFrame1;
-                //     UCHAR ...;
-                //     UCHAR recordLengthFrame8;
-                //     UCHAR startAddress[3];
-                //     UCHAR endAddress[3];
-                //     UCHAR checksum;  /* Sum of bytes mod 256 */
-                //   } HEADER_DC_Frame8
-                uvr_type = 0x76;
-            }
-
-            // Translate uvr_type to string
-            let uvr_type_str;
-            switch (uvr_type) {
-                case 0x5A:
-                    uvr_type_str = "UVR61-3";
-                    break;
-                case 0x76:
-                    uvr_type_str = "UVR1611";
-                    break;
-                default:
-                    uvr_type_str = "Unknown";
-            }
-            this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
-
-            // Translate uvr2_type to string if it exists
-            let uvr2_type_str;
-            if (uvr2_type !== undefined) {
-                switch (uvr2_type) {
+            // derive device type as a string from length of data record of a data frame
+            for (let i = 0; i < this.numberOfDataFrames; i++) {
+                let uvr_type_str;
+                switch (uvr_type_code[i]) {
                     case 0x5A:
-                        uvr2_type_str = "UVR61-3";
+                        uvr_type_str = "UVR61-3";
                         break;
                     case 0x76:
-                        uvr2_type_str = "UVR1611";
+                        uvr_type_str = "UVR1611";
                         break;
                     default:
-                        uvr2_type_str = "Unknown";
+                        uvr_type_str = "Unknown";
                 }
-                this.log.debug("Received UVR type 2 of BL-NET: " + uvr2_type_str);
+                devices.push(uvr_type_str);
+                this.log.debug("Received UVR type of BL-NET: " + uvr_type_str);
             }
 
             // Send firmware version request
@@ -358,8 +351,8 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             return {
                 uvr_mode: uvr_mode_str,
-                uvr_type: uvr_type_str,
-                uvr2_type: uvr2_type_str,
+                uvr_type_str: devices,
+                uvr_type_code: uvr_type_code,
                 module_id: "0x" + module_id.toUpperCase(),
                 firmware_version: firmwareVersion,
                 transmission_mode: transmission_mode
@@ -382,10 +375,10 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @param {Object} systemConfiguration.stateValues - The state values containing uvrRecords.
      * @returns {Promise<void>} - A promise that resolves when all objects have been declared.
      */
-    async declareOrUpdateObjects(systemConfiguration) {
-        const units = systemConfiguration.units;
-        const deviceInfo = systemConfiguration.deviceInfo;
-        const stateValues = systemConfiguration.stateValues;
+    async declareOrUpdateObjects() {
+        const units = this.systemConfiguration.units;
+        const deviceInfo = this.systemConfiguration.deviceInfo;
+        const stateValues = this.systemConfiguration.stateValues;
 
         // Check if deviceInfo is defined
         if (deviceInfo) {
@@ -404,178 +397,192 @@ class Uvr16xxBlNet extends utils.Adapter {
                     native: {},
                 });
                 await this.setState("info." + key, {
-                    val: value,
+                    val: value.toString(),
                     ack: true
                 });
             }
         } else {
             this.log.error("deviceInfo is undefined or null");
         }
-
+        // Log stateValues
+        this.log.debug("State values: " + JSON.stringify(stateValues));
         // Check if stateValues is defined
         if (stateValues) {
-            // Declare outputs
-            if (stateValues.outputs) {
-                for (const [key, value] of Object.entries(stateValues.outputs)) {
-                    await this.setObjectNotExistsAsync("outputs." + key, {
-                        type: "state",
-                        common: {
-                            name: key,
-                            type: "string",
-                            role: "indicator",
-                            read: true,
-                            write: false,
-                        },
-                        native: {},
-                    });
-                    await this.setState("outputs." + key, {
-                        val: value,
-                        ack: true
-                    });
-                }
-            } else {
-                this.log.error("stateValues.outputs is undefined or null");
-            }
-
-            // Declare speed levels
-            if (stateValues.speed_levels) {
-                for (const [key, value] of Object.entries(stateValues.speed_levels)) {
-                    await this.setObjectNotExistsAsync("speed_levels." + key, {
-                        type: "state",
-                        common: {
-                            name: key,
-                            type: "number",
-                            role: "value",
-                            read: true,
-                            write: false,
-                        },
-                        native: {},
-                    });
-                    await this.setState("speed_levels." + key, {
-                        val: value,
-                        ack: true
-                    });
-                }
-            } else {
-                this.log.error("stateValues.speed_levels is undefined or null");
-            }
-
-            // Declare inputs
-            if (stateValues.inputs) {
-                for (const [key, value] of Object.entries(stateValues.inputs)) {
-                    await this.setObjectNotExistsAsync("inputs." + key, {
-                        type: "state",
-                        common: {
-                            name: key,
-                            type: "number",
-                            role: "value",
-                            unit: units[key], // Set unit based on system configuration
-                            read: true,
-                            write: false,
-                        },
-                        native: {},
-                    });
-                    // Process input values: filter bits 4-6 and handle sign bit
-                    let finalValue;
-                    if (typeof value === "number") {
-                        const highByte = value >> 8;
-                        const lowByte = value & 0xFF;
-                        const signBit = highByte & 0x80;
-                        const unitBits = highByte & 0x70;
-                        let input = this.byte2short(lowByte, highByte & 0x0F);
-                        // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
-                        if (signBit) {
-                            // Restore bits 4, 5, 6 with 1, since this is a negative number
-                            input = input | 0xF000;
-                            // Invert the bits (ensure 16-bit operation)
-                            input = (~input & 0xFFFF);
-                            // Add 1 to the inverted bits
-                            input = (input + 1) & 0xFFFF;
-                            // Set the value to negative
-                            input = -input;
-                        }
-                        switch (unitBits) {
-                            case 0x20: // TYPE_TEMP
-                                finalValue = input / 10.0;
-                                break;
-                            case 0x30: // TYPE_VOLUME:
-                                finalValue = input * 4.0;
-                                break;
-                            case 0x10: // TYPE_DIGITAL:
-                                finalValue = (value & 0x8000) ? 1 : 0;
-                                break;
-                            case 0x70: // TYPE_RAS:
-                                finalValue = (input & 0x1FF) / 10.0;
-                                break;
-                            default:
-                                finalValue = input;
-                        }
-                        this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
-                    } else {
-                        this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(value));
+            // Declare objects for each data frame
+            for (let i = 0; this.numberOfDataFrames && i < this.numberOfDataFrames; i++) {
+                const currentFrameName = (i + 1) + "-" + deviceInfo.uvr_type_str[i];
+                await this.setObjectNotExistsAsync(currentFrameName, {
+                    type: "device",
+                    common: {
+                        name: "data frame " + (i + 1) + " from BL-NET",
+                    },
+                    native: {}
+                });
+                // Create full path prefix
+                const path_pre = currentFrameName + '.';
+                // Declare outputs
+                if (stateValues[i].outputs) {
+                    for (const [key, value] of Object.entries(stateValues[i].outputs)) {
+                        await this.setObjectNotExistsAsync(path_pre + "outputs." + key, {
+                            type: "state",
+                            common: {
+                                name: key,
+                                type: "string",
+                                role: "indicator",
+                                read: true,
+                                write: false,
+                            },
+                            native: {},
+                        });
+                        await this.setState(path_pre + "outputs." + key, {
+                            val: value,
+                            ack: true
+                        });
                     }
-
-                    await this.setState("inputs." + key, {
-                        val: finalValue,
-                        ack: true
-                    });
+                } else {
+                    this.log.error("stateValues.outputs is undefined or null");
                 }
-            } else {
-                this.log.error("stateValues.inputs is undefined or null");
-            }
 
-            // Declare thermal energy counters status
-            if (stateValues.thermal_energy_counters_status) {
-                for (const [key, value] of Object.entries(stateValues.thermal_energy_counters_status)) {
-                    await this.setObjectNotExistsAsync("thermal_energy_counters_status." + key, {
-                        type: "state",
-                        common: {
-                            name: key,
-                            type: "string",
-                            role: "indicator",
-                            read: true,
-                            write: false,
-                        },
-                        native: {},
-                    });
-                    await this.setState("thermal_energy_counters_status." + key, {
-                        val: value,
-                        ack: true
-                    });
-                }
-            } else {
-                this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
-            }
-
-            // Declare thermal energy counters
-            if (stateValues.thermal_energy_counters) {
-                for (const [key, value] of Object.entries(stateValues.thermal_energy_counters)) {
-                    let unit;
-                    if (key.startsWith("current_heat_power")) {
-                        unit = "kW";
-                    } else if (key.startsWith("total_heat_energy")) {
-                        unit = "kWh";
+                // Declare speed levels
+                if (stateValues[i].speed_levels) {
+                    for (const [key, value] of Object.entries(stateValues[i].speed_levels)) {
+                        await this.setObjectNotExistsAsync(path_pre + "speed_levels." + key, {
+                            type: "state",
+                            common: {
+                                name: key,
+                                type: "number",
+                                role: "value",
+                                read: true,
+                                write: false,
+                            },
+                            native: {},
+                        });
+                        await this.setState(path_pre + "speed_levels." + key, {
+                            val: value,
+                            ack: true
+                        });
                     }
-
-                    await this.setObjectNotExistsAsync("thermal_energy_counters." + key, {
-                        type: "state",
-                        common: {
-                            name: key,
-                            type: "number",
-                            role: "value",
-                            unit: unit,
-                            read: true,
-                            write: false,
-                        },
-                        native: {},
-                    });
-                    await this.setState("thermal_energy_counters." + key, {
-                        val: value,
-                        ack: true
-                    });
+                } else {
+                    this.log.error("stateValues.speed_levels is undefined or null");
                 }
-            } else {
-                this.log.error("stateValues.thermal_energy_counters is undefined or null");
+
+                // Declare inputs
+                if (stateValues[i].inputs) {
+                    for (const [key, value] of Object.entries(stateValues[i].inputs)) {
+                        await this.setObjectNotExistsAsync(path_pre + "inputs." + key, {
+                            type: "state",
+                            common: {
+                                name: key,
+                                type: "number",
+                                role: "value",
+                                unit: units[key], // Set unit based on system configuration
+                                read: true,
+                                write: false,
+                            },
+                            native: {},
+                        });
+                        // Process input values: filter bits 4-6 and handle sign bit
+                        let finalValue;
+                        if (typeof value === "number") {
+                            const highByte = value >> 8;
+                            const lowByte = value & 0xFF;
+                            const signBit = highByte & 0x80;
+                            const unitBits = highByte & 0x70;
+                            let input = this.byte2short(lowByte, highByte & 0x0F);
+                            // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
+                            if (signBit) {
+                                // Restore bits 4, 5, 6 with 1, since this is a negative number
+                                input = input | 0xF000;
+                                // Invert the bits (ensure 16-bit operation)
+                                input = (~input & 0xFFFF);
+                                // Add 1 to the inverted bits
+                                input = (input + 1) & 0xFFFF;
+                                // Set the value to negative
+                                input = -input;
+                            }
+                            switch (unitBits) {
+                                case 0x20: // TYPE_TEMP
+                                    finalValue = input / 10.0;
+                                    break;
+                                case 0x30: // TYPE_VOLUME:
+                                    finalValue = input * 4.0;
+                                    break;
+                                case 0x10: // TYPE_DIGITAL:
+                                    finalValue = (value & 0x8000) ? 1 : 0;
+                                    break;
+                                case 0x70: // TYPE_RAS:
+                                    finalValue = (input & 0x1FF) / 10.0;
+                                    break;
+                                default:
+                                    finalValue = input;
+                            }
+                            this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
+                        } else {
+                            this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(value));
+                        }
+
+                        await this.setState(path_pre + "inputs." + key, {
+                            val: finalValue,
+                            ack: true
+                        });
+                    }
+                } else {
+                    this.log.error("stateValues.inputs is undefined or null");
+                }
+
+                // Declare thermal energy counters status
+                if (stateValues[i].thermal_energy_counters_status) {
+                    for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters_status)) {
+                        await this.setObjectNotExistsAsync(path_pre + "thermal_energy_counters_status." + key, {
+                            type: "state",
+                            common: {
+                                name: key,
+                                type: "string",
+                                role: "indicator",
+                                read: true,
+                                write: false,
+                            },
+                            native: {},
+                        });
+                        await this.setState(path_pre + "thermal_energy_counters_status." + key, {
+                            val: value,
+                            ack: true
+                        });
+                    }
+                } else {
+                    this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
+                }
+
+                // Declare thermal energy counters
+                if (stateValues[i].thermal_energy_counters) {
+                    for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
+                        let unit;
+                        if (key.startsWith("current_heat_power")) {
+                            unit = "kW";
+                        } else if (key.startsWith("total_heat_energy")) {
+                            unit = "kWh";
+                        }
+
+                        await this.setObjectNotExistsAsync(path_pre + "thermal_energy_counters." + key, {
+                            type: "state",
+                            common: {
+                                name: key,
+                                type: "number",
+                                role: "value",
+                                unit: unit,
+                                read: true,
+                                write: false,
+                            },
+                            native: {},
+                        });
+                        await this.setState(path_pre + "thermal_energy_counters." + key, {
+                            val: value,
+                            ack: true
+                        });
+                    }
+                } else {
+                    this.log.error("stateValues.thermal_energy_counters is undefined or null");
+                }
             }
         } else {
             this.log.error("stateValues is undefined or null");
@@ -594,13 +601,12 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @returns {Promise<Object>} A promise that resolves to an object containing the state values.
      * @throws {Error} If there is an error during communication with the device or if the response format is unexpected.
      */
-    async fetchStateValuesFromDevice() {
+    async fetchStateValuesFromDevice(data_frame_index) {
         const stateValues = {};
         const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
-        const can_frame_index = this.config.can_frame_index; // i.e. first frame (up to 8)
 
         try {
-            const command = new Uint8Array([READ_CURRENT_DATA, can_frame_index]);
+            const command = new Uint8Array([READ_CURRENT_DATA, data_frame_index]);
             const data = await this.fetchDataBlockFromDevice(command);
 
             // Process the received data here
@@ -627,6 +633,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             }
         } catch (error) {
             this.log.error("Error during communication with device: " + error);
+            throw error; // Re-throw the error to reject the promise
         }
     }
 
