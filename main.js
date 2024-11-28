@@ -419,7 +419,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     native: {}
                 });
                 // Create full path prefix
-                const path_pre = currentFrameName + '.';
+                const path_pre = currentFrameName + ".";
                 // Declare outputs
                 if (stateValues[i].outputs) {
                     for (const [key, value] of Object.entries(stateValues[i].outputs)) {
