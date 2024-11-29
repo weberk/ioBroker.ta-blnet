@@ -37,6 +37,7 @@
                     "type": "number",
                     "label": "Poll Interval",
                     "min": 5,
+                    "max": 3600,
                     "default": 30,
                     "help": "Enter the polling interval in seconds",
                     "xs": 12,

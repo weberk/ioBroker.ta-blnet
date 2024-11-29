@@ -68,7 +68,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      * Polling function to fetch state values from the IoT device at regular intervals.
      */
     startPolling() {
-        const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
+        const pollInterval = Math.min(this.config.poll_interval * 1000, 3600000); // Poll interval in milliseconds, with a maximum of 3600000 ms (1 hour)
 
         this.pollingInterval = this.setInterval(async () => {
             // Perform an initialization read attempt, if failed do not start polling
