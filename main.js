@@ -70,7 +70,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     startPolling() {
         const pollInterval = Math.min(this.config.poll_interval * 1000, 3600000); // Poll interval in milliseconds, with a maximum of 3600000 ms (1 hour)
 
-        this.pollingInterval = this.setInterval(async () => {
+        const poll = async () => {
             // Perform an initialization read attempt, if failed do not start polling
             if (!this.initialized) {
                 try {
@@ -109,7 +109,13 @@ class Uvr16xxBlNet extends utils.Adapter {
                     this.log.error("Error polling state values: " + error);
                 }
             }
-        }, pollInterval); // Poll every pollInterval milliseconds
+
+            // Schedule the next poll
+            this.setTimeout(poll, pollInterval);
+        };
+
+        // Start the polling loop
+        this.setTimeout(poll, pollInterval);
     }
 
     /**

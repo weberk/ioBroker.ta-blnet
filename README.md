@@ -12,7 +12,8 @@
 **Tests:** ![Test and Release](https://github.com/weberk/ioBroker.uvr16xx-blnet/workflows/Test%20and%20Release/badge.svg)
 
 ## uvr16xx-blnet adapter for ioBroker
-An ioBroker adapter for reading data from one or up to eight UVRxx controllers by [Technische Alternative](http://www.ta.co.at)  using BL-NET.
+
+An ioBroker adapter for reading data from one or up to eight UVRxx controllers by [Technische Alternative](http://www.ta.co.at) using BL-NET.
 
 After installation, you need to create an instance and configure custom values for the IP address, port number, and update interval that the instance should use.
 
@@ -33,10 +34,11 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -   improved node typing;
 -   explicitely created every node;
 -   improved outputs value filter;
--   ensured calls to setObjectNotExistsAsync happen only once; 
+-   ensured calls to setObjectNotExistsAsync happen only once;
 -   removed data_frame_number parameter
 -   introduced limit for poll intervall
 -   removed obsolete react admin GUI settings and artefacts
+-   use this.setTimeout instead of this.setInterval
 
 ### 1.0.18 (2024-11-28)
 
