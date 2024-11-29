@@ -8,7 +8,7 @@
 
 const utils = require("@iobroker/adapter-core");
 // The net module is used to create TCP clients and servers
-const net = require("net");
+const net = require("node:net");
 
 /**
  * Adapter class for UVR16xx BL-NET devices.
@@ -26,7 +26,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             name: "uvr16xx-blnet",
         });
         this.on("ready", this.onReady.bind(this)); // Bind the onReady method
-        this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
+        //this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
         // this.on("objectChange", this.onObjectChange.bind(this)); // Uncomment to bind the onObjectChange method
         // this.on("message", this.onMessage.bind(this)); // Uncomment to bind the onMessage method
         this.on("unload", this.onUnload.bind(this)); // Bind the onUnload method
@@ -381,22 +381,33 @@ class Uvr16xxBlNet extends utils.Adapter {
         const stateValues = this.systemConfiguration.stateValues;
 
         // Check if deviceInfo is defined
+        const device_node_name = this.name2id("BL-NET");
         if (deviceInfo) {
+            // create device node
+            await this.setObjectNotExistsAsync(device_node_name, {
+                type: "device",
+                common: {
+                    name: "door to climate controls",
+                    role: "gateway"
+                },
+                native: {}
+            });
             // Declare device information
             for (const [key, value] of Object.entries(deviceInfo)) {
-                await this.setObjectNotExistsAsync("info." + key, {
+                const currentKeyName = this.name2id("info." + key);
+                await this.setObjectNotExistsAsync(currentKeyName, {
                     type: "state",
                     common: {
                         name: key,
                         type: "string",
-                        role: "indicator",
+                        role: "info",
                         read: true,
                         write: false,
                         def: value // Set initial value
                     },
                     native: {},
                 });
-                await this.setState("info." + key, {
+                await this.setState(currentKeyName, {
                     val: value.toString(),
                     ack: true
                 });
@@ -404,37 +415,48 @@ class Uvr16xxBlNet extends utils.Adapter {
         } else {
             this.log.error("deviceInfo is undefined or null");
         }
-        // Log stateValues
-        this.log.debug("State values: " + JSON.stringify(stateValues));
+
         // Check if stateValues is defined
         if (stateValues) {
             // Declare objects for each data frame
             for (let i = 0; this.numberOfDataFrames && i < this.numberOfDataFrames; i++) {
-                const currentFrameName = (i + 1) + "-" + deviceInfo.uvr_type_str[i];
+                const currentFrameName = this.name2id(device_node_name + "." + (i + 1) + "-" + deviceInfo.uvr_type_str[i]);
                 await this.setObjectNotExistsAsync(currentFrameName, {
-                    type: "device",
+                    type: "channel",
                     common: {
                         name: "data frame " + (i + 1) + " from BL-NET",
+                        role: "climate",
                     },
                     native: {}
                 });
                 // Create full path prefix
                 const path_pre = currentFrameName + ".";
+
+                // create folder node for outputs
+                let currentFolderName = this.name2id(path_pre + "outputs");
+                await this.setObjectNotExistsAsync(currentFolderName, {
+                    type: "folder",
+                    common: {
+                        name: "metrics for outputs",
+                    },
+                    native: {}
+                });
                 // Declare outputs
                 if (stateValues[i].outputs) {
                     for (const [key, value] of Object.entries(stateValues[i].outputs)) {
-                        await this.setObjectNotExistsAsync(path_pre + "outputs." + key, {
+                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+                        await this.setObjectNotExistsAsync(currentKeyName, {
                             type: "state",
                             common: {
                                 name: key,
-                                type: "string",
-                                role: "indicator",
+                                type: "boolean",
+                                role: "switch.enable",
                                 read: true,
                                 write: false,
                             },
                             native: {},
                         });
-                        await this.setState(path_pre + "outputs." + key, {
+                        await this.setState(currentKeyName, {
                             val: value,
                             ack: true
                         });
@@ -442,40 +464,66 @@ class Uvr16xxBlNet extends utils.Adapter {
                 } else {
                     this.log.error("stateValues.outputs is undefined or null");
                 }
-
+                // create folder node for outputs
+                currentFolderName = this.name2id(path_pre + "speed_levels");
+                await this.setObjectNotExistsAsync(currentFolderName, {
+                    type: "folder",
+                    common: {
+                        name: "metrics for speed levels",
+                    },
+                    native: {}
+                });
                 // Declare speed levels
                 if (stateValues[i].speed_levels) {
                     for (const [key, value] of Object.entries(stateValues[i].speed_levels)) {
-                        await this.setObjectNotExistsAsync(path_pre + "speed_levels." + key, {
+                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+                        await this.setObjectNotExistsAsync(currentKeyName, {
                             type: "state",
                             common: {
                                 name: key,
                                 type: "number",
-                                role: "value",
+                                role: "value.speed",
                                 read: true,
                                 write: false,
                             },
                             native: {},
                         });
-                        await this.setState(path_pre + "speed_levels." + key, {
-                            val: value,
+                        // Process speed levels: filter bits 
+                        const SPEED_ACTIVE = 0x80;
+                        const SPEED_MASK = 0x1F;
+                        let finalValue;
+                        if (typeof value === "number") {
+                            finalValue = (value & SPEED_ACTIVE) ? (value & SPEED_MASK) : null;
+                            this.log.debug("Setting state " + key + " to value " + finalValue);
+                        }
+                        await this.setState(currentKeyName, {
+                            val: finalValue,
                             ack: true
                         });
                     }
                 } else {
                     this.log.error("stateValues.speed_levels is undefined or null");
                 }
-
+                // create folder node for inputs
+                currentFolderName = this.name2id(path_pre + "inputs");
+                await this.setObjectNotExistsAsync(currentFolderName, {
+                    type: "folder",
+                    common: {
+                        name: "metrics for inputs",
+                    },
+                    native: {}
+                });
                 // Declare inputs
                 if (stateValues[i].inputs) {
                     for (const [key, value] of Object.entries(stateValues[i].inputs)) {
-                        await this.setObjectNotExistsAsync(path_pre + "inputs." + key, {
+                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+                        await this.setObjectNotExistsAsync(currentKeyName, {
                             type: "state",
                             common: {
                                 name: key,
                                 type: "number",
                                 role: "value",
-                                unit: units[key], // Set unit based on system configuration
+                                unit: units[i][key], // Set unit based on system configuration
                                 read: true,
                                 write: false,
                             },
@@ -516,12 +564,11 @@ class Uvr16xxBlNet extends utils.Adapter {
                                 default:
                                     finalValue = input;
                             }
-                            this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + this.determineUnit(unitBits));
+                            this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + units[i][key]);
                         } else {
                             this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(value));
                         }
-
-                        await this.setState(path_pre + "inputs." + key, {
+                        await this.setState(currentKeyName, {
                             val: finalValue,
                             ack: true
                         });
@@ -529,22 +576,31 @@ class Uvr16xxBlNet extends utils.Adapter {
                 } else {
                     this.log.error("stateValues.inputs is undefined or null");
                 }
-
+                // create folder node for thermal_energy_counters_status
+                currentFolderName = this.name2id(path_pre + "thermal_energy_counters_status");
+                await this.setObjectNotExistsAsync(currentFolderName, {
+                    type: "folder",
+                    common: {
+                        name: "metrics for thermal energy counters status",
+                    },
+                    native: {}
+                });
                 // Declare thermal energy counters status
                 if (stateValues[i].thermal_energy_counters_status) {
                     for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters_status)) {
-                        await this.setObjectNotExistsAsync(path_pre + "thermal_energy_counters_status." + key, {
+                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+                        await this.setObjectNotExistsAsync(currentKeyName, {
                             type: "state",
                             common: {
                                 name: key,
-                                type: "string",
-                                role: "indicator",
+                                type: "boolean",
+                                role: "sensor.switch",
                                 read: true,
                                 write: false,
                             },
                             native: {},
                         });
-                        await this.setState(path_pre + "thermal_energy_counters_status." + key, {
+                        await this.setState(currentKeyName, {
                             val: value,
                             ack: true
                         });
@@ -552,30 +608,42 @@ class Uvr16xxBlNet extends utils.Adapter {
                 } else {
                     this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
                 }
-
+                // create folder node for thermal_energy_counters
+                currentFolderName = this.name2id(path_pre + "thermal_energy_counters");
+                await this.setObjectNotExistsAsync(currentFolderName, {
+                    type: "folder",
+                    common: {
+                        name: "metrics for thermal energy counters",
+                    },
+                    native: {}
+                });
                 // Declare thermal energy counters
                 if (stateValues[i].thermal_energy_counters) {
                     for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
+                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+
                         let unit;
+                        let currentRole = "";
                         if (key.startsWith("current_heat_power")) {
                             unit = "kW";
+                            currentRole = "value.power";
                         } else if (key.startsWith("total_heat_energy")) {
                             unit = "kWh";
+                            currentRole = "value.energy";
                         }
-
-                        await this.setObjectNotExistsAsync(path_pre + "thermal_energy_counters." + key, {
+                        await this.setObjectNotExistsAsync(currentKeyName, {
                             type: "state",
                             common: {
                                 name: key,
                                 type: "number",
-                                role: "value",
+                                role: currentRole,
                                 unit: unit,
                                 read: true,
                                 write: false,
                             },
                             native: {},
                         });
-                        await this.setState(path_pre + "thermal_energy_counters." + key, {
+                        await this.setState(currentKeyName, {
                             val: value,
                             ack: true
                         });
@@ -795,7 +863,7 @@ class Uvr16xxBlNet extends utils.Adapter {
 
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
-            uvrRecord.outputs[key] = (response[value[0]] & value[1]) ? "ON" : "OFF";
+            uvrRecord.outputs[key] = (response[value[0]] & value[1]) ? true : false;
         }
 
         // Log outputs
@@ -818,17 +886,17 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.debug("Inputs: " + JSON.stringify(uvrRecord.inputs));
 
         // Thermal energy counters status
-        const wmz_all = response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]];
         for (const [key, value] of Object.entries(indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS)) {
             const wmz = response[value[0]];
-            uvrRecord.thermal_energy_counters_status[key] = (wmz & value[1]) ? "active" : "inactive";
+            uvrRecord.thermal_energy_counters_status[key] = (wmz & value[1]) ? true : false;
         }
 
         // Log thermal energy counters status
         this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
 
-        // Thermal energy counters
-        if (wmz_all & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
+        // Thermal energy counters 1 active?
+        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] &
+            indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
             const lowLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]];
             const lowHigh1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]];
             const highLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]];
@@ -849,8 +917,9 @@ class Uvr16xxBlNet extends utils.Adapter {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
         }
-
-        if (wmz_all & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
+        // Thermal energy counters 2 active?
+        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[0]] &
+            indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
             const lowLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]];
             const lowHigh2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]];
             const highLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]];
@@ -959,6 +1028,11 @@ class Uvr16xxBlNet extends utils.Adapter {
         return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
     }
 
+    name2id(pName) {
+        const FORBIDDEN_CHARS = /[^._\-/ :!#$%&()+=@^{}|~\p{Ll}\p{Lu}\p{Nd}]+/gu;
+        return (pName || "").replace(FORBIDDEN_CHARS, "_");
+    }
+
     /**
      * Logs a hexadecimal dump of the provided data.
      *
@@ -1009,54 +1083,6 @@ class Uvr16xxBlNet extends utils.Adapter {
     }
 
 
-    // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
-    // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
-    // /**
-    //  * Is called if a subscribed object changes
-    //  * @param {string} id
-    //  * @param {ioBroker.Object | null | undefined} obj
-    //  */
-    // onObjectChange(id, obj) {
-    //     if (obj) {
-    //         // The object was changed
-    //         this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
-    //     } else {
-    //         // The object was deleted
-    //         this.log.info(`object ${id} deleted`);
-    //     }
-    // }
-
-    /**
-     * Handles state changes.
-     */
-    onStateChange(id, state) {
-        if (state) {
-            // The state was changed
-            this.log.info("state " + id + " changed: " + state.val + " (ack = " + state.ack + ")");
-        } else {
-            // The state was deleted
-            this.log.info("state " + id + " deleted");
-        }
-    }
-
-
-    // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
-    // /**
-    //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
-    //  * @param {ioBroker.Message} obj
-    //  */
-    // onMessage(obj) {
-    //     if (typeof obj === "object" && obj.message) {
-    //         if (obj.command === "send") {
-    //             // e.g. send email or pushover or whatever
-    //             this.log.info("send command");
-
-    //             // Send response in callback if required
-    //             if (obj.callback) this.sendTo(obj.from, obj.command, "Message received", obj.callback);
-    //         }
-    //     }
-    // }
 
 }
 
