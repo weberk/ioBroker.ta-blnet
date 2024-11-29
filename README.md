@@ -26,8 +26,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-### 1.0.20 (2024-11-29)
-
+### **WORK IN PROGRESS**
 -   removed onStateChange;
 -   streamlined object node names;
 -   improved node typing;
@@ -38,6 +37,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -   introduced limit for poll intervall
 -   removed obsolete react admin GUI settings and artefacts
 -   use this.setTimeout instead of this.setInterval
+-   finalized changes because of review findings
 
 ### 1.0.18 (2024-11-28)
 
