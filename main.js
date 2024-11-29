@@ -384,29 +384,33 @@ class Uvr16xxBlNet extends utils.Adapter {
         const device_node_name = this.name2id("BL-NET");
         if (deviceInfo) {
             // create device node
-            await this.setObjectNotExistsAsync(device_node_name, {
-                type: "device",
-                common: {
-                    name: "door to climate controls",
-                    role: "gateway"
-                },
-                native: {}
-            });
+            if (!this.initialized) {
+                await this.setObjectNotExistsAsync(device_node_name, {
+                    type: "device",
+                    common: {
+                        name: "door to climate controls",
+                        role: "gateway"
+                    },
+                    native: {}
+                });
+            }
             // Declare device information
             for (const [key, value] of Object.entries(deviceInfo)) {
                 const currentKeyName = this.name2id("info." + key);
-                await this.setObjectNotExistsAsync(currentKeyName, {
-                    type: "state",
-                    common: {
-                        name: key,
-                        type: "string",
-                        role: "info",
-                        read: true,
-                        write: false,
-                        def: value // Set initial value
-                    },
-                    native: {},
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentKeyName, {
+                        type: "state",
+                        common: {
+                            name: key,
+                            type: "string",
+                            role: "info",
+                            read: true,
+                            write: false,
+                            def: value // Set initial value
+                        },
+                        native: {},
+                    });
+                }
                 await this.setState(currentKeyName, {
                     val: value.toString(),
                     ack: true
@@ -421,41 +425,47 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Declare objects for each data frame
             for (let i = 0; this.numberOfDataFrames && i < this.numberOfDataFrames; i++) {
                 const currentFrameName = this.name2id(device_node_name + "." + (i + 1) + "-" + deviceInfo.uvr_type_str[i]);
-                await this.setObjectNotExistsAsync(currentFrameName, {
-                    type: "channel",
-                    common: {
-                        name: "data frame " + (i + 1) + " from BL-NET",
-                        role: "climate",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFrameName, {
+                        type: "channel",
+                        common: {
+                            name: "data frame " + (i + 1) + " from BL-NET",
+                            role: "climate",
+                        },
+                        native: {}
+                    });
+                }
                 // Create full path prefix
                 const path_pre = currentFrameName + ".";
 
                 // create folder node for outputs
                 let currentFolderName = this.name2id(path_pre + "outputs");
-                await this.setObjectNotExistsAsync(currentFolderName, {
-                    type: "folder",
-                    common: {
-                        name: "metrics for outputs",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFolderName, {
+                        type: "folder",
+                        common: {
+                            name: "metrics for outputs",
+                        },
+                        native: {}
+                    });
+                }
                 // Declare outputs
                 if (stateValues[i].outputs) {
                     for (const [key, value] of Object.entries(stateValues[i].outputs)) {
                         const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        await this.setObjectNotExistsAsync(currentKeyName, {
-                            type: "state",
-                            common: {
-                                name: key,
-                                type: "boolean",
-                                role: "switch.enable",
-                                read: true,
-                                write: false,
-                            },
-                            native: {},
-                        });
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentKeyName, {
+                                type: "state",
+                                common: {
+                                    name: key,
+                                    type: "boolean",
+                                    role: "switch.enable",
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {},
+                            });
+                        }
                         await this.setState(currentKeyName, {
                             val: value,
                             ack: true
@@ -466,28 +476,32 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 // create folder node for outputs
                 currentFolderName = this.name2id(path_pre + "speed_levels");
-                await this.setObjectNotExistsAsync(currentFolderName, {
-                    type: "folder",
-                    common: {
-                        name: "metrics for speed levels",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFolderName, {
+                        type: "folder",
+                        common: {
+                            name: "metrics for speed levels",
+                        },
+                        native: {}
+                    });
+                }
                 // Declare speed levels
                 if (stateValues[i].speed_levels) {
                     for (const [key, value] of Object.entries(stateValues[i].speed_levels)) {
                         const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        await this.setObjectNotExistsAsync(currentKeyName, {
-                            type: "state",
-                            common: {
-                                name: key,
-                                type: "number",
-                                role: "value.speed",
-                                read: true,
-                                write: false,
-                            },
-                            native: {},
-                        });
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentKeyName, {
+                                type: "state",
+                                common: {
+                                    name: key,
+                                    type: "number",
+                                    role: "value.speed",
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {},
+                            });
+                        }
                         // Process speed levels: filter bits 
                         const SPEED_ACTIVE = 0x80;
                         const SPEED_MASK = 0x1F;
@@ -506,29 +520,33 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 // create folder node for inputs
                 currentFolderName = this.name2id(path_pre + "inputs");
-                await this.setObjectNotExistsAsync(currentFolderName, {
-                    type: "folder",
-                    common: {
-                        name: "metrics for inputs",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFolderName, {
+                        type: "folder",
+                        common: {
+                            name: "metrics for inputs",
+                        },
+                        native: {}
+                    });
+                }
                 // Declare inputs
                 if (stateValues[i].inputs) {
                     for (const [key, value] of Object.entries(stateValues[i].inputs)) {
                         const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        await this.setObjectNotExistsAsync(currentKeyName, {
-                            type: "state",
-                            common: {
-                                name: key,
-                                type: "number",
-                                role: "value",
-                                unit: units[i][key], // Set unit based on system configuration
-                                read: true,
-                                write: false,
-                            },
-                            native: {},
-                        });
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentKeyName, {
+                                type: "state",
+                                common: {
+                                    name: key,
+                                    type: "number",
+                                    role: "value",
+                                    unit: units[i][key], // Set unit based on system configuration
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {},
+                            });
+                        }
                         // Process input values: filter bits 4-6 and handle sign bit
                         let finalValue;
                         if (typeof value === "number") {
@@ -578,28 +596,32 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 // create folder node for thermal_energy_counters_status
                 currentFolderName = this.name2id(path_pre + "thermal_energy_counters_status");
-                await this.setObjectNotExistsAsync(currentFolderName, {
-                    type: "folder",
-                    common: {
-                        name: "metrics for thermal energy counters status",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFolderName, {
+                        type: "folder",
+                        common: {
+                            name: "metrics for thermal energy counters status",
+                        },
+                        native: {}
+                    });
+                }
                 // Declare thermal energy counters status
                 if (stateValues[i].thermal_energy_counters_status) {
                     for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters_status)) {
                         const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        await this.setObjectNotExistsAsync(currentKeyName, {
-                            type: "state",
-                            common: {
-                                name: key,
-                                type: "boolean",
-                                role: "sensor.switch",
-                                read: true,
-                                write: false,
-                            },
-                            native: {},
-                        });
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentKeyName, {
+                                type: "state",
+                                common: {
+                                    name: key,
+                                    type: "boolean",
+                                    role: "sensor.switch",
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {},
+                            });
+                        }
                         await this.setState(currentKeyName, {
                             val: value,
                             ack: true
@@ -610,13 +632,15 @@ class Uvr16xxBlNet extends utils.Adapter {
                 }
                 // create folder node for thermal_energy_counters
                 currentFolderName = this.name2id(path_pre + "thermal_energy_counters");
-                await this.setObjectNotExistsAsync(currentFolderName, {
-                    type: "folder",
-                    common: {
-                        name: "metrics for thermal energy counters",
-                    },
-                    native: {}
-                });
+                if (!this.initialized) {
+                    await this.setObjectNotExistsAsync(currentFolderName, {
+                        type: "folder",
+                        common: {
+                            name: "metrics for thermal energy counters",
+                        },
+                        native: {}
+                    });
+                }
                 // Declare thermal energy counters
                 if (stateValues[i].thermal_energy_counters) {
                     for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
@@ -631,18 +655,20 @@ class Uvr16xxBlNet extends utils.Adapter {
                             unit = "kWh";
                             currentRole = "value.energy";
                         }
-                        await this.setObjectNotExistsAsync(currentKeyName, {
-                            type: "state",
-                            common: {
-                                name: key,
-                                type: "number",
-                                role: currentRole,
-                                unit: unit,
-                                read: true,
-                                write: false,
-                            },
-                            native: {},
-                        });
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentKeyName, {
+                                type: "state",
+                                common: {
+                                    name: key,
+                                    type: "number",
+                                    role: currentRole,
+                                    unit: unit,
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {},
+                            });
+                        }
                         await this.setState(currentKeyName, {
                             val: value,
                             ack: true

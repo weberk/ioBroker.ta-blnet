@@ -176,9 +176,10 @@
   "instanceObjects": [
     {
       "_id": "info",
-      "type": "channel",
+      "type": "folder",
       "common": {
-        "name": "Information"
+        "name": "Information",
+        "role": "meta"
       },
       "native": {}
     },
