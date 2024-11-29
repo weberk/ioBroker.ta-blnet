@@ -403,14 +403,13 @@ class Uvr16xxBlNet extends utils.Adapter {
                             type: "string",
                             role: "info",
                             read: true,
-                            write: false,
-                            def: value // Set initial value
+                            write: false
                         },
                         native: {},
                     });
                 }
                 await this.setState(currentKeyName, {
-                    val: value.toString(),
+                    val: JSON.stringify(value),
                     ack: true
                 });
             }

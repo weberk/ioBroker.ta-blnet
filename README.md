@@ -32,6 +32,8 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -   improved outputs value filter;
 -   ensured calls to setObjectNotExistsAsync happen only once; 
 -   removed data_frame_number parameter
+-   introduced limit for poll intervall
+-   removed obsolete react admin GUI settings and artefacts
 
 ### 1.0.18 (2024-11-28)
 
