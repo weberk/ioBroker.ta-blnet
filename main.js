@@ -59,8 +59,6 @@ class Uvr16xxBlNet extends utils.Adapter {
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
-        this.log.info("config can_frame_index: " + this.config.can_frame_index);
-
 
         // Start polling
         this.startPolling();
@@ -72,7 +70,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     startPolling() {
         const pollInterval = this.config.poll_interval * 1000; // Poll interval in milliseconds
 
-        this.pollingInterval = setInterval(async () => {
+        this.pollingInterval = this.setInterval(async () => {
             // Perform an initialization read attempt, if failed do not start polling
             if (!this.initialized) {
                 try {
@@ -346,7 +344,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             // Send transmission mode request
             command = new Uint8Array([MODE_REQUEST]);
             data = await this.sendCommand(command);
-            const transmission_mode = data.readUInt8(0).toString(16).toUpperCase();
+            const transmission_mode = "0x" + data.readUInt8(0).toString(16).toUpperCase();
             this.log.debug("Received mode of BL-NET: 0x" + transmission_mode);
 
             return {
@@ -983,8 +981,7 @@ class Uvr16xxBlNet extends utils.Adapter {
     async sendCommand(command) {
         const sleep = (ms) => {
             return new Promise(resolve => {
-                const timeoutId = setTimeout(resolve, ms);
-                this.currentTimeoutId = timeoutId; // Store the timeout ID
+                this.setTimeout(resolve, ms, ms);
             });
         };
 
@@ -1091,17 +1088,7 @@ class Uvr16xxBlNet extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            // Clear the polling interval
-            if (this.pollingInterval) {
-                clearInterval(this.pollingInterval);
-            }
-
-            // Clear current timeout if it exists
-            if (this.currentTimeoutId) {
-                clearTimeout(this.currentTimeoutId);
-                this.currentTimeoutId = null;
-            }
-
+            // Clear the polling intervals?
             callback();
         } catch (e) {
             callback();

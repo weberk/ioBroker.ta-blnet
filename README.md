@@ -30,6 +30,8 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -   improved node typing;
 -   explicitely created every node;
 -   improved outputs value filter;
+-   ensured calls to setObjectNotExistsAsync happen only once; 
+-   removed data_frame_number parameter
 
 ### 1.0.18 (2024-11-28)
 
