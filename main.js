@@ -499,7 +499,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                                 native: {},
                             });
                         }
-                        // Process speed levels: filter bits 
+                        // Process speed levels: filter bits
                         const SPEED_ACTIVE = 0x80;
                         const SPEED_MASK = 0x1F;
                         let finalValue;
