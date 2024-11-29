@@ -12,10 +12,13 @@
 **Tests:** ![Test and Release](https://github.com/weberk/ioBroker.uvr16xx-blnet/workflows/Test%20and%20Release/badge.svg)
 
 ## uvr16xx-blnet adapter for ioBroker
+An ioBroker adapter for reading data from one or up to eight UVRxx controllers by [Technische Alternative](http://www.ta.co.at)  using BL-NET.
 
-An ioBroker adapter for reading inputs and outputs of the UVR16xx controller from Technische Alternative using BL-NET.
+After installation, you need to create an instance and configure custom values for the IP address, port number, and update interval that the instance should use.
+
+Please ensure that you own the BL-NET device and not the newer CMI product. A BL-NET device looks like this:
 ![BL-NET](doc/BL-NET.png)
-You can find the manual of this device here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf
+You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf
 
 ## Changelog
 
