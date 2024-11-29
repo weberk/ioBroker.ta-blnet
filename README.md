@@ -27,7 +27,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
 
-**WORK IN PROGRESS**
+### **WORK IN PROGRESS**
 
 -   removed onStateChange;
 -   streamlined object node names;
