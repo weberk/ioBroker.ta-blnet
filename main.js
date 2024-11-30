@@ -14,7 +14,7 @@ const net = require("node:net");
  * Adapter class for UVR16xx BL-NET devices.
  * @extends utils.Adapter
  */
-class Uvr16xxBlNet extends utils.Adapter {
+class TaBlnet extends utils.Adapter {
     /**
      * Constructor for the adapter instance
      * @param {Partial<utils.AdapterOptions>} [options={}]
@@ -905,7 +905,7 @@ class Uvr16xxBlNet extends utils.Adapter {
             thermal_energy_counters: {}
         };
 
-        const indexes = Uvr16xxBlNet.CURRENT_DATA_UVR1611;
+        const indexes = TaBlnet.CURRENT_DATA_UVR1611;
 
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
@@ -1127,8 +1127,8 @@ if (require.main !== module) {
     /**
      * @param {Partial<utils.AdapterOptions>} [options={}]
      */
-    module.exports = (options) => new Uvr16xxBlNet(options);
+    module.exports = (options) => new TaBlnet(options);
 } else {
     // Otherwise, start the instance directly when run as a standalone script
-    new Uvr16xxBlNet();
+    new TaBlnet();
 }

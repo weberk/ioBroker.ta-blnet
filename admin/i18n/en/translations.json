@@ -2,8 +2,8 @@
     "Instance Settings": "Instance Settings",
     "IP Address": "IP Address",
     "Enter the IP address or host name of the device": "Enter the IP address or host name of the device",
-    "Port": "Port",
-    "Enter the port number": "Enter the port number",
+    "TA Port": "TA Port",
+    "Enter the port number for the TA port of BL-NET": "Enter the port number for the TA port of BL-NET",
     "Poll Interval": "Poll Interval",
     "Enter the polling interval in seconds": "Enter the polling interval in seconds",
     "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)"

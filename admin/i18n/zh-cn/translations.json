@@ -7,5 +7,7 @@
     "Poll Interval": "轮询间隔",
     "Enter the polling interval in seconds": "输入轮询间隔（以秒为单位）",
     "Enter the IP address or host name of the device": "输入设备的IP地址或主机名",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "输入数据帧索引（即连接到同一 BL-NET 的多个设备）"
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "输入数据帧索引（即连接到同一 BL-NET 的多个设备）",
+    "TA Port": "TA港",
+    "Enter the port number for the TA port of BL-NET": "输入BL-NET TA端口的端口号"
 }

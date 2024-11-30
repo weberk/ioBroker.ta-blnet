@@ -7,5 +7,7 @@
     "Poll Interval": "Interwał ankiety",
     "Enter the polling interval in seconds": "Wprowadź interwał odpytywania w sekundach",
     "Enter the IP address or host name of the device": "Wprowadź adres IP lub nazwę hosta urządzenia",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Wprowadź indeks ramki danych (tj. wiele urządzeń podłączonych do tej samej BL-NET)"
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Wprowadź indeks ramki danych (tj. wiele urządzeń podłączonych do tej samej BL-NET)",
+    "TA Port": "Port TA",
+    "Enter the port number for the TA port of BL-NET": "Wprowadź numer portu dla portu TA BL-NET"
 }

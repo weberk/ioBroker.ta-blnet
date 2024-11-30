@@ -7,5 +7,7 @@
     "Poll Interval": "Poll-interval",
     "Enter the polling interval in seconds": "Voer het polling-interval in seconden in",
     "Enter the IP address or host name of the device": "Voer het IP-adres of de hostnaam van het apparaat in",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Voer de dataframe-index in (d.w.z. meerdere apparaten aangesloten op dezelfde BL-NET)"
+    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Voer de dataframe-index in (d.w.z. meerdere apparaten aangesloten op dezelfde BL-NET)",
+    "TA Port": "TA-poort",
+    "Enter the port number for the TA port of BL-NET": "Voer het poortnummer voor de TA-poort van BL-NET in"
 }
