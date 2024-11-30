@@ -96,8 +96,13 @@ class Uvr16xxBlNet extends utils.Adapter {
             if (this.initialized) {
                 try {
                     const stateValuesArray = []; // Create a local array
+                    // loop through all data frames evident from the header_frame
                     for (let i = 0; i < this.numberOfDataFrames; i++) {
-                        stateValuesArray.push(await this.fetchStateValuesFromDevice(i + 1));
+                        const currentStateValuesArray = await this.fetchStateValuesFromDevice(i + 1);
+                        // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
+                        for (let j = 0; j < currentStateValuesArray.length; j++) {
+                            stateValuesArray.push(currentStateValuesArray[j]);
+                        }
                     }
                     this.systemConfiguration.stateValues = stateValuesArray; // Assign the local array to systemConfiguration
                     await this.setState("info.connection", this.systemConfiguration.success, true);
@@ -142,28 +147,32 @@ class Uvr16xxBlNet extends utils.Adapter {
         try {
             const stateValuesArray = []; // Create a local array
             const unitsArray = []; // Create a local array for units
+            // loop through all data frames evident from the header_frame
             for (let i = 0; i < this.numberOfDataFrames; i++) {
-                const stateValues = await this.fetchStateValuesFromDevice(i + 1);
-                stateValuesArray.push(stateValues); // Add the current state values to the array
-
-                // Determine units based on bits 4-6 of the high byte for inputs
-                const current_units = {}; // Create a local object for units
-                for (const [key, value] of Object.entries(stateValues.inputs)) {
-                    if (typeof value === "number") {
-                        const highByte = value >> 8;
-                        const unitBits = highByte & 0x70;
-                        const unit = this.determineUnit(unitBits);
-                        current_units[key] = unit;
-                    } else {
-                        this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
+                const currentStateValuesArray = await this.fetchStateValuesFromDevice(i + 1);
+                let currentStateValues = {};
+                // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
+                for (let j = 0; j < currentStateValuesArray.length; j++) {
+                    currentStateValues = currentStateValuesArray[j];
+                    // Determine units based on bits 4-6 of the high byte for inputs
+                    const current_units = {}; // Create a local object for units
+                    for (const [key, value] of Object.entries(currentStateValues.inputs)) {
+                        if (typeof value === "number") {
+                            const highByte = value >> 8;
+                            const unitBits = highByte & 0x70;
+                            const unit = this.determineUnit(unitBits);
+                            current_units[key] = unit;
+                        } else {
+                            this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
+                        }
                     }
+                    // Add the current units and StateValues to the collecting array
+                    stateValuesArray.push(currentStateValues);
+                    unitsArray.push(current_units);
                 }
-                // Add the current units to the units array
-                unitsArray.push(current_units);
             }
-            this.systemConfiguration.stateValues = stateValuesArray; // Assign the local array to systemConfiguration
-
             this.log.info("readSystemConfiguration succeeded.");
+            // returned system configuration will be stored in the adapter instance
             return {
                 success: true,
                 stateValues: stateValuesArray,
@@ -306,7 +315,7 @@ class Uvr16xxBlNet extends utils.Adapter {
                     break;
                 case 0xD1:
                     uvr_mode_str = "2DL";
-                    this.numberOfDataFrames = 2;
+                    this.numberOfDataFrames = 1;
                     uvr_type_code.push(data[HEADER_D1_DEVICE1_LENGTH_OFFSET]);
                     uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET]);
                     break;
@@ -699,8 +708,9 @@ class Uvr16xxBlNet extends utils.Adapter {
      * @throws {Error} If there is an error during communication with the device or if the response format is unexpected.
      */
     async fetchStateValuesFromDevice(data_frame_index) {
-        const stateValues = {};
+        const stateValuesArray = [];
         const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
+        const LATEST_SIZE = 56; // Size of one UVR1611 record
 
         try {
             const command = new Uint8Array([READ_CURRENT_DATA, data_frame_index]);
@@ -708,16 +718,23 @@ class Uvr16xxBlNet extends utils.Adapter {
 
             // Process the received data here
             if (data[0] === 0x80) {
-                // Process the response data
-                const response = this.readBlock(data, 57);
-                if (response) {
-                    // Parse the response and update stateValues
-                    const uvrRecord = this.parseUvrRecord(response);
-                    if (uvrRecord) {
-                        Object.assign(stateValues, uvrRecord);
+                // Process the first UVR record
+                const response1 = this.readBlock(data, 0, LATEST_SIZE);
+                if (response1) {
+                    const currentUvrRecord1 = this.parseUvrRecord(response1);
+                    stateValuesArray.push(currentUvrRecord1);
+
+                    // Check if there is a second UVR record
+                    if (data.length >= 1 + LATEST_SIZE * 2) {
+                        const response2 = this.readBlock(data, 1 + LATEST_SIZE, LATEST_SIZE);
+                        if (response2) {
+                            const currentUvrRecord2 = this.parseUvrRecord(response2);
+                            stateValuesArray.push(currentUvrRecord2);
+                        }
                     }
+
                     this.log.debug("fetchStateValuesFromDevice successful.");
-                    return stateValues; // Return the state values
+                    return stateValuesArray; // Return the state values
                 } else {
                     this.log.debug("Invalid response from device");
                     throw new Error("Invalid response from device");
@@ -1020,18 +1037,18 @@ class Uvr16xxBlNet extends utils.Adapter {
     /**
      * Reads a block of data of the specified length from the given data array.
      *
-     * @param {Uint8Array} data - The data array to read from.
+     * @param {Buffer} data - The data array to read from.
+     * @param {number} start - The starting index to read from.
      * @param {number} length - The length of the block to read.
      * @returns {Uint8Array|null} The block of data if the data array is long enough, otherwise null.
      */
-    readBlock(data, length) {
-        if (data.length >= length) {
-            const block = data.slice(0, length);
+    readBlock(data, start, length) {
+        if (data.length >= start + length) {
+            const block = data.subarray(start, start + length);
             return block;
         }
         return null;
     }
-
     /**
      * Converts two bytes (low and high) into a short integer.
      *

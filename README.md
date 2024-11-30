@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   added 2DL reading
+
 ### 1.0.20 (2024-11-30)
 
 -   renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet
