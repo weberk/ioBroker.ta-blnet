@@ -1,186 +1,176 @@
 {
-  "common": {
-    "name": "ta-blnet",
-    "version": "1.0.20",
-    "messagebox": true,
-    "news": {
-      "1.0.19": {
-        "en": "removed onStateChange;\nstreamlined object node names;\nimproved node typing;\nexplicitely created every node;\nimproved outputs value filter;\nensured calls to setObjectNotExistsAsync happen only once;\nremoved data_frame_number parameter\nintroduced limit for poll intervall\nremoved obsolete react admin GUI settings and artefacts\nuse this.setTimeout instead of this.setInterval\nfinalized changes because of review findings",
-        "de": "auf der Karte Änderung;\nstreamlined objektknotennamen;\nverbesserter knotentyp;\nexplizit jeden knoten erstellt;\nverbesserte ausgangswertefilter;\nsichergestellte Anrufe ObjectNotExistsAsync passiert nur einmal;\nentfernt data_frame_number parameter\neinführungsgrenze für pollenintervall\nentfernte obsolete Reagieren Admin-GUI-Einstellungen und Artefakte\nverwenden. Menge Timeout statt dessen. Menge Interoperabilität\nabschließende änderungen aufgrund der untersuchungsergebnisse",
-        "ru": "удалены на государство изменение;\nупорядоченные имена узлов объекта;\nулучшенный тип узла;\nявно создал каждый узел;\nсовершенствование фильтра значений результатов;\nобеспеченные призывы ObjectNotExistsAsync происходит только один раз;\nудаленный параметр_frame_name\nвведенный предел для интервала опросаl\nудаленные устаревшие настройки GUI администратора и артефакты\nиспользуйте это. set Вместо этого тайм-аут. set Интервал\nокончательные изменения в связи с результатами обзора",
-        "pt": "removido no Estado Mudança;\nnome de nó de objeto simplificado;\nmelhorou a digitação do nó;\nexplicitamente criou cada nó;\nmelhorou o filtro de valor de saídas;\nchamadas garantidas para definir ObjectNotExistsAsync acontece apenas uma vez;\nparâmetro remove data_frame_number\nlimite introduzido para intervalo de votação\nremovido obsoleto reagir configurações de GUI de administrador e artefatos\nusa isto. conjunto Timeout em vez disso. conjunto Intervalo\nmudanças finalizadas devido aos achados de revisão",
-        "nl": "verwijderd opstaat verandering;\ngestroomlijnde objectnodenamen;\nverbeterde knooppunttypering;\nelke node expliciet geschapen;\neen verbeterde outputwaardefilter;\ngegarandeerde oproepen tot het instellen ObjectNotExistsAsync gebeurt slechts eenmaal;\ndata_frame_number parameter verwijderd\ningevoerd limiet voor poll intervall\nverwijderde verouderde reactie admin GUI instellingen en artefacten\ngebruik dit. ingesteld Time-out in plaats van dit. ingesteld Interval\ndefinitieve wijzigingen als gevolg van de bevindingen van de evaluatie",
-        "fr": "de l ' État Changement;\nles noms de nœuds d'objet simplifiés;\nune meilleure dactylographie des nœuds;\na créé explicitement chaque noeud;\namélioration du filtre à valeur de sortie;\ndes appels à définir ObjectNotExistsAsync n'arrive qu'une seule fois;\nparamètre data_frame_number supprimé\nlimite introduite pour l'intervalle de sondagel\nsupprimer les paramètres et les artefacts obsolètes de réaction admin GUI\nutilisez ça. ensemble Temps mort au lieu de ça. ensemble Intervalle\nles changements finalisés en raison des conclusions de l'examen",
-        "it": "rimosso suState Cambiamento;\nnomi dei nodi degli oggetti semplificati;\nmiglioramento della digitazione dei nodi;\nesplicitamente creato ogni nodo;\nfiltro valori di output migliorato;\nchiamate sicure per impostare ObjectNotExistsAsync avviene solo una volta;\nparametro data_frame_number rimosso\nlimite introdotto per intervallo di poll\nrimosso obsoleto reagiscono impostazioni e artefatti GUI amministratore\nusa questo. set Timeout invece di questo. set Intervallo\nmodifiche finalizzate a causa dei risultati di revisione",
-        "es": "estados Unidos Cambio;\nnombres de los nodos de objetos simplificados;\n- mejoramiento de los nodos;\ncreado explícitamente cada nodo;\nfiltro de valor de los productos mejorados;\nllamadas aseguradas para establecer ObjectNotExistsAsync sucede sólo una vez;\nparámetro eliminado data_frame_number\nlímite introducido para el intervalo de votación\nremovido obsoleto reaccionar los ajustes y artefactos del administrador GUI\nusa esto. set Tiempo libre en lugar de esto. set Interval\ncambios finalizados debido a las conclusiones del examen",
-        "pl": "usunięto onState Zmiana;\nusprawnione nazwy węzłów obiektowych;\nulepszone typowanie węzłów;\njasno stworzył każdy węzeł;\nulepszony filtr wartości wyjściowych;\nzapewnione wywołania do ustawienia ObjectNotExistsAsync zdarza się tylko raz;\nusunięty parametr data _ frame _ number\nwprowadzony limit dla sondażu intervall\nusunięte przestarzałe ustawienia interfejsu administratora i artefakty\nużyj tego. zestaw Czas zamiast tego. zestaw Przerwanie\nsfinalizowane zmiany z powodu wyników przeglądu",
-        "uk": "видалено onState Зміна;\nпотокові імена вузлів об'єкта;\nполіпшення типування вузлів;\nявно створенню кожного вузла;\nполіпшений фільтр значень виводів;\nзабезпечені дзвінки Об'єктNotExistsAsync один раз;\nвидалити дані_frame_number параметр\nвведений ліміт для інтервалу опитування\nвидалення застарілих реагувань адміністратора Налаштування та артефакти\nвикористовуйте це. Комплекти Час від цього. Комплекти Інтервал\nзаключені зміни через пошуки рецензій",
-        "zh-cn": "在状态上删除 变化;\n精简对象节点名称;\n改进节点打字;\n明确创建每个节点;\n改进产出值过滤器;\n确保呼叫设置 ObjectNoExists Async只发生一次;\n删除的数据_框架_数字参数\n引入的民调间隔限制l\n删除过时的反应管理界面设置和手工艺品\n用这个 设定 暂停而不是这个。 设定 间隔\n由于审查结果,最终更改"
-      },
-      "1.0.18": {
-        "en": "introduced multiple data_frame_reading and population of multiple devices in adapter object tree",
-        "de": "mehrere data_frame_reading und die population mehrerer geräte in adapter-objektbaum",
-        "ru": "введено несколько data_frame_reading и популяция нескольких устройств в дереве объектов адаптера",
-        "pt": "introduziu vários data_frame_reading e população de vários dispositivos na árvore do objeto do adaptador",
-        "nl": "introduceerde meerdere data_frame_reading en populatie van meerdere apparaten in adapter object boom",
-        "fr": "introduit plusieurs data_frame_reading et la population de plusieurs périphériques dans l'arborescence des objets adaptateur",
-        "it": "introdotto più data_frame_reading e la popolazione di più dispositivi nell'albero dell'oggetto dell'adattatore",
-        "es": "introducido múltiples data_frame_reading y población de múltiples dispositivos en el árbol del objeto del adaptador",
-        "pl": "wprowadziła wiele danych _ frame _ reading i populacja wielu urządzeń w drzewie obiektów adaptera",
-        "uk": "введений кілька даних_frame_reading і населення декількох пристроїв в дерево об'єктів адаптера",
-        "zh-cn": "在适配对象树中引入多个数据_帧_读取和多个设备的组合"
-      },
-      "1.0.17": {
-        "en": "added number of CAN frames to uvr_mode_str\nimproved recognition of retry necessity on 'keep patient' messages from BL-NET",
-        "de": "anzahl der CAN-Rahmen zu uvr_mode_str\nverbesserte Erkennung der Retry-Notwendigkeit auf \"keep patient\"-Nachrichten von BL-NET",
-        "ru": "добавленное количество рам CAN к uvr_mode_str\nулучшенное признание необходимости ретри на сообщения «получить пациента» от BL-NET",
-        "pt": "número adicionado de quadros CAN para uvr_mode_str\nmelhor reconhecimento da necessidade de retificação em mensagens de \"paciente de manutenção\" do BL-NET",
-        "nl": "aantal CAN-frames toegevoegd aan uvr_mode_str\nverbeterde erkenning van de noodzaak opnieuw te proberen op \"houd de patiënt\" berichten van BL-NET",
-        "fr": "ajout du nombre d'images CAN à uvr_mode_str\nune meilleure reconnaissance de la nécessité de maintenir les messages « patients » de BL-NET",
-        "it": "numero aggiunto di cornici CAN a uvr_mode_str\nmiglioramento del riconoscimento della necessità di riprova sui messaggi del \"paziente di mantenimento\" di BL-NET",
-        "es": "número añadido de marcos CAN a uvr_mode_str\nmejor reconocimiento de la necesidad de reingresar en los mensajes de \"paciente alto\" de BL-NET",
-        "pl": "dodana liczba klatek CAN do uvr _ mode _ str\nlepsze rozpoznanie konieczności ponownego rozpoznania wiadomości \"zachować pacjenta\" z BL- NET",
-        "uk": "додано кількість кадрів CAN до uvr_mode_str\nпокращене визнання необхідності птиху на повідомленнях «клімату пацієнта» від BL-NET",
-        "zh-cn": "将 CAN 框架添加到 urr_ mode_ str 中\n在BL-NET的“保留病人”信息上,对重复的必要性的认识得到提高"
-      },
-      "1.0.16": {
-        "en": "improved reading of flow rate\ncode refactoring",
-        "de": "verbesserung des durchflusses\ncode refactoring",
-        "ru": "улучшение показателей расхода\nrefactor",
-        "pt": "melhor leitura da taxa de fluxo\nrefactoring de código",
-        "nl": "verbeterde meting van het debiet\ncode refactoring",
-        "fr": "une meilleure lecture du débit\nrefactoration du code",
-        "it": "lettura migliorata della portata\ncodifica refactoring",
-        "es": "mejor lectura de la tasa de flujo\ncambio de código",
-        "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
-        "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
-        "zh-cn": "改进流量读取率\n代码重构"
-      },
-      "1.0.15": {
-        "en": "refactorings and improved code documentation",
-        "de": "refactorings und verbesserte codedokumentation",
-        "ru": "рефакторинг и совершенствование кодовой документации",
-        "pt": "refatorações e melhor documentação de código",
-        "nl": "refactorings en verbeterde codedocumentatie",
-        "fr": "refacturation et amélioration de la documentation du code",
-        "it": "refactorings e documentazione di codice migliorata",
-        "es": "refactorings and improved code documentation",
-        "pl": "remonty i ulepszona dokumentacja kodowa",
-        "uk": "рефакторинги та вдосконалення документації з кодом",
-        "zh-cn": "重新设计和改进的代码文档"
-      },
-      "1.0.14": {
-        "en": "added frame index to options",
-        "de": "hinzufügen von frame index zu optionen",
-        "ru": "добавленный кадровый индекс к опционам",
-        "pt": "índice de quadro adicionado às opções",
-        "nl": "frame-index toegevoegd aan opties",
-        "fr": "indice de cadre ajouté aux options",
-        "it": "indice frame aggiunto alle opzioni",
-        "es": "índice de marco añadido a las opciones",
-        "pl": "dodany indeks ramki do opcji",
-        "uk": "доданий індекс кадрів до опцій",
-        "zh-cn": "在选项中添加框架索引"
-      }
+    "common": {
+        "name": "ta-blnet",
+        "version": "1.0.19",
+        "messagebox": true,
+        "news": {
+            "1.0.19": {
+                "en": "removed onStateChange;\nstreamlined object node names;\nimproved node typing;\nexplicitely created every node;\nimproved outputs value filter;\nensured calls to setObjectNotExistsAsync happen only once;\nremoved data_frame_number parameter\nintroduced limit for poll intervall\nremoved obsolete react admin GUI settings and artefacts\nuse this.setTimeout instead of this.setInterval\nfinalized changes because of review findings",
+                "de": "auf der Karte Änderung;\nstreamlined objektknotennamen;\nverbesserter knotentyp;\nexplizit jeden knoten erstellt;\nverbesserte ausgangswertefilter;\nsichergestellte Anrufe ObjectNotExistsAsync passiert nur einmal;\nentfernt data_frame_number parameter\neinführungsgrenze für pollenintervall\nentfernte obsolete Reagieren Admin-GUI-Einstellungen und Artefakte\nverwenden. Menge Timeout statt dessen. Menge Interoperabilität\nabschließende änderungen aufgrund der untersuchungsergebnisse",
+                "ru": "удалены на государство изменение;\nупорядоченные имена узлов объекта;\nулучшенный тип узла;\nявно создал каждый узел;\nсовершенствование фильтра значений результатов;\nобеспеченные призывы ObjectNotExistsAsync происходит только один раз;\nудаленный параметр_frame_name\nвведенный предел для интервала опросаl\nудаленные устаревшие настройки GUI администратора и артефакты\nиспользуйте это. set Вместо этого тайм-аут. set Интервал\nокончательные изменения в связи с результатами обзора",
+                "pt": "removido no Estado Mudança;\nnome de nó de objeto simplificado;\nmelhorou a digitação do nó;\nexplicitamente criou cada nó;\nmelhorou o filtro de valor de saídas;\nchamadas garantidas para definir ObjectNotExistsAsync acontece apenas uma vez;\nparâmetro remove data_frame_number\nlimite introduzido para intervalo de votação\nremovido obsoleto reagir configurações de GUI de administrador e artefatos\nusa isto. conjunto Timeout em vez disso. conjunto Intervalo\nmudanças finalizadas devido aos achados de revisão",
+                "nl": "verwijderd opstaat verandering;\ngestroomlijnde objectnodenamen;\nverbeterde knooppunttypering;\nelke node expliciet geschapen;\neen verbeterde outputwaardefilter;\ngegarandeerde oproepen tot het instellen ObjectNotExistsAsync gebeurt slechts eenmaal;\ndata_frame_number parameter verwijderd\ningevoerd limiet voor poll intervall\nverwijderde verouderde reactie admin GUI instellingen en artefacten\ngebruik dit. ingesteld Time-out in plaats van dit. ingesteld Interval\ndefinitieve wijzigingen als gevolg van de bevindingen van de evaluatie",
+                "fr": "de l ' État Changement;\nles noms de nœuds d'objet simplifiés;\nune meilleure dactylographie des nœuds;\na créé explicitement chaque noeud;\namélioration du filtre à valeur de sortie;\ndes appels à définir ObjectNotExistsAsync n'arrive qu'une seule fois;\nparamètre data_frame_number supprimé\nlimite introduite pour l'intervalle de sondagel\nsupprimer les paramètres et les artefacts obsolètes de réaction admin GUI\nutilisez ça. ensemble Temps mort au lieu de ça. ensemble Intervalle\nles changements finalisés en raison des conclusions de l'examen",
+                "it": "rimosso suState Cambiamento;\nnomi dei nodi degli oggetti semplificati;\nmiglioramento della digitazione dei nodi;\nesplicitamente creato ogni nodo;\nfiltro valori di output migliorato;\nchiamate sicure per impostare ObjectNotExistsAsync avviene solo una volta;\nparametro data_frame_number rimosso\nlimite introdotto per intervallo di poll\nrimosso obsoleto reagiscono impostazioni e artefatti GUI amministratore\nusa questo. set Timeout invece di questo. set Intervallo\nmodifiche finalizzate a causa dei risultati di revisione",
+                "es": "estados Unidos Cambio;\nnombres de los nodos de objetos simplificados;\n- mejoramiento de los nodos;\ncreado explícitamente cada nodo;\nfiltro de valor de los productos mejorados;\nllamadas aseguradas para establecer ObjectNotExistsAsync sucede sólo una vez;\nparámetro eliminado data_frame_number\nlímite introducido para el intervalo de votación\nremovido obsoleto reaccionar los ajustes y artefactos del administrador GUI\nusa esto. set Tiempo libre en lugar de esto. set Interval\ncambios finalizados debido a las conclusiones del examen",
+                "pl": "usunięto onState Zmiana;\nusprawnione nazwy węzłów obiektowych;\nulepszone typowanie węzłów;\njasno stworzył każdy węzeł;\nulepszony filtr wartości wyjściowych;\nzapewnione wywołania do ustawienia ObjectNotExistsAsync zdarza się tylko raz;\nusunięty parametr data _ frame _ number\nwprowadzony limit dla sondażu intervall\nusunięte przestarzałe ustawienia interfejsu administratora i artefakty\nużyj tego. zestaw Czas zamiast tego. zestaw Przerwanie\nsfinalizowane zmiany z powodu wyników przeglądu",
+                "uk": "видалено onState Зміна;\nпотокові імена вузлів об'єкта;\nполіпшення типування вузлів;\nявно створенню кожного вузла;\nполіпшений фільтр значень виводів;\nзабезпечені дзвінки Об'єктNotExistsAsync один раз;\nвидалити дані_frame_number параметр\nвведений ліміт для інтервалу опитування\nвидалення застарілих реагувань адміністратора Налаштування та артефакти\nвикористовуйте це. Комплекти Час від цього. Комплекти Інтервал\nзаключені зміни через пошуки рецензій",
+                "zh-cn": "在状态上删除 变化;\n精简对象节点名称;\n改进节点打字;\n明确创建每个节点;\n改进产出值过滤器;\n确保呼叫设置 ObjectNoExists Async只发生一次;\n删除的数据_框架_数字参数\n引入的民调间隔限制l\n删除过时的反应管理界面设置和手工艺品\n用这个 设定 暂停而不是这个。 设定 间隔\n由于审查结果,最终更改"
+            },
+            "1.0.18": {
+                "en": "introduced multiple data_frame_reading and population of multiple devices in adapter object tree",
+                "de": "mehrere data_frame_reading und die population mehrerer geräte in adapter-objektbaum",
+                "ru": "введено несколько data_frame_reading и популяция нескольких устройств в дереве объектов адаптера",
+                "pt": "introduziu vários data_frame_reading e população de vários dispositivos na árvore do objeto do adaptador",
+                "nl": "introduceerde meerdere data_frame_reading en populatie van meerdere apparaten in adapter object boom",
+                "fr": "introduit plusieurs data_frame_reading et la population de plusieurs périphériques dans l'arborescence des objets adaptateur",
+                "it": "introdotto più data_frame_reading e la popolazione di più dispositivi nell'albero dell'oggetto dell'adattatore",
+                "es": "introducido múltiples data_frame_reading y población de múltiples dispositivos en el árbol del objeto del adaptador",
+                "pl": "wprowadziła wiele danych _ frame _ reading i populacja wielu urządzeń w drzewie obiektów adaptera",
+                "uk": "введений кілька даних_frame_reading і населення декількох пристроїв в дерево об'єктів адаптера",
+                "zh-cn": "在适配对象树中引入多个数据_帧_读取和多个设备的组合"
+            },
+            "1.0.17": {
+                "en": "added number of CAN frames to uvr_mode_str\nimproved recognition of retry necessity on 'keep patient' messages from BL-NET",
+                "de": "anzahl der CAN-Rahmen zu uvr_mode_str\nverbesserte Erkennung der Retry-Notwendigkeit auf \"keep patient\"-Nachrichten von BL-NET",
+                "ru": "добавленное количество рам CAN к uvr_mode_str\nулучшенное признание необходимости ретри на сообщения «получить пациента» от BL-NET",
+                "pt": "número adicionado de quadros CAN para uvr_mode_str\nmelhor reconhecimento da necessidade de retificação em mensagens de \"paciente de manutenção\" do BL-NET",
+                "nl": "aantal CAN-frames toegevoegd aan uvr_mode_str\nverbeterde erkenning van de noodzaak opnieuw te proberen op \"houd de patiënt\" berichten van BL-NET",
+                "fr": "ajout du nombre d'images CAN à uvr_mode_str\nune meilleure reconnaissance de la nécessité de maintenir les messages « patients » de BL-NET",
+                "it": "numero aggiunto di cornici CAN a uvr_mode_str\nmiglioramento del riconoscimento della necessità di riprova sui messaggi del \"paziente di mantenimento\" di BL-NET",
+                "es": "número añadido de marcos CAN a uvr_mode_str\nmejor reconocimiento de la necesidad de reingresar en los mensajes de \"paciente alto\" de BL-NET",
+                "pl": "dodana liczba klatek CAN do uvr _ mode _ str\nlepsze rozpoznanie konieczności ponownego rozpoznania wiadomości \"zachować pacjenta\" z BL- NET",
+                "uk": "додано кількість кадрів CAN до uvr_mode_str\nпокращене визнання необхідності птиху на повідомленнях «клімату пацієнта» від BL-NET",
+                "zh-cn": "将 CAN 框架添加到 urr_ mode_ str 中\n在BL-NET的“保留病人”信息上,对重复的必要性的认识得到提高"
+            },
+            "1.0.16": {
+                "en": "improved reading of flow rate\ncode refactoring",
+                "de": "verbesserung des durchflusses\ncode refactoring",
+                "ru": "улучшение показателей расхода\nrefactor",
+                "pt": "melhor leitura da taxa de fluxo\nrefactoring de código",
+                "nl": "verbeterde meting van het debiet\ncode refactoring",
+                "fr": "une meilleure lecture du débit\nrefactoration du code",
+                "it": "lettura migliorata della portata\ncodifica refactoring",
+                "es": "mejor lectura de la tasa de flujo\ncambio de código",
+                "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
+                "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
+                "zh-cn": "改进流量读取率\n代码重构"
+            },
+            "1.0.15": {
+                "en": "refactorings and improved code documentation",
+                "de": "refactorings und verbesserte codedokumentation",
+                "ru": "рефакторинг и совершенствование кодовой документации",
+                "pt": "refatorações e melhor documentação de código",
+                "nl": "refactorings en verbeterde codedocumentatie",
+                "fr": "refacturation et amélioration de la documentation du code",
+                "it": "refactorings e documentazione di codice migliorata",
+                "es": "refactorings and improved code documentation",
+                "pl": "remonty i ulepszona dokumentacja kodowa",
+                "uk": "рефакторинги та вдосконалення документації з кодом",
+                "zh-cn": "重新设计和改进的代码文档"
+            },
+            "1.0.14": {
+                "en": "added frame index to options",
+                "de": "hinzufügen von frame index zu optionen",
+                "ru": "добавленный кадровый индекс к опционам",
+                "pt": "índice de quadro adicionado às opções",
+                "nl": "frame-index toegevoegd aan opties",
+                "fr": "indice de cadre ajouté aux options",
+                "it": "indice frame aggiunto alle opzioni",
+                "es": "índice de marco añadido a las opciones",
+                "pl": "dodany indeks ramki do opcji",
+                "uk": "доданий індекс кадрів до опцій",
+                "zh-cn": "在选项中添加框架索引"
+            }
+        },
+        "titleLang": {
+            "en": "TA BL-NET",
+            "de": "TA BL-NET",
+            "ru": "ТА BL-NET",
+            "pt": "TA BL-NET",
+            "nl": "TA BL-NET",
+            "fr": "TA BL-NET",
+            "it": "TA BL-NET",
+            "es": "TA BL-NET",
+            "pl": "TA BL-NET",
+            "uk": "TA BL-NET",
+            "zh-cn": "TA BL-NET"
+        },
+        "desc": {
+            "en": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
+            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des-Controllers von Technische Alternative über BL-NET.",
+            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера от Technische Alternative с использованием BL-NET.",
+            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador da Technische Alternative usando BL-NET.",
+            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de-controller van Technische Alternative met behulp van BL-NET.",
+            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur de Technische Alternative via BL-NET.",
+            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller di Technische Alternative tramite BL-NET.",
+            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador de Technische Alternative utilizando BL-NET.",
+            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika firmy Technische Alternative za pomocą BL-NET.",
+            "uk": "Адаптер ioBroker для читання входів і виходів контролера від Technische Alternative за допомогою BL-NET.",
+            "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 控制器的输入和输出的 ioBroker 适配器。"
+        },
+        "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
+        "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "ta-blnet.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
+        "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "climate-control",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "supportCustoms": false,
+        "eraseOnUpload": true,
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.0.23"
+            }
+        ]
     },
-    "titleLang": {
-      "en": "TA BL-NET",
-      "de": "TA BL-NET",
-      "ru": "ТА BL-NET",
-      "pt": "TA BL-NET",
-      "nl": "TA BL-NET",
-      "fr": "TA BL-NET",
-      "it": "TA BL-NET",
-      "es": "TA BL-NET",
-      "pl": "TA BL-NET",
-      "uk": "TA BL-NET",
-      "zh-cn": "TA BL-NET"
+    "native": {
+        "ip_address": "192.168.2.77",
+        "port": 40000,
+        "poll_interval": 30
     },
-    "desc": {
-      "en": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
-      "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des-Controllers von Technische Alternative über BL-NET.",
-      "ru": "Адаптер ioBroker для чтения входов и выходов контроллера от Technische Alternative с использованием BL-NET.",
-      "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador da Technische Alternative usando BL-NET.",
-      "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de-controller van Technische Alternative met behulp van BL-NET.",
-      "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur de Technische Alternative via BL-NET.",
-      "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller di Technische Alternative tramite BL-NET.",
-      "es": "Un adaptador ioBroker para leer entradas y salidas del controlador de Technische Alternative utilizando BL-NET.",
-      "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika firmy Technische Alternative za pomocą BL-NET.",
-      "uk": "Адаптер ioBroker для читання входів і виходів контролера від Technische Alternative за допомогою BL-NET.",
-      "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 控制器的输入和输出的 ioBroker 适配器。"
-    },
-    "authors": [
-      "Klaus Weber <klausatweberesprit@gmail.com>"
-    ],
-    "keywords": [
-      "BL-NET",
-      "UVR1611",
-      "UVR16x2",
-      "solar",
-      "BUSO",
-      "Technische",
-      "Alternative"
-    ],
-    "licenseInformation": {
-      "type": "free",
-      "license": "MIT"
-    },
-    "platform": "Javascript/Node.js",
-    "icon": "ta-blnet.png",
-    "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
-    "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
-    "loglevel": "info",
-    "tier": 3,
-    "mode": "daemon",
-    "type": "climate-control",
-    "compact": true,
-    "connectionType": "local",
-    "dataSource": "poll",
-    "adminUI": {
-      "config": "json"
-    },
-    "supportCustoms": false,
-    "eraseOnUpload": true,
-    "dependencies": [
-      {
-        "js-controller": ">=6.0.11"
-      }
-    ],
-    "globalDependencies": [
-      {
-        "admin": ">=7.0.23"
-      }
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "folder",
+            "common": {
+                "name": "Information",
+                "role": "meta"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
     ]
-  },
-  "native": {
-    "ip_address": "192.168.2.77",
-    "port": 40000,
-    "poll_interval": 30
-  },
-  "objects": [],
-  "instanceObjects": [
-    {
-      "_id": "info",
-      "type": "folder",
-      "common": {
-        "name": "Information",
-        "role": "meta"
-      },
-      "native": {}
-    },
-    {
-      "_id": "info.connection",
-      "type": "state",
-      "common": {
-        "role": "indicator.connected",
-        "name": "Device or service connected",
-        "type": "boolean",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    }
-  ]
 }
