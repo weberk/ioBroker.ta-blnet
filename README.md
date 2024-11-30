@@ -1,19 +1,19 @@
-<img src="admin/uvr16xx-blnet.png" alt="Logo" style="width:20%;" />
+<img src="admin/ta-blnet.png" alt="Logo" style="width:20%;" />
 
-# ioBroker.uvr16xx-blnet
+# ioBroker.ta-blnet
 
-[![NPM version](https://img.shields.io/npm/v/iobroker.uvr16xx-blnet.svg)](https://www.npmjs.com/package/iobroker.uvr16xx-blnet)
-[![Downloads](https://img.shields.io/npm/dm/iobroker.uvr16xx-blnet.svg)](https://www.npmjs.com/package/iobroker.uvr16xx-blnet)
-![Number of Installations](https://iobroker.live/badges/uvr16xx-blnet-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/uvr16xx-blnet-stable.svg)
+[![NPM version](https://img.shields.io/npm/v/iobroker.ta-blnet.svg)](https://www.npmjs.com/package/iobroker.ta-blnet)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.ta-blnet.svg)](https://www.npmjs.com/package/iobroker.ta-blnet)
+![Number of Installations](https://iobroker.live/badges/ta-blnet-installed.svg)
+![Current version in stable repository](https://iobroker.live/badges/ta-blnet-stable.svg)
 
-[![NPM](https://nodei.co/npm/iobroker.uvr16xx-blnet.png?downloads=true)](https://nodei.co/npm/iobroker.uvr16xx-blnet/)
+[![NPM](https://nodei.co/npm/iobroker.ta-blnet.png?downloads=true)](https://nodei.co/npm/iobroker.ta-blnet/)
 
-**Tests:** ![Test and Release](https://github.com/weberk/ioBroker.uvr16xx-blnet/workflows/Test%20and%20Release/badge.svg)
+**Tests:** ![Test and Release](https://github.com/weberk/ioBroker.ta-blnet/workflows/Test%20and%20Release/badge.svg)
 
-## uvr16xx-blnet adapter for ioBroker
+## ta-blnet adapter for ioBroker
 
-An ioBroker adapter for reading data from one or up to eight UVRxx controllers by [Technische Alternative](http://www.ta.co.at) using BL-NET.
+An ioBroker adapter for reading data from one or up to eight climate controllers by [Technische Alternative](http://www.ta.co.at) using BL-NET.
 
 After installation, you need to create an instance and configure custom values for the IP address, port number, and update interval that the instance should use.
 
@@ -26,6 +26,10 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet
+- published new package to npm
+
 ### 1.0.19 (2024-11-29)
 -   removed onStateChange;
 -   streamlined object node names;

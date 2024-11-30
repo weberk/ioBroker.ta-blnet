@@ -23,7 +23,7 @@ class Uvr16xxBlNet extends utils.Adapter {
         // Call the parent constructor with the adapter name and options
         super({
             ...options,
-            name: "uvr16xx-blnet",
+            name: "ta-blnet",
         });
         this.on("ready", this.onReady.bind(this)); // Bind the onReady method
         //this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method

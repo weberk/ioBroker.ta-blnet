@@ -1,12 +1,12 @@
 {
-  "name": "iobroker.uvr16xx-blnet",
+  "name": "iobroker.ta-blnet",
   "version": "1.0.19",
-  "description": "An ioBroker adapter for reading inputs and outputs of the UVRxx controller from Technische Alternative using BL-NET.",
+  "description": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
   "author": {
     "name": "Klaus Weber",
     "email": "klausatweberesprit@gmail.com"
   },
-  "homepage": "https://github.com/weberk/ioBroker.uvr16xx-blnet",
+  "homepage": "https://github.com/weberk/ioBroker.ta-blnet",
   "license": "MIT",
   "keywords": [
     "ioBroker",
@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/weberk/ioBroker.uvr16xx-blnet.git"
+    "url": "git+https://github.com/weberk/ioBroker.ta-blnet.git"
   },
   "engines": {
     "node": ">= 18"
@@ -79,7 +79,7 @@
     "release-major": "release-script major --yes"
   },
   "bugs": {
-    "url": "https://github.com/weberk/ioBroker.uvr16xx-blnet/issues"
+    "url": "https://github.com/weberk/ioBroker.ta-blnet/issues"
   },
   "readmeFilename": "README.md"
 }

@@ -1,9 +1,9 @@
 {
     "cli": true,
     "target": "directory",
-    "adapterName": "uvr16xx-blnet",
-    "title": "TA UVRxx & BL-NET",
-    "description": "An ioBroker adapter for reading inputs and outputs of the UVRxx controller from Technische Alternative.",
+    "adapterName": "ta-blnet",
+    "title": "TA BL-NET",
+    "description": "An ioBroker adapter for reading inputs and outputs of the climate controllers from Technische Alternative.",
     "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
     "expert": "yes",
     "features": ["adapter"],

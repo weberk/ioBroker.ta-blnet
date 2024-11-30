@@ -1,6 +1,6 @@
 {
   "common": {
-    "name": "uvr16xx-blnet",
+    "name": "ta-blnet",
     "version": "1.0.19",
     "messagebox": true,
     "news": {
@@ -97,30 +97,30 @@
       }
     },
     "titleLang": {
-      "en": "TA UVRxx & BL-NET",
-      "de": "TA UVRxx & BL-NET",
-      "ru": "ТА UVRxx и BL-NET",
-      "pt": "TA UVRxx e BL-NET",
-      "nl": "TA UVRxx & BL-NET",
-      "fr": "TA UVRxx et BL-NET",
-      "it": "TA UVRxx e BL-NET",
-      "es": "TA UVRxx y BL-NET",
-      "pl": "TA UVRxx i BL-NET",
-      "uk": "TA UVRxx & BL-NET",
-      "zh-cn": "TA UVRxx 和 BL-NET"
+      "en": "TA BL-NET",
+      "de": "TA BL-NET",
+      "ru": "ТА BL-NET",
+      "pt": "TA BL-NET",
+      "nl": "TA BL-NET",
+      "fr": "TA BL-NET",
+      "it": "TA BL-NET",
+      "es": "TA BL-NET",
+      "pl": "TA BL-NET",
+      "uk": "TA BL-NET",
+      "zh-cn": "TA BL-NET"
     },
     "desc": {
-      "en": "An ioBroker adapter for reading inputs and outputs of the UVRxx controller from Technische Alternative using BL-NET.",
-      "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des UVRxx-Controllers von Technische Alternative über BL-NET.",
-      "ru": "Адаптер ioBroker для чтения входов и выходов контроллера UVRxx от Technische Alternative с использованием BL-NET.",
-      "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador UVRxx da Technische Alternative usando BL-NET.",
-      "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de UVRxx-controller van Technische Alternative met behulp van BL-NET.",
-      "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur UVRxx de Technische Alternative via BL-NET.",
-      "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller UVRxx di Technische Alternative tramite BL-NET.",
-      "es": "Un adaptador ioBroker para leer entradas y salidas del controlador UVRxx de Technische Alternative utilizando BL-NET.",
-      "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika UVRxx firmy Technische Alternative za pomocą BL-NET.",
-      "uk": "Адаптер ioBroker для читання входів і виходів контролера UVRxx від Technische Alternative за допомогою BL-NET.",
-      "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 UVRxx 控制器的输入和输出的 ioBroker 适配器。"
+      "en": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
+      "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des-Controllers von Technische Alternative über BL-NET.",
+      "ru": "Адаптер ioBroker для чтения входов и выходов контроллера от Technische Alternative с использованием BL-NET.",
+      "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador da Technische Alternative usando BL-NET.",
+      "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de-controller van Technische Alternative met behulp van BL-NET.",
+      "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur de Technische Alternative via BL-NET.",
+      "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller di Technische Alternative tramite BL-NET.",
+      "es": "Un adaptador ioBroker para leer entradas y salidas del controlador de Technische Alternative utilizando BL-NET.",
+      "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika firmy Technische Alternative za pomocą BL-NET.",
+      "uk": "Адаптер ioBroker для читання входів і виходів контролера від Technische Alternative за допомогою BL-NET.",
+      "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 控制器的输入和输出的 ioBroker 适配器。"
     },
     "authors": [
       "Klaus Weber <klausatweberesprit@gmail.com>"
@@ -139,10 +139,10 @@
       "license": "MIT"
     },
     "platform": "Javascript/Node.js",
-    "icon": "uvr16xx-blnet.png",
+    "icon": "ta-blnet.png",
     "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.uvr16xx-blnet/main/admin/uvr16xx-blnet.png",
-    "readme": "https://github.com/weberk/ioBroker.uvr16xx-blnet/blob/main/README.md",
+    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
+    "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
     "loglevel": "info",
     "tier": 3,
     "mode": "daemon",
