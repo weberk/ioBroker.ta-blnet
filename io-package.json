@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "messagebox": true,
     "news": {
+      "1.0.20": {
+        "en": "renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet\npublished new package to npm",
+        "de": "umbenannt Adapter und git repo von ioBroker.uvr16xx-blnet zu ioBroker. ta-blnet\nveröffentlicht neues paket zu npm",
+        "ru": "переименован в адаптер и git repo от ioBroker.uvr16xx-blnet до ioBroker. ta-blnet\nопубликованный новый пакет для npm",
+        "pt": "renomeado adaptador e git repo de ioBroker.uvr16xx-blnet para ioBroker. Ta-blnet\npublicado novo pacote para npm",
+        "nl": "hernoemde adapter en git repo van ioBroker.uvr16xx-blnet naar ioBroker. ta-blnet\ngepubliceerd nieuw pakket naar npm",
+        "fr": "rebaptisé adaptateur et git repo de ioBroker.uvr16xx-blnet à ioBroker. ta-blnet\nnouveau paquet publié à npm",
+        "it": "adattatore rinominato e repo git da ioBroker.uvr16xx-blnet a ioBroker. Ta-blnet\npubblicato nuovo pacchetto a npm",
+        "es": "adaptador renombrado y git repo desde ioBroker.uvr16xx-blnet a ioBroker. ta-blnet\npublicado nuevo paquete para npm",
+        "pl": "zmienić nazwę adaptera i git repo z jOBroker.uvr16xx-blnet do jOBroker. ta- blnet\nopublikowany nowy pakiet do npm",
+        "uk": "перейменований адаптер і git repo від ioBroker.uvr16xx-blnet до ioBroker. та-блнет\nопубліковано новий пакет на npm",
+        "zh-cn": "将适配器和git repo从ioBroker.uvr16xx-blnet更名为ioBroker. 双蓝网\n已发布新软件包到 npm"
+      },
       "1.0.19": {
         "en": "removed onStateChange;\nstreamlined object node names;\nimproved node typing;\nexplicitely created every node;\nimproved outputs value filter;\nensured calls to setObjectNotExistsAsync happen only once;\nremoved data_frame_number parameter\nintroduced limit for poll intervall\nremoved obsolete react admin GUI settings and artefacts\nuse this.setTimeout instead of this.setInterval\nfinalized changes because of review findings",
         "de": "auf der Karte Änderung;\nstreamlined objektknotennamen;\nverbesserter knotentyp;\nexplizit jeden knoten erstellt;\nverbesserte ausgangswertefilter;\nsichergestellte Anrufe ObjectNotExistsAsync passiert nur einmal;\nentfernt data_frame_number parameter\neinführungsgrenze für pollenintervall\nentfernte obsolete Reagieren Admin-GUI-Einstellungen und Artefakte\nverwenden. Menge Timeout statt dessen. Menge Interoperabilität\nabschließende änderungen aufgrund der untersuchungsergebnisse",
@@ -81,19 +94,6 @@
         "pl": "dodany indeks ramki do opcji",
         "uk": "доданий індекс кадрів до опцій",
         "zh-cn": "在选项中添加框架索引"
-      },
-      "1.0.13": {
-        "en": "improved CAN bus mode reading",
-        "de": "verbesserte CAN-Busmodusmessung",
-        "ru": "улучшенный режим автобуса",
-        "pt": "melhor leitura do modo de ônibus CAN",
-        "nl": "verbeterde CAN bus modus lezen",
-        "fr": "meilleure lecture du mode de bus CAN",
-        "it": "migliore lettura della modalità CAN bus",
-        "es": "mejora del modo de autobús CAN",
-        "pl": "ulepszone czytanie magistrali CAN",
-        "uk": "покращений читання режиму CAN",
-        "zh-cn": "改进的 CAN 总线模式读取"
       }
     },
     "titleLang": {

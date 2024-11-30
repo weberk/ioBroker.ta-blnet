@@ -26,11 +26,14 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
-- renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet
-- published new package to npm
+
+### 1.0.20 (2024-11-30)
+
+-   renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet
+-   published new package to npm
 
 ### 1.0.19 (2024-11-29)
+
 -   removed onStateChange;
 -   streamlined object node names;
 -   improved node typing;
