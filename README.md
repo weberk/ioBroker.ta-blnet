@@ -26,10 +26,15 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   fixed negative current_heat_power
+
 ### 1.0.21 (2024-12-01)
 
 -   added 2DL reading
--   renamed main class to TaBlnet and port to 'TA port' 
+-   renamed main class to TaBlnet and port to 'TA port'
 -   fixed negative current_heat_power
 
 ### 1.0.20 (2024-11-30)
