@@ -660,9 +660,19 @@ class TaBlnet extends utils.Adapter {
 
                         let unit;
                         let currentRole = "";
+                        let finalValue = value;
                         if (key.startsWith("current_heat_power")) {
                             unit = "kW";
                             currentRole = "value.power";
+                            // Check for negative values and convert to two's complement
+                            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
+                                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
+                            }
+                            // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
+                            // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
+                            finalValue = finalValue * 10; // Convert from 1/10 kW to kW
+                            finalValue = finalValue / 256; // Adjust for the factor of 256 used in the encoding
+                            finalValue = finalValue / 100; // Convert to kW with decimal places
                         } else if (key.startsWith("total_heat_energy")) {
                             unit = "kWh";
                             currentRole = "value.energy";
@@ -681,8 +691,9 @@ class TaBlnet extends utils.Adapter {
                                 native: {},
                             });
                         }
+                        this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + unit);
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: finalValue,
                             ack: true
                         });
                     }
@@ -943,22 +954,20 @@ class TaBlnet extends utils.Adapter {
         // Thermal energy counters 1 active?
         if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] &
             indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
-            const lowLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]];
-            const lowHigh1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]];
-            const highLow1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]];
-            const highHigh1 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]];
 
-            const hundredths1 = (lowLow1 * 10) / 256;
-            let power1 = (10 * this.byte2int(lowHigh1, highLow1, highHigh1, 0) + hundredths1) / 100;
-
-            // Check for negative sign bit
-            if (highHigh1 & 0x80) { // Check if the highest bit (8th bit) is set
-                power1 = (10 * (this.byte2int(lowHigh1, highLow1, highHigh1, 0) - 65536) - hundredths1) / 100;
-            }
-
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = power1;
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] = this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 +
-                this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0;
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = this.byte2int(
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]], // lowLow1
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]], // lowHigh1
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]], // highLow1
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]] // highHigh1
+            );
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] =
+                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]],
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 +
+                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]],
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0;
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
@@ -966,22 +975,20 @@ class TaBlnet extends utils.Adapter {
         // Thermal energy counters 2 active?
         if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[0]] &
             indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
-            const lowLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]];
-            const lowHigh2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]];
-            const highLow2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]];
-            const highHigh2 = response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]];
 
-            const hundredths2 = (lowLow2 * 10) / 256;
-            let power2 = (10 * this.byte2int(lowHigh2, highLow2, highHigh2, 0) + hundredths2) / 100;
-
-            // Check for negative sign bit
-            if (highHigh2 & 0x80) { // Check if the highest bit (8th bit) is set
-                power2 = (10 * (this.byte2int(lowHigh2, highLow2, highHigh2, 0) - 65536) - hundredths2) / 100;
-            }
-
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = power2;
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] = this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 +
-                this.byte2short(response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]], response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0;
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = this.byte2int(
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]], // lowLow2
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]], // lowHigh2
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]], // highLow2
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]] // highHigh2
+            );
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] =
+                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]],
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 +
+                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]],
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0;
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
