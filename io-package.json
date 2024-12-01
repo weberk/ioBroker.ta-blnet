@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.21",
+    "version": "1.0.22",
     "messagebox": true,
     "news": {
+      "1.0.22": {
+        "en": "fixed negative current_heat_power",
+        "de": "fester negativer strom_heat_power",
+        "ru": "фиксированный отрицательный ток_тепл_мощь",
+        "pt": "corrente negativa fixa_heat_power",
+        "nl": "vaste negatieve stroom_warmte_vermogen",
+        "fr": "valeur négative de courant_heat_power",
+        "it": "corrente negativa fissa_heat_power",
+        "es": "corriente negativa fija_heat_power",
+        "pl": "stały prąd ujemny _ ciepło _ moc",
+        "uk": "фіксований негативний струм_heat_power",
+        "zh-cn": "固定负电流_热力_功率"
+      },
       "1.0.21": {
         "en": "added 2DL reading\nrenamed main class to TaBlnet and port to 'TA port' \nfixed negative current_heat_power",
         "de": "2DL Lesen\numbenannt Hauptklasse zu TaBlnet und Hafen zu 'TA-Port '\nfester negativer strom_heat_power",
@@ -81,19 +94,6 @@
         "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
         "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
         "zh-cn": "改进流量读取率\n代码重构"
-      },
-      "1.0.15": {
-        "en": "refactorings and improved code documentation",
-        "de": "refactorings und verbesserte codedokumentation",
-        "ru": "рефакторинг и совершенствование кодовой документации",
-        "pt": "refatorações e melhor documentação de código",
-        "nl": "refactorings en verbeterde codedocumentatie",
-        "fr": "refacturation et amélioration de la documentation du code",
-        "it": "refactorings e documentazione di codice migliorata",
-        "es": "refactorings and improved code documentation",
-        "pl": "remonty i ulepszona dokumentacja kodowa",
-        "uk": "рефакторинги та вдосконалення документації з кодом",
-        "zh-cn": "重新设计和改进的代码文档"
       }
     },
     "titleLang": {
