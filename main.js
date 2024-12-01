@@ -9,6 +9,7 @@
 const utils = require("@iobroker/adapter-core");
 // The net module is used to create TCP clients and servers
 const net = require("node:net");
+const os = require("node:os");
 
 /**
  * Adapter class for UVR16xx BL-NET devices.
@@ -59,7 +60,13 @@ class TaBlnet extends utils.Adapter {
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
-
+        // check whats in the config
+        const cpus = os.cpus();
+        cpus.forEach((cpu, index) => {
+            this.log.debug(`CPU ${index}: ${JSON.stringify(cpu)}`);
+        });
+        const cpuModel = cpus && cpus[0] && cpus[0].model ? cpus[0].model : 'unknown';
+        this.log.debug("CPU Model: " + cpuModel + " cpus[0]:" + JSON.stringify(cpus[0]));
         // Start polling
         this.startPolling();
     }
