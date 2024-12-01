@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.20",
+    "version": "1.0.21",
     "messagebox": true,
     "news": {
+      "1.0.21": {
+        "en": "added 2DL reading\nrenamed main class to TaBlnet and port to 'TA port' \nfixed negative current_heat_power",
+        "de": "2DL Lesen\numbenannt Hauptklasse zu TaBlnet und Hafen zu 'TA-Port '\nfester negativer strom_heat_power",
+        "ru": "добавлено 2DL чтение\nпереименовал основной класс в TaBlnet и порт в порт TA \"\nфиксированный отрицательный ток_тепл_мощь",
+        "pt": "adicionado 2DL leitura\nrenomeado classe principal para TaBlnet e porta para porta de 'TA '\ncorrente negativa fixa_heat_power",
+        "nl": "2DL-lezen toegevoegd\nhernoemde hoofdklasse naar TaBlnet en poort naar 'TA poort '\nvaste negatieve stroom_warmte_vermogen",
+        "fr": "ajouté 2DL lecture\nrebaptisé classe principale en TaBlnet et port en port 'TA '\nvaleur négative de courant_heat_power",
+        "it": "aggiunto 2DL lettura\nrinominato classe principale a TaBlnet e porto a 'TA porto '\ncorrente negativa fissa_heat_power",
+        "es": "añadido 2DL lectura\nrenombrada clase principal a TaBlnet y puerto a puerto de 'TA '\ncorriente negativa fija_heat_power",
+        "pl": "dodano odczyt 2DL\nzmieniono nazwę klasy głównej na TaBlnet i port na 'TA port'\nstały prąd ujemny _ ciepło _ moc",
+        "uk": "додано 2DL читання\nперейменувати головний клас в Таблет і порт в порт \"ТА\" Р\nфіксований негативний струм_heat_power",
+        "zh-cn": "添加 2DL 读取\n将主类更名为 TaBlnet , 将端口更名为 'TA' 端口  '\n固定负电流_热力_功率"
+      },
       "1.0.20": {
         "en": "renamed adapter and git repo from ioBroker.uvr16xx-blnet to ioBroker.ta-blnet\npublished new package to npm",
         "de": "umbenannt Adapter und git repo von ioBroker.uvr16xx-blnet zu ioBroker. ta-blnet\nveröffentlicht neues paket zu npm",
@@ -81,19 +94,6 @@
         "pl": "remonty i ulepszona dokumentacja kodowa",
         "uk": "рефакторинги та вдосконалення документації з кодом",
         "zh-cn": "重新设计和改进的代码文档"
-      },
-      "1.0.14": {
-        "en": "added frame index to options",
-        "de": "hinzufügen von frame index zu optionen",
-        "ru": "добавленный кадровый индекс к опционам",
-        "pt": "índice de quadro adicionado às opções",
-        "nl": "frame-index toegevoegd aan opties",
-        "fr": "indice de cadre ajouté aux options",
-        "it": "indice frame aggiunto alle opzioni",
-        "es": "índice de marco añadido a las opciones",
-        "pl": "dodany indeks ramki do opcji",
-        "uk": "доданий індекс кадрів до опцій",
-        "zh-cn": "在选项中添加框架索引"
       }
     },
     "titleLang": {
