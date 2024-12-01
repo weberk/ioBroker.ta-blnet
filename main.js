@@ -952,7 +952,7 @@ class TaBlnet extends utils.Adapter {
             let power1 = (10 * this.byte2int(lowHigh1, highLow1, highHigh1, 0) + hundredths1) / 100;
 
             // Check for negative sign bit
-            if (highHigh1 > 32767) {
+            if (highHigh1 & 0x80) { // Check if the highest bit (8th bit) is set
                 power1 = (10 * (this.byte2int(lowHigh1, highLow1, highHigh1, 0) - 65536) - hundredths1) / 100;
             }
 
@@ -975,7 +975,7 @@ class TaBlnet extends utils.Adapter {
             let power2 = (10 * this.byte2int(lowHigh2, highLow2, highHigh2, 0) + hundredths2) / 100;
 
             // Check for negative sign bit
-            if (highHigh2 > 32767) {
+            if (highHigh2 & 0x80) { // Check if the highest bit (8th bit) is set
                 power2 = (10 * (this.byte2int(lowHigh2, highLow2, highHigh2, 0) - 65536) - hundredths2) / 100;
             }
 

@@ -31,6 +31,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 
 -   added 2DL reading
 -   renamed main class to TaBlnet and port to 'TA port' 
+-   fixed negative current_heat_power
 
 ### 1.0.20 (2024-11-30)
 
