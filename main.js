@@ -65,7 +65,7 @@ class TaBlnet extends utils.Adapter {
         cpus.forEach((cpu, index) => {
             this.log.debug(`CPU ${index}: ${JSON.stringify(cpu)}`);
         });
-        const cpuModel = cpus && cpus[0] && cpus[0].model ? cpus[0].model : 'unknown';
+        const cpuModel = cpus && cpus[0] && cpus[0].model ? cpus[0].model : "unknown";
         this.log.debug("CPU Model: " + cpuModel + " cpus[0]:" + JSON.stringify(cpus[0]));
         // Start polling
         this.startPolling();
