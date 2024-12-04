@@ -327,8 +327,8 @@ class TaBlnet extends utils.Adapter {
                     uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET]);
                     break;
                 case 0xDC:
-                    uvr_mode_str = this.numberOfDataFrames + "CAN";
                     this.numberOfDataFrames = data[5];
+                    uvr_mode_str = this.numberOfDataFrames + "CAN";
                     for (let i = 0; i < this.numberOfDataFrames; i++) {
                         uvr_type_code.push(data[HEADER_DC_DEVICE1_LENGTH_OFFSET + i]);
                     }
