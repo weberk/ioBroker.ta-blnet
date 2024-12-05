@@ -10,6 +10,7 @@ const utils = require("@iobroker/adapter-core");
 // The net module is used to create TCP clients and servers
 const net = require("node:net");
 //const os = require("node:os");
+const http = require("node:http");
 
 /**
  * Adapter class for UVR16xx BL-NET devices.
@@ -814,6 +815,60 @@ class TaBlnet extends utils.Adapter {
 
             this.log.debug("Initiate attempt to fetch data block from BL-NET");
             attemptFetch(); // Start with the first attempt
+        });
+    }
+
+    async fetchJSONDataFromDevice(hostname, username, password, canNode) {
+        return new Promise((resolve, reject) => {
+            let sData = "";
+            const res = {}; // result that is returned to the calling function (as the msg Object)
+            res.data = {};
+
+            // Start HTTP request
+            const options = {
+                auth: username + ":" + password,
+                hostname: hostname,
+                port: 80,
+                path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
+                method: "GET"
+            };
+
+            const httpResult = http.request(options, httpResult => {
+                if (httpResult.statusCode == 200) {
+                    // Successfully connected to CMI
+                    httpResult.on("data", d => {
+                        sData += d;
+                    });
+                    httpResult.on("end", () => {
+                        // Parse HTTP message into object
+                        try {
+                            res.data = JSON.parse(sData);
+                            res.httpStatusCode = httpResult.statusCode;
+                            res.httpStatusMessage = httpResult.statusMessage;
+                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+                            resolve(res); // Resolve the promise with the result
+                        } catch (err) {
+                            res.data = {};
+                            res.httpStatusCode = "998";
+                            res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
+                            reject(res); // Reject the promise with the error result
+                        }
+                    });
+                } else {
+                    res.data = {};
+                    res.httpStatusCode = httpResult.statusCode;
+                    res.httpStatusMessage = httpResult.statusMessage;
+                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
+                    reject(res); // Reject the promise with the error result
+                }
+            }).on("error", error => {
+                res.data = {};
+                res.httpStatusCode = "999";
+                res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
+                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
+                reject(res); // Reject the promise with the error result
+            });
+            httpResult.end();
         });
     }
 
