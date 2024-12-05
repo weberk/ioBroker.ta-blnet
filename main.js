@@ -51,15 +51,14 @@ class TaBlnet extends utils.Adapter {
         };
 
         // define constants
-        // Topics according TA Documentation "CMI-JSON-API Version 6
-        this.cmiUnits = ["", "°C", "W/m²", "l/h", "Sek", "Min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "Std", "Tage", "Imp", "kΩ", "l", "km/h",
-            "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "AUS/EIN",
-            "NEIN/JA", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "Sek", "", "%", "Uhr", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx"
+
+        // Topics according TA Documentation "CMI-JSON-API Version 7"
+        this.cmiUnits = ["", "°C", "W/m²", "l/h", "sec", "min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "hr", "Days", "Imp", "kΩ", "l", "km/h",
+            "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "ON/OFF",
+            "NO/YES", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "sec", "", "%", "h", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx", "Bg/m³"
         ];
-        //IF "AUS/EIN" or "NEIN/JA" are changed, change it below in the code as well (search for "NEIN/JA" in the code)
-
+        // sections to be used for ioBroker adapter objects
         this.cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
-
     }
 
     /**
