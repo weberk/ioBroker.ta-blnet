@@ -70,6 +70,10 @@ class TaBlnet extends utils.Adapter {
         this.log.info("config ip_address: " + this.config.ip_address);
         this.log.info("config port: " + this.config.port);
         this.log.info("config poll_interval: " + this.config.poll_interval);
+        this.log.info("expert_username: " + this.config.expert_username);
+        this.log.info("expert_password: " + this.config.expert_password);
+        this.log.info("can_node_list: " + this.config.can_node_list);
+        this.log.info("selected_ta_logger: " + this.config.selected_ta_logger);
         //Test code for "CPU Model Name Resolved as Unknown for Raspberry PI2" https://github.com/nodejs/node/issues/56105
         // const cpus = os.cpus();
         // cpus.forEach((cpu, index) => {

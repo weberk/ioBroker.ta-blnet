@@ -167,9 +167,13 @@
     ]
   },
   "native": {
+    "selected_ta_logger": "BL-NET",
     "ip_address": "192.168.2.77",
     "port": 40000,
-    "poll_interval": 30
+    "poll_interval": 30,
+    "can_node_list": "1,2,3",
+    "expert_password": "password",
+    "expert_username": "expert"
   },
   "objects": [],
   "instanceObjects": [

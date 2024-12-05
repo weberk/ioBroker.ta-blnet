@@ -1,13 +1,18 @@
 {
-    "Instance Settings": "Налаштування екземпляра",
+    "Global Settings": "Глобальні налаштування",
+    "CMI Only Settings": "Лише параметри CMI",
+    "TA Logger": "TA Logger",
+    "Select the type of TA logger": "Виберіть тип реєстратора TA",
     "IP Address": "IP-адреса",
-    "Enter the IP address of the device": "Введіть IP-адресу або ім’я хоста пристрою",
-    "Port": "Порт",
-    "Enter the port number": "Введіть номер порту",
+    "Enter the IP address or hostname of the logging device": "Введіть IP-адресу або ім’я хоста пристрою реєстрації",
+    "TA Port": "Порт TA",
+    "Enter the port number for the logging device": "Введіть номер порту для пристрою реєстрації",
     "Poll Interval": "Інтервал опитування",
     "Enter the polling interval in seconds": "Введіть інтервал опитування в секундах",
-    "Enter the IP address or host name of the device": "Введіть IP-адресу або ім’я хоста пристрою",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Введіть індекс кадру даних (тобто кілька пристроїв, підключених до однієї мережі BL-NET)",
-    "TA Port": "Порт TA",
-    "Enter the port number for the TA port of BL-NET": "Введіть номер порту для порту TA BL-NET"
+    "CAN Node List": "Список вузлів CAN",
+    "Enter a comma-separated list of CAN node numbers": "Введіть розділений комами список номерів вузлів CAN",
+    "Expert Username": "Ім'я користувача експерта",
+    "Enter the username for expert access": "Введіть ім’я користувача для експертного доступу",
+    "Expert Password": "Пароль експерта",
+    "Enter the password for expert access": "Введіть пароль для експертного доступу"
 }

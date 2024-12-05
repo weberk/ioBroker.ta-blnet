@@ -5,28 +5,25 @@
         "width": "calc(100% - 100px)"
     },
     "items": {
-        "_options": {
+        "options1": {
             "type": "panel",
-            "label": "Instance Settings",
+            "label": "Global Settings",
             "items": {
-                "ip_address": {
-                    "type": "text",
-                    "label": "IP Address",
-                    "default": "192.168.2.177",
-                    "help": "Enter the IP address or host name of the BL-NET device",
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 6,
-                    "lg": 6,
-                    "xl": 6
-                },
-                "port": {
-                    "type": "number",
-                    "label": "TA Port",
-                    "default": 40000,
-                    "help": "Enter the port number for the TA port of BL-NET",
-                    "min": 1024,
-                    "max": 49151,
+                "selected_ta_logger": {
+                    "type": "select",
+                    "label": "TA Logger",
+                    "options": [
+                        {
+                            "label": "BL-NET",
+                            "value": "BL-NET"
+                        },
+                        {
+                            "label": "CMI",
+                            "value": "CMI"
+                        }
+                    ],
+                    "default": "BL-NET",
+                    "help": "Select the type of TA logger",
                     "xs": 12,
                     "sm": 6,
                     "md": 6,
@@ -40,6 +37,69 @@
                     "max": 3600,
                     "default": 30,
                     "help": "Enter the polling interval in seconds",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "ip_address": {
+                    "type": "text",
+                    "label": "IP Address",
+                    "default": "192.168.2.77",
+                    "help": "Enter the IP address or hostname of the logging device",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "port": {
+                    "type": "number",
+                    "label": "TA Port",
+                    "default": 40000,
+                    "help": "Enter the port number for the logging device",
+                    "min": 1024,
+                    "max": 49151,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                }
+            }
+        },
+        "options2": {
+            "type": "panel",
+            "label": "CMI Only Settings",
+            "items": {
+                "expert_username": {
+                    "type": "text",
+                    "label": "Expert Username",
+                    "default": "expert",
+                    "help": "Enter the username for expert access",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "expert_password": {
+                    "type": "password",
+                    "label": "Expert Password",
+                    "default": "password",
+                    "help": "Enter the password for expert access",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "can_node_list": {
+                    "type": "text",
+                    "label": "CAN Node List",
+                    "default": "1,2,3",
+                    "help": "Enter a comma-separated list of CAN node numbers",
                     "xs": 12,
                     "sm": 6,
                     "md": 6,

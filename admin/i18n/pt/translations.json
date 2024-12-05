@@ -1,13 +1,18 @@
 {
-    "Instance Settings": "Configurações de instância",
+    "Global Settings": "Configurações globais",
+    "CMI Only Settings": "Configurações somente CMI",
+    "TA Logger": "Registrador TA",
+    "Select the type of TA logger": "Selecione o tipo de registrador TA",
     "IP Address": "Endereço IP",
-    "Enter the IP address of the device": "Insira o endereço IP ou nome do host do dispositivo",
-    "Port": "Porta",
-    "Enter the port number": "Digite o número da porta",
+    "Enter the IP address or hostname of the logging device": "Insira o endereço IP ou nome do host do dispositivo de registro",
+    "TA Port": "Porto TA",
+    "Enter the port number for the logging device": "Insira o número da porta do dispositivo de registro",
     "Poll Interval": "Intervalo de pesquisa",
     "Enter the polling interval in seconds": "Insira o intervalo de pesquisa em segundos",
-    "Enter the IP address or host name of the device": "Insira o endereço IP ou nome do host do dispositivo",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Insira o índice do quadro de dados (ou seja, vários dispositivos conectados ao mesmo BL-NET)",
-    "TA Port": "Porto TA",
-    "Enter the port number for the TA port of BL-NET": "Insira o número da porta TA do BL-NET"
+    "CAN Node List": "Lista de nós CAN",
+    "Enter a comma-separated list of CAN node numbers": "Insira uma lista separada por vírgulas de números de nós CAN",
+    "Expert Username": "Nome de usuário especialista",
+    "Enter the username for expert access": "Digite o nome de usuário para acesso de especialista",
+    "Expert Password": "Senha de especialista",
+    "Enter the password for expert access": "Digite a senha para acesso de especialista"
 }

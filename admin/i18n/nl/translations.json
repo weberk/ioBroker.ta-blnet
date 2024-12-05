@@ -1,13 +1,18 @@
 {
-    "Instance Settings": "Instantie-instellingen",
+    "Global Settings": "Algemene instellingen",
+    "CMI Only Settings": "Alleen CMI-instellingen",
+    "TA Logger": "TA-logger",
+    "Select the type of TA logger": "Selecteer het type TA-logger",
     "IP Address": "IP-adres",
-    "Enter the IP address of the device": "Voer het IP-adres of de hostnaam van het apparaat in",
-    "Port": "Haven",
-    "Enter the port number": "Voer het poortnummer in",
+    "Enter the IP address or hostname of the logging device": "Voer het IP-adres of de hostnaam van het logapparaat in",
+    "TA Port": "TA-poort",
+    "Enter the port number for the logging device": "Voer het poortnummer voor het logapparaat in",
     "Poll Interval": "Poll-interval",
     "Enter the polling interval in seconds": "Voer het polling-interval in seconden in",
-    "Enter the IP address or host name of the device": "Voer het IP-adres of de hostnaam van het apparaat in",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Voer de dataframe-index in (d.w.z. meerdere apparaten aangesloten op dezelfde BL-NET)",
-    "TA Port": "TA-poort",
-    "Enter the port number for the TA port of BL-NET": "Voer het poortnummer voor de TA-poort van BL-NET in"
+    "CAN Node List": "CAN-knooppuntlijst",
+    "Enter a comma-separated list of CAN node numbers": "Voer een door komma's gescheiden lijst met CAN-knooppuntnummers in",
+    "Expert Username": "Expert-gebruikersnaam",
+    "Enter the username for expert access": "Voer de gebruikersnaam in voor experttoegang",
+    "Expert Password": "Expertwachtwoord",
+    "Enter the password for expert access": "Voer het wachtwoord in voor deskundige toegang"
 }

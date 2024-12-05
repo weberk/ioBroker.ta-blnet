@@ -1,10 +1,18 @@
 {
-    "Instance Settings": "Instance Settings",
+    "Global Settings": "Global Settings",
+    "CMI Only Settings": "CMI Only Settings",
+    "TA Logger": "TA Logger",
+    "Select the type of TA logger": "Select the type of TA logger",
     "IP Address": "IP Address",
-    "Enter the IP address or host name of the device": "Enter the IP address or host name of the device",
+    "Enter the IP address or hostname of the logging device": "Enter the IP address or hostname of the logging device",
     "TA Port": "TA Port",
-    "Enter the port number for the TA port of BL-NET": "Enter the port number for the TA port of BL-NET",
+    "Enter the port number for the logging device": "Enter the port number for the logging device",
     "Poll Interval": "Poll Interval",
     "Enter the polling interval in seconds": "Enter the polling interval in seconds",
-    "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)": "Enter the data frame index (i.e. multiple devices connected to the same BL-NET)"
+    "CAN Node List": "CAN Node List",
+    "Enter a comma-separated list of CAN node numbers": "Enter a comma-separated list of CAN node numbers",
+    "Expert Username": "Expert Username",
+    "Enter the username for expert access": "Enter the username for expert access",
+    "Expert Password": "Expert Password",
+    "Enter the password for expert access": "Enter the password for expert access"
 }
