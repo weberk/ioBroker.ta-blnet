@@ -50,6 +50,17 @@ class TaBlnet extends utils.Adapter {
             deviceInfo: {},
             units: {}
         };
+
+        // define constants
+        // Topics according TA Documentation "CMI-JSON-API Version 6 
+        const cmiUnits = ["", "°C", "W/m²", "l/h", "Sek", "Min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "Std", "Tage", "Imp", "kΩ", "l", "km/h",
+            "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "AUS/EIN",
+            "NEIN/JA", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "Sek", "", "%", "Uhr", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx"
+        ];
+        //IF "AUS/EIN" or "NEIN/JA" are changed, change it below in the code as well (search for "NEIN/JA" in the code)
+
+        const cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
+
     }
 
     /**
@@ -820,55 +831,235 @@ class TaBlnet extends utils.Adapter {
 
     async fetchJSONDataFromDevice(hostname, username, password, canNode) {
         return new Promise((resolve, reject) => {
-            let sData = "";
-            const res = {}; // result that is returned to the calling function (as the msg Object)
-            res.data = {};
+            const maxRetries = 5; // Maximum number of retries
+            let attempt = 0; // Current attempt
 
-            // Start HTTP request
-            const options = {
-                auth: username + ":" + password,
-                hostname: hostname,
-                port: 80,
-                path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
-                method: "GET"
-            };
+            const attemptFetch = async () => {
+                while (attempt < maxRetries) {
+                    attempt++;
+                    try {
+                        let sData = "";
+                        const res = {}; // result that is returned to the calling function (as the msg Object)
+                        res.data = {};
 
-            const httpResult = http.request(options, httpResult => {
-                if (httpResult.statusCode == 200) {
-                    // Successfully connected to CMI
-                    httpResult.on("data", d => {
-                        sData += d;
-                    });
-                    httpResult.on("end", () => {
-                        // Parse HTTP message into object
-                        try {
+                        // Start HTTP request
+                        const options = {
+                            auth: username + ":" + password,
+                            hostname: hostname,
+                            port: 80,
+                            path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
+                            method: "GET"
+                        };
+                        this.log.debug("Sending request to " + hostname + " with options: " + JSON.stringify(options));
+                        // first use static response string for testing
+                        if (1 == attempt) {
+                            // http://192.168.30.40/INCLUDE/api.cgi?jsonnode=2&jsonparam=La,Ld,I,O,Na,Nd,D
+                            // sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
+                            // http://1234:1234@192.168.30.40/INCLUDE/api.cgi?jsonnode=7&jsonparam=I,O
+                            sData = JSON.stringify({ "Header":{ "Version":7, "Device":"80", "Timestamp":1733304802 }, "Data":{ "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":2, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":3, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":4, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":5, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":6, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":7, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":8, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":9, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":10, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":11, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":12, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":13, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } ], "Outputs":[ { "Number":1, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":2, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":6, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":7, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":8, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":9, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":11, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } ]}, "Status":"OK", "Status code":0 });
+                            //         {
+                            //         "Header": {
+                            //             "Version": 7,
+                            //             "Device": "80",
+                            //             "Timestamp": 1733304802
+                            //         },
+                            //         "Data": {
+                            //             "Inputs": [{
+                            //                     "Number": 1,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "Value": 1459.2,
+                            //                         "Unit": "1"
+                            //                     }
+                            //                 },
+                            // ... and so on
+                            //                 {
+                            //                     "Number": 10,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "Value": 1459.2,
+                            //                         "Unit": "1"
+                            //                     }
+                            //                 },
+                            //                 {
+                            //                     "Number": 11,
+                            //                     "AD": "D",
+                            //                     "Value": {
+                            //                         "Value": 0,
+                            //                         "Unit": "43"
+                            //                     }
+                            //                 },
+                            //                 {
+                            //                     "Number": 12,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "Value": 1459.2,
+                            //                         "Unit": "1"
+                            //                     }
+                            //                 },
+                            //                 {
+                            //                     "Number": 13,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "Value": 1459.2,
+                            //                         "Unit": "1"
+                            //                     }
+                            //                 },
+                            //                 {
+                            //                     "Number": 14,
+                            //                     "AD": "D",
+                            //                     "Value": {
+                            //                         "Value": 0,
+                            //                         "Unit": "43"
+                            //                     }
+                            //                 },
+                            // ... and so on
+                            //                 {
+                            //                     "Number": 16,
+                            //                     "AD": "D",
+                            //                     "Value": {
+                            //                         "Value": 0,
+                            //                         "Unit": "43"
+                            //                     }
+                            //                 }
+                            //             ],
+                            //             "Outputs": [{
+                            //                     "Number": 1,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "State": 0,
+                            //                         "Value": 0,
+                            //                         "Unit": "0"
+                            //                     }
+                            //                 },
+                            //                 {
+                            //                     "Number": 2,
+                            //                     "AD": "A",
+                            //                     "Value": {
+                            //                         "State": 0,
+                            //                         "Value": 0,
+                            //                         "Unit": "0"
+                            //                     }
+                            //                 },
+                            //                 {
+                            // ... and so on
+                            //                 {
+                            //                     "Number": 13,
+                            //                     "AD": "D",
+                            //                     "Value": {
+                            //                         "Value": 0,
+                            //                         "Unit": "0"
+                            //                     }
+                            //                 }
+                            //             ]
+                            //         },
+                            //         "Status": "OK",
+                            //         "Status code": 0
+                            //     }
+                            // );
                             res.data = JSON.parse(sData);
-                            res.httpStatusCode = httpResult.statusCode;
-                            res.httpStatusMessage = httpResult.statusMessage;
+                            res.httpStatusCode = 200;
+                            res.httpStatusMessage = "OK";
                             res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                             resolve(res); // Resolve the promise with the result
-                        } catch (err) {
-                            res.data = {};
-                            res.httpStatusCode = "998";
-                            res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
-                            reject(res); // Reject the promise with the error result
+                            return; // Exit the loop on success
                         }
-                    });
-                } else {
-                    res.data = {};
-                    res.httpStatusCode = httpResult.statusCode;
-                    res.httpStatusMessage = httpResult.statusMessage;
-                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
-                    reject(res); // Reject the promise with the error result
+                        const httpResult = http.request(options, httpResult => {
+                            if (httpResult.statusCode == 200) {
+                                // Successfully connected to CMI
+                                httpResult.on("data", d => {
+                                    sData += d;
+                                });
+                                httpResult.on("end", () => {
+                                    // Parse HTTP message into object
+                                    try {
+                                        res.data = JSON.parse(sData);
+                                        res.httpStatusCode = httpResult.statusCode;
+                                        res.httpStatusMessage = httpResult.statusMessage;
+                                        res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+                                        // Check CMI status code
+                                        switch (res.data["Status code"]) {
+                                            case 1:
+                                                this.log.warn("NODE ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 2:
+                                                this.log.warn("FAIL: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 3:
+                                                this.log.error("SYNTAX ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 4:
+                                                this.log.warn("TOO MANY REQUESTS: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 5:
+                                                this.log.warn("DEVICE NOT SUPPORTED: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 6:
+                                                this.log.error("TOO FEW ARGUMENTS: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            case 7:
+                                                this.log.warn("CAN BUSY: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
+                                            default:
+                                                this.log.error("UNKNOWN ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                        }
+                                        resolve(res); // Resolve the promise with the result
+                                        return; // Exit the loop on success
+                                    } catch (err) {
+                                        res.data = {};
+                                        res.httpStatusCode = "998";
+                                        res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
+                                        this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
+                                    }
+                                });
+                            } else {
+                                res.data = {};
+                                res.httpStatusCode = httpResult.statusCode;
+                                res.httpStatusMessage = httpResult.statusMessage;
+                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
+                                this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
+
+                                // Log semantic error messages based on HTTP status code
+                                switch (res.httpStatusCode) {
+                                    case 300:
+                                        this.log.error("NO LIVE DATA - Data in global context store not found");
+                                        break;
+                                    case 401:
+                                        this.log.error("WRONG USER OR PASSWORD");
+                                        break;
+                                    default:
+                                        this.log.error("OTHER HTTP ERROR");
+                                }
+                            }
+                        }).on("error", error => {
+                            res.data = {};
+                            res.httpStatusCode = "999";
+                            res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
+                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
+                            this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
+                        });
+                        this.log.debug("Sent request as attempt: " + attempt);
+                        httpResult.end();
+
+                        // Check if the attempt was successful
+                        if (res.httpStatusCode == 200) {
+                            return; // Exit the loop on success
+                        }
+
+                    } catch (error) {
+                        this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
+                    }
+
+                    // Wait for 30 seconds before the next attempt
+                    if (attempt < maxRetries) {
+                        await new Promise(resolve => this.setTimeout(resolve, 30000, 30000));
+                    }
                 }
-            }).on("error", error => {
-                res.data = {};
-                res.httpStatusCode = "999";
-                res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
-                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
-                reject(res); // Reject the promise with the error result
-            });
-            httpResult.end();
+                reject(new Error("Max retries reached. Unable to communicate with device."));
+            };
+
+            this.log.debug("Initiate attempt to fetch JSON data from CMI");
+            attemptFetch(); // Start with the first attempt
         });
     }
 
