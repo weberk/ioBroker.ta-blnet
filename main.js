@@ -53,13 +53,13 @@ class TaBlnet extends utils.Adapter {
 
         // define constants
         // Topics according TA Documentation "CMI-JSON-API Version 6 
-        const cmiUnits = ["", "°C", "W/m²", "l/h", "Sek", "Min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "Std", "Tage", "Imp", "kΩ", "l", "km/h",
+        this.cmiUnits = ["", "°C", "W/m²", "l/h", "Sek", "Min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "Std", "Tage", "Imp", "kΩ", "l", "km/h",
             "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "AUS/EIN",
             "NEIN/JA", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "Sek", "", "%", "Uhr", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx"
         ];
         //IF "AUS/EIN" or "NEIN/JA" are changed, change it below in the code as well (search for "NEIN/JA" in the code)
 
-        const cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
+        this.cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
 
     }
 
@@ -751,14 +751,18 @@ class TaBlnet extends utils.Adapter {
                 // Process the first UVR record
                 const response1 = this.readBlock(data, 0, LATEST_SIZE);
                 if (response1) {
-                    const currentUvrRecord1 = this.parseUvrRecord(response1);
-                    stateValuesArray.push(currentUvrRecord1);
+                    const currentUvrRecord1 = this.parseUvrRecordFromBuffer(response1);
+                    this.log.debug("UVR record created from binary record 1: " + JSON.stringify(currentUvrRecord1));
+                    const resStruct = await this.fetchJSONDataFromDevice("", "", "", 1);
+                    const dummyUvrJSONRecord1 = this.parseUvrRecordFromJSON(resStruct.data);
+                    this.log.debug("JS Record created from JSON response: " + JSON.stringify(dummyUvrJSONRecord1));
+                    stateValuesArray.push(dummyUvrJSONRecord1);
 
                     // Check if there is a second UVR record
                     if (data.length >= 1 + LATEST_SIZE * 2) {
                         const response2 = this.readBlock(data, 1 + LATEST_SIZE, LATEST_SIZE);
                         if (response2) {
-                            const currentUvrRecord2 = this.parseUvrRecord(response2);
+                            const currentUvrRecord2 = this.parseUvrRecordFromBuffer(response2);
                             stateValuesArray.push(currentUvrRecord2);
                         }
                     }
@@ -829,6 +833,16 @@ class TaBlnet extends utils.Adapter {
         });
     }
 
+    /**
+     * Fetches JSON data from a device with retry logic.
+     * 
+     * @param {string} hostname - The hostname of the device.
+     * @param {string} username - The username for authentication.
+     * @param {string} password - The password for authentication.
+     * @param {number} canNode - The CAN node to query.
+     * @returns {Promise<{data: Object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
+     * @throws {Error} If the maximum number of retries is reached.
+     */
     async fetchJSONDataFromDevice(hostname, username, password, canNode) {
         return new Promise((resolve, reject) => {
             const maxRetries = 5; // Maximum number of retries
@@ -839,8 +853,12 @@ class TaBlnet extends utils.Adapter {
                     attempt++;
                     try {
                         let sData = "";
-                        const res = {}; // result that is returned to the calling function (as the msg Object)
-                        res.data = {};
+                        const res = {
+                            data: {},
+                            httpStatusCode: 0,
+                            httpStatusMessage: "",
+                            debug: ""
+                        };
 
                         // Start HTTP request
                         const options = {
@@ -856,107 +874,227 @@ class TaBlnet extends utils.Adapter {
                             // http://192.168.30.40/INCLUDE/api.cgi?jsonnode=2&jsonparam=La,Ld,I,O,Na,Nd,D
                             // sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
                             // http://1234:1234@192.168.30.40/INCLUDE/api.cgi?jsonnode=7&jsonparam=I,O
-                            sData = JSON.stringify({ "Header":{ "Version":7, "Device":"80", "Timestamp":1733304802 }, "Data":{ "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":2, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":3, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":4, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":5, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":6, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":7, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":8, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":9, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":10, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":11, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":12, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":13, "AD":"A", "Value":{ "Value":1459.2, "Unit":"1" } } , { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } , { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } } ], "Outputs":[ { "Number":1, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":2, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":6, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":7, "AD":"A", "Value":{ "State":0,"Value":0, "Unit":"0" } } , { "Number":8, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":9, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":11, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } , { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"0" } } ]}, "Status":"OK", "Status code":0 });
-                            //         {
-                            //         "Header": {
-                            //             "Version": 7,
-                            //             "Device": "80",
-                            //             "Timestamp": 1733304802
-                            //         },
-                            //         "Data": {
-                            //             "Inputs": [{
-                            //                     "Number": 1,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "Value": 1459.2,
-                            //                         "Unit": "1"
-                            //                     }
-                            //                 },
-                            // ... and so on
-                            //                 {
-                            //                     "Number": 10,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "Value": 1459.2,
-                            //                         "Unit": "1"
-                            //                     }
-                            //                 },
-                            //                 {
-                            //                     "Number": 11,
-                            //                     "AD": "D",
-                            //                     "Value": {
-                            //                         "Value": 0,
-                            //                         "Unit": "43"
-                            //                     }
-                            //                 },
-                            //                 {
-                            //                     "Number": 12,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "Value": 1459.2,
-                            //                         "Unit": "1"
-                            //                     }
-                            //                 },
-                            //                 {
-                            //                     "Number": 13,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "Value": 1459.2,
-                            //                         "Unit": "1"
-                            //                     }
-                            //                 },
-                            //                 {
-                            //                     "Number": 14,
-                            //                     "AD": "D",
-                            //                     "Value": {
-                            //                         "Value": 0,
-                            //                         "Unit": "43"
-                            //                     }
-                            //                 },
-                            // ... and so on
-                            //                 {
-                            //                     "Number": 16,
-                            //                     "AD": "D",
-                            //                     "Value": {
-                            //                         "Value": 0,
-                            //                         "Unit": "43"
-                            //                     }
-                            //                 }
-                            //             ],
-                            //             "Outputs": [{
-                            //                     "Number": 1,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "State": 0,
-                            //                         "Value": 0,
-                            //                         "Unit": "0"
-                            //                     }
-                            //                 },
-                            //                 {
-                            //                     "Number": 2,
-                            //                     "AD": "A",
-                            //                     "Value": {
-                            //                         "State": 0,
-                            //                         "Value": 0,
-                            //                         "Unit": "0"
-                            //                     }
-                            //                 },
-                            //                 {
-                            // ... and so on
-                            //                 {
-                            //                     "Number": 13,
-                            //                     "AD": "D",
-                            //                     "Value": {
-                            //                         "Value": 0,
-                            //                         "Unit": "0"
-                            //                     }
-                            //                 }
-                            //             ]
-                            //         },
-                            //         "Status": "OK",
-                            //         "Status code": 0
-                            //     }
-                            // );
+                            sData = JSON.stringify({
+                                "Header": {
+                                    "Version": 7,
+                                    "Device": "80",
+                                    "Timestamp": 1733304802
+                                },
+                                "Data": {
+                                    "Inputs": [{
+                                        "Number": 1,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 2,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 3,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 4,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 5,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 6,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 7,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 8,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 9,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 10,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 11,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "43"
+                                        }
+                                    }, {
+                                        "Number": 12,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 13,
+                                        "AD": "A",
+                                        "Value": {
+                                            "Value": 1459.2,
+                                            "Unit": "1"
+                                        }
+                                    }, {
+                                        "Number": 14,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "43"
+                                        }
+                                    }, {
+                                        "Number": 15,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "43"
+                                        }
+                                    }, {
+                                        "Number": 16,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "43"
+                                        }
+                                    }],
+                                    "Outputs": [{
+                                        "Number": 1,
+                                        "AD": "A",
+                                        "Value": {
+                                            "State": 0,
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 2,
+                                        "AD": "A",
+                                        "Value": {
+                                            "State": 0,
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 3,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 4,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 5,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 6,
+                                        "AD": "A",
+                                        "Value": {
+                                            "State": 0,
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 7,
+                                        "AD": "A",
+                                        "Value": {
+                                            "State": 0,
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 8,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 9,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 10,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 11,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 12,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }, {
+                                        "Number": 13,
+                                        "AD": "D",
+                                        "Value": {
+                                            "Value": 0,
+                                            "Unit": "0"
+                                        }
+                                    }]
+                                },
+                                "Status": "OK",
+                                "Status code": 0
+                            });
+
                             res.data = JSON.parse(sData);
                             res.httpStatusCode = 200;
                             res.httpStatusMessage = "OK";
@@ -974,8 +1112,8 @@ class TaBlnet extends utils.Adapter {
                                     // Parse HTTP message into object
                                     try {
                                         res.data = JSON.parse(sData);
-                                        res.httpStatusCode = httpResult.statusCode;
-                                        res.httpStatusMessage = httpResult.statusMessage;
+                                        res.httpStatusCode = httpResult.statusCode ?? 0;
+                                        res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                         res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                                         // Check CMI status code
                                         switch (res.data["Status code"]) {
@@ -1007,15 +1145,15 @@ class TaBlnet extends utils.Adapter {
                                         return; // Exit the loop on success
                                     } catch (err) {
                                         res.data = {};
-                                        res.httpStatusCode = "998";
+                                        res.httpStatusCode = 998;
                                         res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
                                         this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
                                     }
                                 });
                             } else {
                                 res.data = {};
-                                res.httpStatusCode = httpResult.statusCode;
-                                res.httpStatusMessage = httpResult.statusMessage;
+                                res.httpStatusCode = httpResult.statusCode ?? 0;
+                                res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                 res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
                                 this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
 
@@ -1033,7 +1171,7 @@ class TaBlnet extends utils.Adapter {
                             }
                         }).on("error", error => {
                             res.data = {};
-                            res.httpStatusCode = "999";
+                            res.httpStatusCode = 999;
                             res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
                             res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
                             this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
@@ -1160,7 +1298,7 @@ class TaBlnet extends utils.Adapter {
      * @param {Uint8Array} response - The response data from the UVR1611 device.
      * @returns {Object} uvrRecord - The parsed UVR1611 record containing outputs, speed levels, inputs, and thermal energy counters.
      */
-    parseUvrRecord(response) {
+    parseUvrRecordFromBuffer(response) {
         const uvrRecord = {
             outputs: {},
             speed_levels: {},
@@ -1249,6 +1387,47 @@ class TaBlnet extends utils.Adapter {
 
         // Log thermal energy counters
         this.log.debug("Thermal energy counters: " + JSON.stringify(uvrRecord.thermal_energy_counters));
+
+        return uvrRecord;
+    }
+
+    parseUvrRecordFromJSON(jsonObject) {
+        const uvrRecord = {
+            outputs: {},
+            speed_levels: {},
+            inputs: {},
+            thermal_energy_counters_status: {},
+            thermal_energy_counters: {}
+        };
+
+        // Helper function to parse sections
+        function parseSection(sectionName, data) {
+            switch (sectionName) {
+                case "Inputs":
+                    data.forEach(input => {
+                        const inputKey = `S${String(input.Number).padStart(2, "0")}`;
+                        uvrRecord.inputs[inputKey] = input.Value.Value;
+                    });
+                    break;
+                case "Outputs":
+                    data.forEach(output => {
+                        const outputKey = `A${String(output.Number).padStart(2, "0")}`;
+                        uvrRecord.outputs[outputKey] = output.Value.State === 1;
+                    });
+                    break;
+                    // Add cases for other sections as needed
+                    // For example, "Logging Analog", "Logging Digital", etc.
+                default:
+                    break;
+            }
+        }
+
+        // Iterate over cmiSections and parse each section if it exists in the input
+        this.cmiSections.forEach(section => {
+            if (jsonObject.Data[section]) {
+                parseSection(section, jsonObject.Data[section]);
+            }
+        });
 
         return uvrRecord;
     }
