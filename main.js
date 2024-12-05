@@ -505,7 +505,7 @@ class TaBlnet extends utils.Adapter {
                 } else {
                     this.log.error("stateValues.outputs is undefined or null");
                 }
-                // create folder node for outputs
+                // create folder node for speed_levels
                 currentFolderName = this.name2id(path_pre + "speed_levels");
                 if (!this.initialized) {
                     await this.setObjectNotExistsAsync(currentFolderName, {
@@ -533,16 +533,8 @@ class TaBlnet extends utils.Adapter {
                                 native: {},
                             });
                         }
-                        // Process speed levels: filter bits
-                        const SPEED_ACTIVE = 0x80;
-                        const SPEED_MASK = 0x1F;
-                        let finalValue;
-                        if (typeof value === "number") {
-                            finalValue = (value & SPEED_ACTIVE) ? (value & SPEED_MASK) : null;
-                            this.log.debug("Setting state " + key + " to value " + finalValue);
-                        }
                         await this.setState(currentKeyName, {
-                            val: finalValue,
+                            val: value,
                             ack: true
                         });
                     }
@@ -578,47 +570,8 @@ class TaBlnet extends utils.Adapter {
                                 native: {},
                             });
                         }
-                        // Process input values: filter bits 4-6 and handle sign bit
-                        let finalValue;
-                        if (typeof value === "number") {
-                            const highByte = value >> 8;
-                            const lowByte = value & 0xFF;
-                            const signBit = highByte & 0x80;
-                            const unitBits = highByte & 0x70;
-                            let input = this.byte2short(lowByte, highByte & 0x0F);
-                            // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
-                            if (signBit) {
-                                // Restore bits 4, 5, 6 with 1, since this is a negative number
-                                input = input | 0xF000;
-                                // Invert the bits (ensure 16-bit operation)
-                                input = (~input & 0xFFFF);
-                                // Add 1 to the inverted bits
-                                input = (input + 1) & 0xFFFF;
-                                // Set the value to negative
-                                input = -input;
-                            }
-                            switch (unitBits) {
-                                case 0x20: // TYPE_TEMP
-                                    finalValue = input / 10.0;
-                                    break;
-                                case 0x30: // TYPE_VOLUME:
-                                    finalValue = input * 4.0;
-                                    break;
-                                case 0x10: // TYPE_DIGITAL:
-                                    finalValue = (value & 0x8000) ? 1 : 0;
-                                    break;
-                                case 0x70: // TYPE_RAS:
-                                    finalValue = (input & 0x1FF) / 10.0;
-                                    break;
-                                default:
-                                    finalValue = input;
-                            }
-                            this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + units[i][key]);
-                        } else {
-                            this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(value));
-                        }
                         await this.setState(currentKeyName, {
-                            val: finalValue,
+                            val: value,
                             ack: true
                         });
                     }
@@ -679,19 +632,9 @@ class TaBlnet extends utils.Adapter {
 
                         let unit;
                         let currentRole = "";
-                        let finalValue = value;
                         if (key.startsWith("current_heat_power")) {
                             unit = "kW";
                             currentRole = "value.power";
-                            // Check for negative values and convert to two's complement
-                            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
-                                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
-                            }
-                            // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
-                            // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
-                            finalValue = finalValue * 10; // Convert from 1/10 kW to kW
-                            finalValue = finalValue / 256; // Adjust for the factor of 256 used in the encoding
-                            finalValue = finalValue / 100; // Convert to kW with decimal places
                         } else if (key.startsWith("total_heat_energy")) {
                             unit = "kWh";
                             currentRole = "value.energy";
@@ -712,7 +655,7 @@ class TaBlnet extends utils.Adapter {
                         }
                         this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + unit);
                         await this.setState(currentKeyName, {
-                            val: finalValue,
+                            val: value,
                             ack: true
                         });
                     }
@@ -1112,7 +1055,7 @@ class TaBlnet extends utils.Adapter {
                                     // Parse HTTP message into object
                                     try {
                                         res.data = JSON.parse(sData);
-                                        res.httpStatusCode = httpResult.statusCode ?? 0;
+                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : 0;
                                         res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                         res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                                         // Check CMI status code
@@ -1152,7 +1095,7 @@ class TaBlnet extends utils.Adapter {
                                 });
                             } else {
                                 res.data = {};
-                                res.httpStatusCode = httpResult.statusCode ?? 0;
+                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : 0;
                                 res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                 res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
                                 this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
@@ -1308,10 +1251,14 @@ class TaBlnet extends utils.Adapter {
         };
 
         const indexes = TaBlnet.CURRENT_DATA_UVR1611;
+        const defaultUnit = this.cmiUnits[0]; // Default unit
 
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
-            uvrRecord.outputs[key] = (response[value[0]] & value[1]) ? true : false;
+            uvrRecord.outputs[key] = {
+                value: (response[value[0]] & value[1]) ? true : false,
+                type: defaultUnit
+            };
         }
 
         // Log outputs
@@ -1319,7 +1266,18 @@ class TaBlnet extends utils.Adapter {
 
         // Speed levels
         for (const [key, value] of Object.entries(indexes.SPEED_LEVELS)) {
-            uvrRecord.speed_levels[key] = response[value];
+            // Process speed levels: filter bits
+            const SPEED_ACTIVE = 0x80;
+            const SPEED_MASK = 0x1F;
+            const localValue = response[value];
+            let finalValue;
+            if (typeof localValue === "number") {
+                finalValue = (localValue & SPEED_ACTIVE) ? (localValue & SPEED_MASK) : null;
+            }
+            uvrRecord.speed_levels[key] = {
+                value: finalValue,
+                type: defaultUnit
+            };
         }
 
         // Log speed levels
@@ -1327,7 +1285,50 @@ class TaBlnet extends utils.Adapter {
 
         // Inputs
         for (const [key, value] of Object.entries(indexes.SENSORS)) {
-            uvrRecord.inputs[key] = this.byte2short(response[value[0]], response[value[1]]);
+            // Process input values: filter bits 4-6 and handle sign bit
+            const localValue = this.byte2short(response[value[0]], response[value[1]]);
+            let finalValue;
+            if (typeof localValue === "number") {
+                const highByte = localValue >> 8;
+                const lowByte = localValue & 0xFF;
+                const signBit = highByte & 0x80;
+                const unitBits = highByte & 0x70;
+                let input = this.byte2short(lowByte, highByte & 0x0F);
+                // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
+                if (signBit) {
+                    // Restore bits 4, 5, 6 with 1, since this is a negative number
+                    input = input | 0xF000;
+                    // Invert the bits (ensure 16-bit operation)
+                    input = (~input & 0xFFFF);
+                    // Add 1 to the inverted bits
+                    input = (input + 1) & 0xFFFF;
+                    // Set the value to negative
+                    input = -input;
+                }
+                switch (unitBits) {
+                    case 0x20: // TYPE_TEMP
+                        finalValue = input / 10.0;
+                        break;
+                    case 0x30: // TYPE_VOLUME:
+                        finalValue = input * 4.0;
+                        break;
+                    case 0x10: // TYPE_DIGITAL:
+                        finalValue = (localValue & 0x8000) ? 1 : 0;
+                        break;
+                    case 0x70: // TYPE_RAS:
+                        finalValue = (input & 0x1FF) / 10.0;
+                        break;
+                    default:
+                        finalValue = input;
+                }
+                // this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + units[i][key]);
+            } else {
+                this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(localValue));
+            }
+            uvrRecord.inputs[key] = {
+                value: finalValue,
+                type: defaultUnit
+            };
         }
 
         // Log inputs
@@ -1336,7 +1337,10 @@ class TaBlnet extends utils.Adapter {
         // Thermal energy counters status
         for (const [key, value] of Object.entries(indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS)) {
             const wmz = response[value[0]];
-            uvrRecord.thermal_energy_counters_status[key] = (wmz & value[1]) ? true : false;
+            uvrRecord.thermal_energy_counters_status[key] = {
+                value: (wmz & value[1]) ? true : false,
+                type: defaultUnit
+            };
         }
 
         // Log thermal energy counters status
@@ -1345,44 +1349,86 @@ class TaBlnet extends utils.Adapter {
         // Thermal energy counters 1 active?
         if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] &
             indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
-
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = this.byte2int(
+            const value = this.byte2int(
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]], // lowLow1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]], // lowHigh1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]], // highLow1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]] // highHigh1
             );
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] =
-                this.byte2short(
+            let finalValue = value;
+            // Check for negative values and convert to two's complement
+            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
+                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
+            }
+            // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
+            // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
+            finalValue = finalValue * 10; // Convert from 1/10 kW to kW
+            finalValue = finalValue / 256; // Adjust for the factor of 256 used in the encoding
+            finalValue = finalValue / 100; // Convert to kW with decimal places
+
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = {
+                value: finalValue,
+                type: defaultUnit
+            };
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
+                value: this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 +
-                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0;
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0,
+                type: defaultUnit
+            };
         } else {
-            uvrRecord.thermal_energy_counters["current_heat_power1"] = 0;
-            uvrRecord.thermal_energy_counters["total_heat_energy1"] = 0;
+            uvrRecord.thermal_energy_counters["current_heat_power1"] = {
+                value: 0,
+                type: defaultUnit
+            };
+            uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
+                value: 0,
+                type: defaultUnit
+            };
         }
         // Thermal energy counters 2 active?
         if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[0]] &
             indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
 
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = this.byte2int(
+            const value = this.byte2int(
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]], // lowLow2
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]], // lowHigh2
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]], // highLow2
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]] // highHigh2
             );
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] =
-                this.byte2short(
+            let finalValue = value;
+            // Check for negative values and convert to two's complement
+            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
+                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
+            }
+            // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
+            // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
+            finalValue = finalValue * 10; // Convert from 1/10 kW to kW
+            finalValue = finalValue / 256; // Adjust for the factor of 256 used in the encoding
+            finalValue = finalValue / 100; // Convert to kW with decimal places
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = {
+                value: finalValue,
+                type: defaultUnit
+            };
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
+                value: this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 +
-                this.byte2short(
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0;
+                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0,
+                type: defaultUnit
+            };
         } else {
-            uvrRecord.thermal_energy_counters["current_heat_power2"] = 0;
-            uvrRecord.thermal_energy_counters["total_heat_energy2"] = 0;
+            uvrRecord.thermal_energy_counters["current_heat_power2"] = {
+                value: 0,
+                type: defaultUnit
+            };
+            uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
+                value: 0,
+                type: defaultUnit
+            };
         }
 
         // Log thermal energy counters
@@ -1401,18 +1447,28 @@ class TaBlnet extends utils.Adapter {
         };
 
         // Helper function to parse sections
-        function parseSection(sectionName, data) {
+        const parseSection = (sectionName, data) => {
             switch (sectionName) {
                 case "Inputs":
                     data.forEach(input => {
                         const inputKey = `S${String(input.Number).padStart(2, "0")}`;
-                        uvrRecord.inputs[inputKey] = input.Value.Value;
+                        const unitIndex = input.Value.Unit;
+                        const unitString = this.cmiUnits[unitIndex] || `unknown: ${unitIndex}`;
+                        uvrRecord.inputs[inputKey] = {
+                            value: input.Value.Value,
+                            type: unitString
+                        };
                     });
                     break;
                 case "Outputs":
                     data.forEach(output => {
                         const outputKey = `A${String(output.Number).padStart(2, "0")}`;
-                        uvrRecord.outputs[outputKey] = output.Value.State === 1;
+                        const unitIndex = output.Value.Unit;
+                        const unitString = this.cmiUnits[unitIndex] || `unknown: ${unitIndex}`;
+                        uvrRecord.outputs[outputKey] = {
+                            value: output.Value.State === 1,
+                            type: unitString
+                        };
                     });
                     break;
                     // Add cases for other sections as needed
@@ -1420,7 +1476,7 @@ class TaBlnet extends utils.Adapter {
                 default:
                     break;
             }
-        }
+        };
 
         // Iterate over cmiSections and parse each section if it exists in the input
         this.cmiSections.forEach(section => {
