@@ -47,12 +47,11 @@ class TaBlnet extends utils.Adapter {
         this.systemConfiguration = {
             success: false,
             stateValues: {},
-            deviceInfo: {},
-            units: {}
+            deviceInfo: {}
         };
 
         // define constants
-        // Topics according TA Documentation "CMI-JSON-API Version 6 
+        // Topics according TA Documentation "CMI-JSON-API Version 6
         this.cmiUnits = ["", "°C", "W/m²", "l/h", "Sek", "Min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "Std", "Tage", "Imp", "kΩ", "l", "km/h",
             "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "AUS/EIN",
             "NEIN/JA", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "Sek", "", "%", "Uhr", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx"
@@ -101,7 +100,7 @@ class TaBlnet extends utils.Adapter {
                     if (this.systemConfiguration.success === true) {
                         // Declare objects
                         await this.declareOrUpdateObjects();
-
+                        this.log.debug("objects for metrics declared.");
                         this.initialized = true;
                         this.log.debug("Initialization succeeded.");
                     }
@@ -127,7 +126,7 @@ class TaBlnet extends utils.Adapter {
                     await this.setState("info.connection", this.systemConfiguration.success, true);
                     // Update objects
                     await this.declareOrUpdateObjects();
-                    this.log.info("Polled state values from BL-NET");
+                    this.log.debug("objects for metrics updated.");
                 } catch (error) {
                     await this.setState("info.connection", false, true);
                     this.log.error("Error polling state values: " + error);
@@ -144,7 +143,7 @@ class TaBlnet extends utils.Adapter {
 
     /**
      * Reads the system configuration from the device.
-     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object, units: Object}>} - The result of the read with success status, state values, device info, and units.
+     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object}>} - The result of the read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
         let deviceInfo;
@@ -158,14 +157,11 @@ class TaBlnet extends utils.Adapter {
             return {
                 success: false,
                 stateValues: [],
-                deviceInfo: {},
-                units: []
+                deviceInfo: {}
             };
         }
-
         try {
             const stateValuesArray = []; // Create a local array
-            const unitsArray = []; // Create a local array for units
             // loop through all data frames evident from the header_frame
             for (let i = 0; i < this.numberOfDataFrames; i++) {
                 const currentStateValuesArray = await this.fetchStateValuesFromDevice(i + 1);
@@ -173,21 +169,8 @@ class TaBlnet extends utils.Adapter {
                 // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
                 for (let j = 0; j < currentStateValuesArray.length; j++) {
                     currentStateValues = currentStateValuesArray[j];
-                    // Determine units based on bits 4-6 of the high byte for inputs
-                    const current_units = {}; // Create a local object for units
-                    for (const [key, value] of Object.entries(currentStateValues.inputs)) {
-                        if (typeof value === "number") {
-                            const highByte = value >> 8;
-                            const unitBits = highByte & 0x70;
-                            const unit = this.determineUnit(unitBits);
-                            current_units[key] = unit;
-                        } else {
-                            this.log.error("Invalid input value for " + key + ": " + JSON.stringify(value));
-                        }
-                    }
                     // Add the current units and StateValues to the collecting array
                     stateValuesArray.push(currentStateValues);
-                    unitsArray.push(current_units);
                 }
             }
             this.log.info("readSystemConfiguration succeeded.");
@@ -195,43 +178,18 @@ class TaBlnet extends utils.Adapter {
             return {
                 success: true,
                 stateValues: stateValuesArray,
-                deviceInfo: deviceInfo,
-                units: unitsArray
+                deviceInfo: deviceInfo
             };
         } catch (error) {
             this.log.error("readSystemConfiguration failed: " + error);
             return {
                 success: false,
                 stateValues: [],
-                deviceInfo: {},
-                units: []
+                deviceInfo: {}
             };
         }
     }
 
-    /**
-     * Determine the unit based on the unitBits
-     * @param {number} unitBits - The bits representing the unit
-     * @returns {string} - The determined unit as a string
-     */
-    determineUnit(unitBits) {
-        switch (unitBits) {
-            case 0x00:
-                return "unused"; // No unit
-            case 0x10:
-                return "digital"; // Digital unit
-            case 0x20:
-                return "°C"; // Temperature in Celsius
-            case 0x30:
-                return "l/h"; // Flow rate in liters per hour
-            case 0x60:
-                return "W/m²"; // Power per square meter
-            case 0x70:
-                return "°C (room sensor)"; // Room temperature sensor in Celsius
-            default:
-                return "unknown"; // Unknown unit
-        }
-    }
     /**
      * Reads device information from the BL-NET device.
      *
@@ -408,7 +366,6 @@ class TaBlnet extends utils.Adapter {
      * @returns {Promise<void>} - A promise that resolves when all objects have been declared.
      */
     async declareOrUpdateObjects() {
-        const units = this.systemConfiguration.units;
         const deviceInfo = this.systemConfiguration.deviceInfo;
         const stateValues = this.systemConfiguration.stateValues;
 
@@ -491,6 +448,7 @@ class TaBlnet extends utils.Adapter {
                                     name: key,
                                     type: "boolean",
                                     role: "switch.enable",
+                                    unit: value.type,
                                     read: true,
                                     write: false,
                                 },
@@ -498,7 +456,7 @@ class TaBlnet extends utils.Adapter {
                             });
                         }
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: value.value,
                             ack: true
                         });
                     }
@@ -527,6 +485,7 @@ class TaBlnet extends utils.Adapter {
                                     name: key,
                                     type: "number",
                                     role: "value.speed",
+                                    unit: value.type,
                                     read: true,
                                     write: false,
                                 },
@@ -534,7 +493,7 @@ class TaBlnet extends utils.Adapter {
                             });
                         }
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: value.value,
                             ack: true
                         });
                     }
@@ -563,7 +522,7 @@ class TaBlnet extends utils.Adapter {
                                     name: key,
                                     type: "number",
                                     role: "value",
-                                    unit: units[i][key], // Set unit based on system configuration
+                                    unit: value.type,
                                     read: true,
                                     write: false,
                                 },
@@ -571,7 +530,7 @@ class TaBlnet extends utils.Adapter {
                             });
                         }
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: value.value,
                             ack: true
                         });
                     }
@@ -600,6 +559,7 @@ class TaBlnet extends utils.Adapter {
                                     name: key,
                                     type: "boolean",
                                     role: "sensor.switch",
+                                    unit: value.type,
                                     read: true,
                                     write: false,
                                 },
@@ -607,7 +567,7 @@ class TaBlnet extends utils.Adapter {
                             });
                         }
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: value.value,
                             ack: true
                         });
                     }
@@ -630,13 +590,10 @@ class TaBlnet extends utils.Adapter {
                     for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
                         const currentKeyName = this.name2id(currentFolderName + "." + key);
 
-                        let unit;
                         let currentRole = "";
                         if (key.startsWith("current_heat_power")) {
-                            unit = "kW";
                             currentRole = "value.power";
                         } else if (key.startsWith("total_heat_energy")) {
-                            unit = "kWh";
                             currentRole = "value.energy";
                         }
                         if (!this.initialized) {
@@ -646,16 +603,15 @@ class TaBlnet extends utils.Adapter {
                                     name: key,
                                     type: "number",
                                     role: currentRole,
-                                    unit: unit,
+                                    unit: value.type,
                                     read: true,
                                     write: false,
                                 },
                                 native: {},
                             });
                         }
-                        this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + unit);
                         await this.setState(currentKeyName, {
-                            val: value,
+                            val: value.value,
                             ack: true
                         });
                     }
@@ -666,8 +622,6 @@ class TaBlnet extends utils.Adapter {
         } else {
             this.log.error("stateValues is undefined or null");
         }
-
-        this.log.debug("objects for metrics declared.");
     }
 
     /**
@@ -778,7 +732,7 @@ class TaBlnet extends utils.Adapter {
 
     /**
      * Fetches JSON data from a device with retry logic.
-     * 
+     *
      * @param {string} hostname - The hostname of the device.
      * @param {string} username - The username for authentication.
      * @param {string} password - The password for authentication.
@@ -1043,6 +997,8 @@ class TaBlnet extends utils.Adapter {
                             res.httpStatusMessage = "OK";
                             res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                             resolve(res); // Resolve the promise with the result
+                            // Log  dump of the data
+                            this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
                             return; // Exit the loop on success
                         }
                         const httpResult = http.request(options, httpResult => {
@@ -1085,6 +1041,8 @@ class TaBlnet extends utils.Adapter {
                                                 this.log.error("UNKNOWN ERROR: " + res.data["Status code"] + " - " + res.data.Status);
                                         }
                                         resolve(res); // Resolve the promise with the result
+                                        // Log  dump of the data
+                                        this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
                                         return; // Exit the loop on success
                                     } catch (err) {
                                         res.data = {};
@@ -1288,6 +1246,7 @@ class TaBlnet extends utils.Adapter {
             // Process input values: filter bits 4-6 and handle sign bit
             const localValue = this.byte2short(response[value[0]], response[value[1]]);
             let finalValue;
+            let finalUnit;
             if (typeof localValue === "number") {
                 const highByte = localValue >> 8;
                 const lowByte = localValue & 0xFF;
@@ -1305,21 +1264,33 @@ class TaBlnet extends utils.Adapter {
                     // Set the value to negative
                     input = -input;
                 }
+                finalValue = input;
                 switch (unitBits) {
+                    case 0x00:
+                        finalUnit = this.cmiUnits[0]; // No unit
+                        break;
+                    case 0x10:
+                        finalValue = (localValue & 0x8000) ? 1 : 0;
+                        finalUnit = "digital"; // Digital unit (no direct match in cmiUnits)
+                        break;
                     case 0x20: // TYPE_TEMP
                         finalValue = input / 10.0;
+                        finalUnit = this.cmiUnits[1]; // °C
                         break;
-                    case 0x30: // TYPE_VOLUME:
+                    case 0x30: // TYPE_VOLUME: Flow rate in liters per hour
                         finalValue = input * 4.0;
+                        finalUnit = this.cmiUnits[3]; // l/h
                         break;
-                    case 0x10: // TYPE_DIGITAL:
+                    case 0x60: // Power per square meter:
                         finalValue = (localValue & 0x8000) ? 1 : 0;
+                        finalUnit = this.cmiUnits[2]; // W/m²
                         break;
-                    case 0x70: // TYPE_RAS:
+                    case 0x70: // TYPE_RAS: Room temperature sensor in Celsius (using °C)
                         finalValue = (input & 0x1FF) / 10.0;
+                        finalUnit = this.cmiUnits[1]; // °C
                         break;
                     default:
-                        finalValue = input;
+                        finalUnit = "unknown"; // Unknown unit
                 }
                 // this.log.debug("Setting state " + key + " to value " + finalValue + " as type " + units[i][key]);
             } else {
@@ -1327,7 +1298,7 @@ class TaBlnet extends utils.Adapter {
             }
             uvrRecord.inputs[key] = {
                 value: finalValue,
-                type: defaultUnit
+                type: finalUnit
             };
         }
 
@@ -1347,8 +1318,11 @@ class TaBlnet extends utils.Adapter {
         this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
 
         // Thermal energy counters 1 active?
+        const unitKW = this.cmiUnits[10]; // kW
+        const unitKWh = this.cmiUnits[11]; // kWh
         if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] &
             indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
+
             const value = this.byte2int(
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]], // lowLow1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]], // lowHigh1
@@ -1368,7 +1342,7 @@ class TaBlnet extends utils.Adapter {
 
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: finalValue,
-                type: defaultUnit
+                type: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
                 value: this.byte2short(
@@ -1376,16 +1350,16 @@ class TaBlnet extends utils.Adapter {
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]],
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0,
-                type: defaultUnit
+                type: unitKWh
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: 0,
-                type: defaultUnit
+                type: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
                 value: 0,
-                type: defaultUnit
+                type: unitKWh
             };
         }
         // Thermal energy counters 2 active?
@@ -1410,7 +1384,7 @@ class TaBlnet extends utils.Adapter {
             finalValue = finalValue / 100; // Convert to kW with decimal places
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: finalValue,
-                type: defaultUnit
+                type: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
                 value: this.byte2short(
@@ -1418,16 +1392,16 @@ class TaBlnet extends utils.Adapter {
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]],
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0,
-                type: defaultUnit
+                type: unitKWh
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: 0,
-                type: defaultUnit
+                type: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
                 value: 0,
-                type: defaultUnit
+                type: unitKWh
             };
         }
 
@@ -1453,7 +1427,7 @@ class TaBlnet extends utils.Adapter {
                     data.forEach(input => {
                         const inputKey = `S${String(input.Number).padStart(2, "0")}`;
                         const unitIndex = input.Value.Unit;
-                        const unitString = this.cmiUnits[unitIndex] || `unknown: ${unitIndex}`;
+                        const unitString = this.cmiUnits[unitIndex];
                         uvrRecord.inputs[inputKey] = {
                             value: input.Value.Value,
                             type: unitString
@@ -1464,7 +1438,7 @@ class TaBlnet extends utils.Adapter {
                     data.forEach(output => {
                         const outputKey = `A${String(output.Number).padStart(2, "0")}`;
                         const unitIndex = output.Value.Unit;
-                        const unitString = this.cmiUnits[unitIndex] || `unknown: ${unitIndex}`;
+                        const unitString = this.cmiUnits[unitIndex];
                         uvrRecord.outputs[outputKey] = {
                             value: output.Value.State === 1,
                             type: unitString
