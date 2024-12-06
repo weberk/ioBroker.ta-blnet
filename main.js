@@ -28,7 +28,7 @@ class TaBlnet extends utils.Adapter {
             name: "ta-blnet",
         });
         this.on("ready", this.onReady.bind(this)); // Bind the onReady method
-        //this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
+        // this.on("stateChange", this.onStateChange.bind(this)); // Bind the onStateChange method
         // this.on("objectChange", this.onObjectChange.bind(this)); // Uncomment to bind the onObjectChange method
         // this.on("message", this.onMessage.bind(this)); // Uncomment to bind the onMessage method
         this.on("unload", this.onUnload.bind(this)); // Bind the onUnload method
@@ -74,6 +74,22 @@ class TaBlnet extends utils.Adapter {
         this.log.info("expert_password: " + this.config.expert_password);
         this.log.info("can_node_list: " + this.config.can_node_list);
         this.log.info("selected_ta_logger: " + this.config.selected_ta_logger);
+
+        // Subscribe to all objects
+        this.initialized = false;
+        // this.subscribeObjects("system.adapter.ta-blnet.*.alive");
+        // this.subscribeForeignStates("system.adapter.ta-blnet.*.alive");
+        //this.subscribeObjects(`system.adapter.${this.namespace}`);
+
+        // Check if the selected TA logger has changed
+        const devicePath = this.namespace + "." + this.config.selected_ta_logger;
+        const initializedLogger = await this.getObjectAsync(devicePath);
+        if (initializedLogger) {
+            this.log.debug("onReady: Initialization time logger is the same as in configuration.");
+        } else {
+            this.log.debug("onReady: Initialization time logger has changed.");
+            await this.deleteObjectsUnderInstance(this.namespace);
+        }
         //Test code for "CPU Model Name Resolved as Unknown for Raspberry PI2" https://github.com/nodejs/node/issues/56105
         // const cpus = os.cpus();
         // cpus.forEach((cpu, index) => {
@@ -137,11 +153,11 @@ class TaBlnet extends utils.Adapter {
             }
 
             // Schedule the next poll
-            this.setTimeout(poll, pollInterval);
+            this.currentTimeoutId = this.setTimeout(poll, pollInterval);
         };
 
         // Start the polling loop
-        this.setTimeout(poll, pollInterval);
+        this.currentTimeoutId = this.setTimeout(poll, pollInterval);
     }
 
     /**
@@ -373,7 +389,7 @@ class TaBlnet extends utils.Adapter {
         const stateValues = this.systemConfiguration.stateValues;
 
         // Check if deviceInfo is defined
-        const device_node_name = this.name2id("BL-NET");
+        const device_node_name = this.name2id(this.config.selected_ta_logger);
         if (deviceInfo) {
             // create device node
             if (!this.initialized) {
@@ -643,29 +659,50 @@ class TaBlnet extends utils.Adapter {
         const LATEST_SIZE = 56; // Size of one UVR1611 record
 
         try {
-            const command = new Uint8Array([READ_CURRENT_DATA, data_frame_index]);
-            const data = await this.fetchDataBlockFromDevice(command);
+            if (this.config.selected_ta_logger === "BL-NET") {
+                this.log.debug("fetchStateValuesFromDevice BL-NET for data frame: " + data_frame_index);
+                const command = new Uint8Array([READ_CURRENT_DATA, data_frame_index]);
+                const data = await this.fetchDataBlockFromDevice(command);
 
-            // Process the received data here
-            if (data[0] === 0x80) {
-                // Process the first UVR record
-                const response1 = this.readBlock(data, 0, LATEST_SIZE);
-                if (response1) {
-                    const currentUvrRecord1 = this.parseUvrRecordFromBuffer(response1);
-                    this.log.debug("UVR record created from binary record 1: " + JSON.stringify(currentUvrRecord1));
-                    const resStruct = await this.fetchJSONDataFromDevice("", "", "", 1);
-                    const dummyUvrJSONRecord1 = this.parseUvrRecordFromJSON(resStruct.data);
-                    this.log.debug("JS Record created from JSON response: " + JSON.stringify(dummyUvrJSONRecord1));
-                    stateValuesArray.push(dummyUvrJSONRecord1);
+                // Process the received data here
+                if (data[0] === 0x80) {
+                    // Process the first UVR record
+                    const response1 = this.readBlock(data, 0, LATEST_SIZE);
+                    if (response1) {
+                        const currentUvrRecord1 = this.parseUvrRecordFromBuffer(response1);
+                        this.log.debug("UVR record created from binary record 1: " + JSON.stringify(currentUvrRecord1));
+                        stateValuesArray.push(currentUvrRecord1);
 
-                    // Check if there is a second UVR record
-                    if (data.length >= 1 + LATEST_SIZE * 2) {
-                        const response2 = this.readBlock(data, 1 + LATEST_SIZE, LATEST_SIZE);
-                        if (response2) {
-                            const currentUvrRecord2 = this.parseUvrRecordFromBuffer(response2);
-                            stateValuesArray.push(currentUvrRecord2);
+                        // Check if there is a second UVR record
+                        if (data.length >= 1 + LATEST_SIZE * 2) {
+                            const response2 = this.readBlock(data, 1 + LATEST_SIZE, LATEST_SIZE);
+                            if (response2) {
+                                const currentUvrRecord2 = this.parseUvrRecordFromBuffer(response2);
+                                stateValuesArray.push(currentUvrRecord2);
+                            }
                         }
+                        this.log.debug("fetchStateValuesFromDevice successful.");
+                        return stateValuesArray; // Return the state values
+                    } else {
+                        this.log.debug("Invalid response from device");
+                        throw new Error("Invalid response from device");
                     }
+                } else {
+                    // Unexpected response
+                    this.log.debug("Unexpected data format");
+                    this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data
+                    throw new Error("Unexpected data format");
+                }
+            } else {
+                this.log.debug("fetchStateValuesFromDevice CMI for CAN node id: " + data_frame_index);
+                const data = await this.fetchJSONDataFromDevice(data_frame_index);
+
+                // Process the received data here
+                if (data.httpStatusCode === 200) {
+                    // Process the first UVR record
+                    const currentUvrJSONRecord = this.parseUvrRecordFromJSON(data.data);
+                    this.log.debug("JS Record created from JSON response: " + JSON.stringify(currentUvrJSONRecord));
+                    stateValuesArray.push(currentUvrJSONRecord);
 
                     this.log.debug("fetchStateValuesFromDevice successful.");
                     return stateValuesArray; // Return the state values
@@ -673,11 +710,7 @@ class TaBlnet extends utils.Adapter {
                     this.log.debug("Invalid response from device");
                     throw new Error("Invalid response from device");
                 }
-            } else {
-                // Unexpected response
-                this.log.debug("Unexpected data format");
-                this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data
-                throw new Error("Unexpected data format");
+
             }
         } catch (error) {
             this.log.error("Error during communication with device: " + error);
@@ -743,7 +776,11 @@ class TaBlnet extends utils.Adapter {
      * @returns {Promise<{data: Object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
      * @throws {Error} If the maximum number of retries is reached.
      */
-    async fetchJSONDataFromDevice(hostname, username, password, canNode) {
+    async fetchJSONDataFromDevice(canNode) {
+        const hostname = this.config.ip_address;
+        const username = this.config.expert_username;
+        const password = this.config.expert_password;
+
         return new Promise((resolve, reject) => {
             const maxRetries = 5; // Maximum number of retries
             let attempt = 0; // Current attempt
@@ -1582,15 +1619,88 @@ class TaBlnet extends utils.Adapter {
      */
     onUnload(callback) {
         try {
+            //this.deleteObjectsUnderInstance(this.namespace);
             // Clear the polling intervals?
+            if (this.currentTimeoutId) {
+                this.clearTimeout(this.currentTimeoutId);
+                this.log.debug("onUnload: Cleared orphan timeout.");
+            }
             callback();
         } catch (e) {
             callback();
         }
     }
 
+    // async onStateChange(id, state) {
+    //     if (state) {
+    //         const _initializationTimeLogger = await this.getStateAsync("info.selected_ta_logger");
+    //         if (this.config.selected_ta_logger && _initializationTimeLogger &&
+    //             !id.includes("info.selected_ta_logger") &&
+    //             _initializationTimeLogger.val !== this.config.selected_ta_logger) {
+    //             this.log.info("_initializationTimeLogger: " + JSON.stringify(_initializationTimeLogger) + "config: " + this.config.selected_ta_logger);
+    //             this.initialized = false;
+    //             await this.setState("info.selected_ta_logger", {
+    //                 val: this.config.selected_ta_logger,
+    //                 ack: true
+    //             });
+    //             this.log.error("Configuration changed via onStateChange");
+    //             await this.deleteObjectsUnderInstance(this.namespace);
+    //         }
+    //         this.log.info(`Wert von ${id} wurde geschrieben: ${state.val}`);
+    //     }
+    // }
 
+    // // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
+    // // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
+    // /**
+    //  * Is called if a subscribed object changes
+    //  * @param {string} id
+    //  * @param {ioBroker.Object | null | undefined} obj
+    //  */
+    // async onObjectChange(id, obj) {
+    //     if (obj) {
+    //         // The object was changed
+    //         this.log.info(`object ${id} changed`);
+    //     } else {
+    //         // The object was deleted
+    //         this.log.info(`object ${id} deleted`);
+    //     }
+    //}
 
+    async deleteObjectsUnderInstance(instanceId) {
+        this.log.debug("Objects to be deleted for: " + instanceId);
+
+        this.initialized = false;
+        // delete device tree
+        try {
+            await this.delObjectAsync(instanceId + ".BL-NET", {
+                recursive: true
+            });
+        } catch (error) {
+            this.log.warn(`Error deleting object ${instanceId + ".BL-NET"}: ${error.message}`);
+        }
+        try {
+            await this.delObjectAsync(instanceId + ".CMI", {
+                recursive: true
+            });
+        } catch (error) {
+            this.log.warn(`Error deleting object ${instanceId + ".CMI"}: ${error.message}`);
+        }
+        // delete some objects under the folder info, but info.connection
+        try {
+            const objects = await this.getForeignObjectsAsync(instanceId + ".*");
+            for (const id in objects) {
+                if (Object.prototype.hasOwnProperty.call(objects, id)) {
+                    if (!id.includes(".info.connection"))
+                        await this.delObjectAsync(id, {
+                            recursive: true
+                        });
+                }
+            }
+        } catch (error) {
+            this.log.error(`Error deleting objects under ${instanceId}: ${error.message}`);
+        }
+    }
 }
 
 // Check if the script is being run directly or required as a module
