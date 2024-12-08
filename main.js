@@ -57,6 +57,29 @@ class TaBlnet extends utils.Adapter {
             "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "ON/OFF",
             "NO/YES", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "sec", "", "%", "h", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx", "Bg/m³"
         ];
+        // CMI-JSON-API Version 7
+        this.cmiAttachedDevices = {
+            "7f": "CoE",
+            "80": "UVR1611",
+            "81": "CAN-MT",
+            "82": "CAN-I/O44",
+            "83": "CAN-I/O35",
+            "84": "CAN-BC",
+            "85": "CAN-EZ",
+            "86": "CAN-TOUCH",
+            "87": "UVR16x2",
+            "88": "RSM610",
+            "89": "CAN-I/O45",
+            "8a": "CMI",
+            "8b": "CAN-EZ2",
+            "8c": "CAN-MTx2",
+            "8d": "CAN-BC2",
+            "8e": "UVR65",
+            "8f": "CAN-EZ3",
+            "91": "UVR610",
+            "92": "UVR67",
+            "a3": "BL-NET"
+        };
         // sections to be used for ioBroker adapter objects
         this.cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
     }
@@ -133,9 +156,11 @@ class TaBlnet extends utils.Adapter {
             if (this.initialized) {
                 try {
                     const stateValuesArray = []; // Create a local array
+                    const deviceInfo = this.systemConfiguration.deviceInfo;
                     // loop through all data frames evident from the header_frame
-                    for (let i = 0; i < this.numberOfDataFrames; i++) {
-                        const currentStateValuesArray = await this.fetchStateValuesFromDevice(i + 1);
+                    this.log.debug("Polling state values from devices: " + JSON.stringify(deviceInfo.channelNodes));
+                    for (const data_frame_index of deviceInfo.channelNodes) {
+                        const currentStateValuesArray = await this.fetchStateValuesFromDevice(data_frame_index);
                         // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
                         for (let j = 0; j < currentStateValuesArray.length; j++) {
                             stateValuesArray.push(currentStateValuesArray[j]);
@@ -166,47 +191,89 @@ class TaBlnet extends utils.Adapter {
      */
     async readSystemConfiguration() {
         let deviceInfo;
+        const stateValuesArray = []; // Create a local array
+        // Try to read some metadata on the devices
+        try {
+            // BL-NET selected
+            if (this.config.selected_ta_logger === "BL-NET") {
+                deviceInfo = await this.read_BLNET_DeviceInfo();
+                this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
+                // Try to read the state values from the device
+                try {
+                    // loop through all data frames evident from the header_frame
+                    for (let i = 0; i < this.numberOfDataFrames; i++) {
+                        const currentStateValuesArray = await this.fetchStateValuesFromDevice(deviceInfo.channelNodes[i]);
+                        // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
+                        for (let j = 0; j < currentStateValuesArray.length; j++) {
+                            stateValuesArray.push(currentStateValuesArray[j]);
+                        }
+                    }
 
-        // Try to read some metadata on the device
-        try {
-            deviceInfo = await this.readDeviceInfo();
-            this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
-        } catch (error) {
-            this.log.debug("readDeviceInfo function error: " + error);
-            return {
-                success: false,
-                stateValues: [],
-                deviceInfo: {}
-            };
-        }
-        try {
-            const stateValuesArray = []; // Create a local array
-            // loop through all data frames evident from the header_frame
-            for (let i = 0; i < this.numberOfDataFrames; i++) {
-                const currentStateValuesArray = await this.fetchStateValuesFromDevice(i + 1);
-                let currentStateValues = {};
-                // loop through all currentStateValues returned by the current data frame read (2DL = 2, 1DL = 1, CAN = 1)
-                for (let j = 0; j < currentStateValuesArray.length; j++) {
-                    currentStateValues = currentStateValuesArray[j];
-                    // Add the current units and StateValues to the collecting array
-                    stateValuesArray.push(currentStateValues);
+                } catch (error) {
+                    this.log.error("readSystemConfiguration reading stateValues failed: " + error);
+                    return {
+                        success: false,
+                        stateValues: [],
+                        deviceInfo: {}
+                    };
                 }
             }
-            this.log.info("readSystemConfiguration succeeded.");
-            // returned system configuration will be stored in the adapter instance
-            return {
-                success: true,
-                stateValues: stateValuesArray,
-                deviceInfo: deviceInfo
-            };
+            // CIM selected
+            else {
+                // check the CAN nodes from CIM configuration
+                const canNodesArray = this.config.can_node_list.split(",").map(node => parseInt(node.trim(), 10));
+                this.numberOfDataFrames = canNodesArray.length;
+                deviceInfo = {
+                    uvr_mode: this.numberOfDataFrames + "CAN",
+                    uvr_type_str: {},
+                    uvr_type_code: {},
+                    channelNodes: canNodesArray,
+                    module_id: "--",
+                    firmware_version: "--",
+                    transmission_mode: "--"
+                };
+
+                // Fetch JSON data from device for each CAN node and update deviceInfo
+                let uvr_type_str = [];
+                let uvr_type_code = [];
+                for (const data_frame_index of deviceInfo.channelNodes) {
+                    try {
+                        this.log.debug("readSystemConfiguration reading data for CAN node: " + data_frame_index);
+                        const res = await this.fetchJSONDataFromDevice(data_frame_index);
+                        // use the header data to get the device type
+                        const deviceCode = res.data.Header.Device.toString(16); // Convert to hex string
+                        uvr_type_code.push(deviceCode);
+                        const deviceName = this.cmiAttachedDevices[deviceCode] || "Unknown";
+                        uvr_type_str.push(deviceName);
+                        // reuse res to get the values
+                        const currentUvrJSONRecord = this.parseUvrRecordFromJSON(res.data);
+                        stateValuesArray.push(currentUvrJSONRecord);
+                    } catch (error) {
+                        this.log.error(`Error fetching data for CAN node ${data_frame_index}: ${error.message}`);
+                    }
+                }
+                // Update deviceInfo with the fetched data
+                deviceInfo.uvr_type_code = uvr_type_code;
+                deviceInfo.uvr_type_str = uvr_type_str;
+                this.log.debug("deviceInfo is defined as:" + JSON.stringify(deviceInfo));
+            }
         } catch (error) {
-            this.log.error("readSystemConfiguration failed: " + error);
+            this.log.debug("readSystemConfiguration reading of DeviceInfo failed: " + error);
             return {
                 success: false,
                 stateValues: [],
                 deviceInfo: {}
             };
         }
+
+        // all succeeded
+        this.log.info("readSystemConfiguration succeeded.");
+        // returned system configuration will be stored in the adapter instance
+        return {
+            success: true,
+            stateValues: stateValuesArray,
+            deviceInfo: deviceInfo
+        };
     }
 
     /**
@@ -220,13 +287,14 @@ class TaBlnet extends utils.Adapter {
      * - {string} uvr_mode - The UVR mode (e.g., "1DL", "2DL", "CAN").
      * - {Array<string>} uvr_type_str - The UVR type(s) as strings (e.g., ["UVR61-3", "UVR1611"]).
      * - {Array<number>} uvr_type_code - The UVR type(s) as numbers.
+     * - {Array<number>} channelNodes - The channel nodes (e.g., [1, 2, 3]).
      * - {string} module_id - The module ID of the BL-NET device.
      * - {string} firmware_version - The firmware version of the BL-NET device.
      * - {string} transmission_mode - The transmission mode (e.g., "Current Data").
      *
      * @throws {Error} If there is an error during communication with the device.
      */
-    async readDeviceInfo() {
+    async read_BLNET_DeviceInfo() {
         // Define constants
         const VERSION_REQUEST = 0x81;
         const HEADER_READ = 0xAA;
@@ -357,11 +425,17 @@ class TaBlnet extends utils.Adapter {
             data = await this.sendCommand(command);
             const transmission_mode = "0x" + data.readUInt8(0).toString(16).toUpperCase();
             this.log.debug("Received mode of BL-NET: 0x" + transmission_mode);
+            // Create an array with the frame indices [1, 2, ..., 8]
+            const frameIndexArray = [];
+            for (let i = 1; i <= this.numberOfDataFrames; i++) {
+                frameIndexArray.push(i);
+            }
 
             return {
                 uvr_mode: uvr_mode_str,
                 uvr_type_str: devices,
                 uvr_type_code: uvr_type_code,
+                channelNodes: frameIndexArray,
                 module_id: "0x" + module_id.toUpperCase(),
                 firmware_version: firmwareVersion,
                 transmission_mode: transmission_mode
@@ -431,7 +505,7 @@ class TaBlnet extends utils.Adapter {
         if (stateValues) {
             // Declare objects for each data frame
             for (let i = 0; this.numberOfDataFrames && i < this.numberOfDataFrames; i++) {
-                const currentFrameName = this.name2id(device_node_name + "." + (i + 1) + "-" + deviceInfo.uvr_type_str[i]);
+                const currentFrameName = this.name2id(device_node_name + "." + deviceInfo.channelNodes[i] + "-" + deviceInfo.uvr_type_str[i]);
                 if (!this.initialized) {
                     await this.setObjectNotExistsAsync(currentFrameName, {
                         type: "channel",
@@ -1129,9 +1203,9 @@ class TaBlnet extends utils.Adapter {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
                     }
 
-                    // Wait for 30 seconds before the next attempt
+                    // Wait for 62 seconds before the next attempt
                     if (attempt < maxRetries) {
-                        await new Promise(resolve => this.setTimeout(resolve, 30000, 30000));
+                        await new Promise(resolve => this.setTimeout(resolve, 62000, 62000));
                     }
                 }
                 reject(new Error("Max retries reached. Unable to communicate with device."));
