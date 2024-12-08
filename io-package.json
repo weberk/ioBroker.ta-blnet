@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.22",
+    "version": "1.0.23",
     "messagebox": true,
     "news": {
+      "1.0.23": {
+        "en": "added initial CMI support",
+        "de": "anfängliche CMI-Unterstützung",
+        "ru": "добавлена первоначальная поддержка CMI",
+        "pt": "suporte CMI inicial adicionado",
+        "nl": "toegevoegde initiële CMI-ondersteuning",
+        "fr": "le soutien initial du CMI ajouté",
+        "it": "supporto CMI iniziale aggiunto",
+        "es": "apoyo inicial del CMI",
+        "pl": "dodane wstępne wsparcie CMI",
+        "uk": "додана початкова підтримка CMI",
+        "zh-cn": "增加了海事委员会的初步支助"
+      },
       "1.0.22": {
         "en": "fixed negative current_heat_power",
         "de": "fester negativer strom_heat_power",
@@ -81,19 +94,6 @@
         "pl": "dodana liczba klatek CAN do uvr _ mode _ str\nlepsze rozpoznanie konieczności ponownego rozpoznania wiadomości \"zachować pacjenta\" z BL- NET",
         "uk": "додано кількість кадрів CAN до uvr_mode_str\nпокращене визнання необхідності птиху на повідомленнях «клімату пацієнта» від BL-NET",
         "zh-cn": "将 CAN 框架添加到 urr_ mode_ str 中\n在BL-NET的“保留病人”信息上,对重复的必要性的认识得到提高"
-      },
-      "1.0.16": {
-        "en": "improved reading of flow rate\ncode refactoring",
-        "de": "verbesserung des durchflusses\ncode refactoring",
-        "ru": "улучшение показателей расхода\nrefactor",
-        "pt": "melhor leitura da taxa de fluxo\nrefactoring de código",
-        "nl": "verbeterde meting van het debiet\ncode refactoring",
-        "fr": "une meilleure lecture du débit\nrefactoration du code",
-        "it": "lettura migliorata della portata\ncodifica refactoring",
-        "es": "mejor lectura de la tasa de flujo\ncambio de código",
-        "pl": "poprawa odczytu natężenia przepływu\nrefaktoring kodu",
-        "uk": "поліпшення читання швидкості потоку\nрефакторинг коду",
-        "zh-cn": "改进流量读取率\n代码重构"
       }
     },
     "titleLang": {
