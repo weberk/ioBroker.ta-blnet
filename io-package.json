@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.23",
+    "version": "1.0.24",
     "messagebox": true,
     "news": {
+      "1.0.24": {
+        "en": "fixed lint errors",
+        "de": "feste flutfehler",
+        "ru": "погрешности фиксированного линта",
+        "pt": "erros do forro fixo",
+        "nl": "vaste pluisfouten",
+        "fr": "erreurs de linte corrigées",
+        "it": "errori di testo fissi",
+        "es": "errores de lint fijos",
+        "pl": "błędy stałe",
+        "uk": "виправлені помилки в розмітці",
+        "zh-cn": "修正错误"
+      },
       "1.0.23": {
         "en": "added initial CMI support",
         "de": "anfängliche CMI-Unterstützung",
@@ -81,19 +94,6 @@
         "pl": "wprowadziła wiele danych _ frame _ reading i populacja wielu urządzeń w drzewie obiektów adaptera",
         "uk": "введений кілька даних_frame_reading і населення декількох пристроїв в дерево об'єктів адаптера",
         "zh-cn": "在适配对象树中引入多个数据_帧_读取和多个设备的组合"
-      },
-      "1.0.17": {
-        "en": "added number of CAN frames to uvr_mode_str\nimproved recognition of retry necessity on 'keep patient' messages from BL-NET",
-        "de": "anzahl der CAN-Rahmen zu uvr_mode_str\nverbesserte Erkennung der Retry-Notwendigkeit auf \"keep patient\"-Nachrichten von BL-NET",
-        "ru": "добавленное количество рам CAN к uvr_mode_str\nулучшенное признание необходимости ретри на сообщения «получить пациента» от BL-NET",
-        "pt": "número adicionado de quadros CAN para uvr_mode_str\nmelhor reconhecimento da necessidade de retificação em mensagens de \"paciente de manutenção\" do BL-NET",
-        "nl": "aantal CAN-frames toegevoegd aan uvr_mode_str\nverbeterde erkenning van de noodzaak opnieuw te proberen op \"houd de patiënt\" berichten van BL-NET",
-        "fr": "ajout du nombre d'images CAN à uvr_mode_str\nune meilleure reconnaissance de la nécessité de maintenir les messages « patients » de BL-NET",
-        "it": "numero aggiunto di cornici CAN a uvr_mode_str\nmiglioramento del riconoscimento della necessità di riprova sui messaggi del \"paziente di mantenimento\" di BL-NET",
-        "es": "número añadido de marcos CAN a uvr_mode_str\nmejor reconocimiento de la necesidad de reingresar en los mensajes de \"paciente alto\" de BL-NET",
-        "pl": "dodana liczba klatek CAN do uvr _ mode _ str\nlepsze rozpoznanie konieczności ponownego rozpoznania wiadomości \"zachować pacjenta\" z BL- NET",
-        "uk": "додано кількість кадрів CAN до uvr_mode_str\nпокращене визнання необхідності птиху на повідомленнях «клімату пацієнта» від BL-NET",
-        "zh-cn": "将 CAN 框架添加到 urr_ mode_ str 中\n在BL-NET的“保留病人”信息上,对重复的必要性的认识得到提高"
       }
     },
     "titleLang": {
