@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   fixed lint errors
+
 ### 1.0.23 (2024-12-08)
 
 -   added initial CMI support
