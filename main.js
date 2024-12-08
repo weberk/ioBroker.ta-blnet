@@ -843,9 +843,6 @@ class TaBlnet extends utils.Adapter {
     /**
      * Fetches JSON data from a device with retry logic.
      *
-     * @param {string} hostname - The hostname of the device.
-     * @param {string} username - The username for authentication.
-     * @param {string} password - The password for authentication.
      * @param {number} canNode - The CAN node to query.
      * @returns {Promise<{data: Object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
      * @throws {Error} If the maximum number of retries is reached.

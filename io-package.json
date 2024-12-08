@@ -1,22 +1,9 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.23",
+    "version": "1.0.22",
     "messagebox": true,
     "news": {
-      "1.0.23": {
-        "en": "added initial CMI support",
-        "de": "anfängliche CMI-Unterstützung",
-        "ru": "добавлена первоначальная поддержка CMI",
-        "pt": "suporte CMI inicial adicionado",
-        "nl": "toegevoegde initiële CMI-ondersteuning",
-        "fr": "le soutien initial du CMI ajouté",
-        "it": "supporto CMI iniziale aggiunto",
-        "es": "apoyo inicial del CMI",
-        "pl": "dodane wstępne wsparcie CMI",
-        "uk": "додана початкова підтримка CMI",
-        "zh-cn": "增加了海事委员会的初步支助"
-      },
       "1.0.22": {
         "en": "fixed negative current_heat_power",
         "de": "fester negativer strom_heat_power",
