@@ -218,9 +218,9 @@ class TaBlnet extends utils.Adapter {
                     };
                 }
             }
-            // CIM selected
+            // CMI selected
             else {
-                // check the CAN nodes from CIM configuration
+                // check the CAN nodes from CMI configuration
                 const canNodesArray = this.config.can_node_list.split(",").map(node => parseInt(node.trim(), 10));
                 this.numberOfDataFrames = canNodesArray.length;
                 deviceInfo = {
@@ -234,8 +234,8 @@ class TaBlnet extends utils.Adapter {
                 };
 
                 // Fetch JSON data from device for each CAN node and update deviceInfo
-                let uvr_type_str = [];
-                let uvr_type_code = [];
+                const uvr_type_str = [];
+                const uvr_type_code = [];
                 for (const data_frame_index of deviceInfo.channelNodes) {
                     try {
                         this.log.debug("readSystemConfiguration reading data for CAN node: " + data_frame_index);

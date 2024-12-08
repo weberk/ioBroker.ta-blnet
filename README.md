@@ -29,7 +29,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 
 ### **WORK IN PROGRESS**
 
--
+-   added initial CMI support
 
 ### 1.0.22 (2024-12-01)
 
