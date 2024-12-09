@@ -470,7 +470,7 @@ class TaBlnet extends utils.Adapter {
                 await this.setObjectNotExistsAsync(device_node_name, {
                     type: "device",
                     common: {
-                        name: "door to climate controls",
+                        name: "Door to Climate Controls",
                         role: "gateway"
                     },
                     native: {}
@@ -510,7 +510,7 @@ class TaBlnet extends utils.Adapter {
                     await this.setObjectNotExistsAsync(currentFrameName, {
                         type: "channel",
                         common: {
-                            name: "data frame " + (i + 1) + " from BL-NET",
+                            name: "Channel " + deviceInfo.channelNodes[i] + " (" + this.config.selected_ta_logger + ")",
                             role: "climate",
                         },
                         native: {}
