@@ -26,8 +26,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.25 (2024-12-10)
 
 -   improved error handling on CMI return codes
 -   improved node names

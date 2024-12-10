@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.24",
+    "version": "1.0.25",
     "messagebox": true,
     "news": {
+      "1.0.25": {
+        "en": "improved error handling on CMI return codes\nimproved node names",
+        "de": "verbesserte Fehlerbehandlung bei CMI-Rückgabecodes\nverbesserte knotennamen",
+        "ru": "улучшенная обработка ошибок в кодах возврата CMI\nулучшенные имена узлов",
+        "pt": "melhor manipulação de erros em códigos de retorno CMI\nnomes de nó melhorados",
+        "nl": "verbeterde foutafhandeling op CMI retourcodes\nverbeterde nodenamen",
+        "fr": "amélioration du traitement des erreurs sur les codes de retour CMI\nnoms améliorés des nœuds",
+        "it": "migliore gestione degli errori sui codici di ritorno CMI\nnomi dei nodi migliorati",
+        "es": "mejor manejo de errores en los códigos de retorno CMI\nmejora de los nombres de los nodos",
+        "pl": "ulepszona obsługa błędów przy kodach zwrotnych CMI\nulepszone nazwy węzłów",
+        "uk": "покращена обробка помилок на кодах повернення CMI\nполіпшення назв вузлів",
+        "zh-cn": "改进 CMI 返回代码上的错误处理\n改进的节点名称"
+      },
       "1.0.24": {
         "en": "fixed lint errors",
         "de": "feste flutfehler",
@@ -81,19 +94,6 @@
         "pl": "usunięto onState Zmiana;\nusprawnione nazwy węzłów obiektowych;\nulepszone typowanie węzłów;\njasno stworzył każdy węzeł;\nulepszony filtr wartości wyjściowych;\nzapewnione wywołania do ustawienia ObjectNotExistsAsync zdarza się tylko raz;\nusunięty parametr data _ frame _ number\nwprowadzony limit dla sondażu intervall\nusunięte przestarzałe ustawienia interfejsu administratora i artefakty\nużyj tego. zestaw Czas zamiast tego. zestaw Przerwanie\nsfinalizowane zmiany z powodu wyników przeglądu",
         "uk": "видалено onState Зміна;\nпотокові імена вузлів об'єкта;\nполіпшення типування вузлів;\nявно створенню кожного вузла;\nполіпшений фільтр значень виводів;\nзабезпечені дзвінки Об'єктNotExistsAsync один раз;\nвидалити дані_frame_number параметр\nвведений ліміт для інтервалу опитування\nвидалення застарілих реагувань адміністратора Налаштування та артефакти\nвикористовуйте це. Комплекти Час від цього. Комплекти Інтервал\nзаключені зміни через пошуки рецензій",
         "zh-cn": "在状态上删除 变化;\n精简对象节点名称;\n改进节点打字;\n明确创建每个节点;\n改进产出值过滤器;\n确保呼叫设置 ObjectNoExists Async只发生一次;\n删除的数据_框架_数字参数\n引入的民调间隔限制l\n删除过时的反应管理界面设置和手工艺品\n用这个 设定 暂停而不是这个。 设定 间隔\n由于审查结果,最终更改"
-      },
-      "1.0.18": {
-        "en": "introduced multiple data_frame_reading and population of multiple devices in adapter object tree",
-        "de": "mehrere data_frame_reading und die population mehrerer geräte in adapter-objektbaum",
-        "ru": "введено несколько data_frame_reading и популяция нескольких устройств в дереве объектов адаптера",
-        "pt": "introduziu vários data_frame_reading e população de vários dispositivos na árvore do objeto do adaptador",
-        "nl": "introduceerde meerdere data_frame_reading en populatie van meerdere apparaten in adapter object boom",
-        "fr": "introduit plusieurs data_frame_reading et la population de plusieurs périphériques dans l'arborescence des objets adaptateur",
-        "it": "introdotto più data_frame_reading e la popolazione di più dispositivi nell'albero dell'oggetto dell'adattatore",
-        "es": "introducido múltiples data_frame_reading y población de múltiples dispositivos en el árbol del objeto del adaptador",
-        "pl": "wprowadziła wiele danych _ frame _ reading i populacja wielu urządzeń w drzewie obiektów adaptera",
-        "uk": "введений кілька даних_frame_reading і населення декількох пристроїв в дерево об'єктів адаптера",
-        "zh-cn": "在适配对象树中引入多个数据_帧_读取和多个设备的组合"
       }
     },
     "titleLang": {
