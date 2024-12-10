@@ -59,7 +59,7 @@ class TaBlnet extends utils.Adapter {
         ];
         // CMI-JSON-API Version 7
         this.cmiAttachedDevices = {
-            "7f": "CoE",
+            "7F": "CoE",
             "80": "UVR1611",
             "81": "CAN-MT",
             "82": "CAN-I/O44",
@@ -70,17 +70,16 @@ class TaBlnet extends utils.Adapter {
             "87": "UVR16x2",
             "88": "RSM610",
             "89": "CAN-I/O45",
-            "8a": "CMI",
-            "8b": "CAN-EZ2",
-            "8c": "CAN-MTx2",
-            "8d": "CAN-BC2",
-            "8e": "UVR65",
-            "8f": "CAN-EZ3",
+            "8A": "CMI",
+            "8B": "CAN-EZ2",
+            "8C": "CAN-MTx2",
+            "8D": "CAN-BC2",
+            "8E": "UVR65",
+            "8F": "CAN-EZ3",
             "91": "UVR610",
             "92": "UVR67",
-            "a3": "BL-NET"
-        };
-        // sections to be used for ioBroker adapter objects
+            "A3": "BL-NET"
+        }; // sections to be used for ioBroker adapter objects
         this.cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
     }
 
@@ -767,7 +766,9 @@ class TaBlnet extends utils.Adapter {
                     this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data
                     throw new Error("Unexpected data format");
                 }
-            } else {
+            }
+            // CMI selected
+            else {
                 this.log.debug("fetchStateValuesFromDevice CMI for CAN node id: " + data_frame_index);
                 const data = await this.fetchJSONDataFromDevice(data_frame_index);
 
@@ -859,14 +860,14 @@ class TaBlnet extends utils.Adapter {
             const attemptFetch = async () => {
                 while (attempt < maxRetries) {
                     attempt++;
+                    const res = {
+                        data: {},
+                        httpStatusCode: 0,
+                        httpStatusMessage: "",
+                        debug: ""
+                    };
                     try {
                         let sData = "";
-                        const res = {
-                            data: {},
-                            httpStatusCode: 0,
-                            httpStatusMessage: "",
-                            debug: ""
-                        };
 
                         // Start HTTP request
                         const options = {
@@ -1123,7 +1124,7 @@ class TaBlnet extends utils.Adapter {
                                     // Parse HTTP message into object
                                     try {
                                         res.data = JSON.parse(sData);
-                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : 0;
+                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
                                         res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                         res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                                         // Check CMI status code
@@ -1152,10 +1153,12 @@ class TaBlnet extends utils.Adapter {
                                             default:
                                                 this.log.error("UNKNOWN ERROR: " + res.data["Status code"] + " - " + res.data.Status);
                                         }
-                                        resolve(res); // Resolve the promise with the result
                                         // Log dump of the data
                                         this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
-                                        return; // Exit the loop on success
+                                        if (res.data["Status code"] === 0) {
+                                            resolve(res); // Resolve the promise with the result
+                                            return; // Exit the loop on success
+                                        }
                                     } catch (err) {
                                         res.data = {};
                                         res.httpStatusCode = 998;
@@ -1165,11 +1168,10 @@ class TaBlnet extends utils.Adapter {
                                 });
                             } else {
                                 res.data = {};
-                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : 0;
+                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
                                 res.httpStatusMessage = httpResult.statusMessage || "No status message";
                                 res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
                                 this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
-
                                 // Log semantic error messages based on HTTP status code
                                 switch (res.httpStatusCode) {
                                     case 300:
@@ -1188,18 +1190,18 @@ class TaBlnet extends utils.Adapter {
                             res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
                             res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
                             this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
-                        });
-                        this.log.debug("Sent request as attempt: " + attempt);
-                        req.end();
 
-                        // Check if the attempt was successful
-                        if (res.httpStatusCode == 200) {
-                            return; // Exit the loop on success
-                        }
+                        });
+
+                        req.end(); // end request
+
+                        this.log.debug("Sent request as attempt: " + attempt);
 
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
                     }
+                    // Log the res object for debugging purposes
+                    this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
 
                     // Wait for 62 seconds before the next attempt
                     if (attempt < maxRetries) {
