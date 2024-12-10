@@ -504,7 +504,8 @@ class TaBlnet extends utils.Adapter {
         if (stateValues) {
             // Declare objects for each data frame
             for (let i = 0; this.numberOfDataFrames && i < this.numberOfDataFrames; i++) {
-                const currentFrameName = this.name2id(device_node_name + "." + deviceInfo.channelNodes[i] + "-" + deviceInfo.uvr_type_str[i]);
+                const channelNode = deviceInfo.channelNodes[i].toString().padStart(4, "0");
+                const currentFrameName = this.name2id(device_node_name + "." + channelNode + "-" + deviceInfo.uvr_type_str[i]);
                 if (!this.initialized) {
                     await this.setObjectNotExistsAsync(currentFrameName, {
                         type: "channel",
