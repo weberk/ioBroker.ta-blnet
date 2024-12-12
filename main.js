@@ -240,7 +240,7 @@ class TaBlnet extends utils.Adapter {
                         this.log.debug("readSystemConfiguration reading data for CAN node: " + data_frame_index);
                         const res = await this.fetchJSONDataFromDevice(data_frame_index);
                         // use the header data to get the device type
-                        const deviceCode = res.data.Header.Device.toString(16); // Convert to hex string
+                        const deviceCode = res.data.Header.Device; // take hex number as capital letter string
                         uvr_type_code.push(deviceCode);
                         const deviceName = this.cmiAttachedDevices[deviceCode] || "Unknown";
                         uvr_type_str.push(deviceName);
@@ -374,23 +374,23 @@ class TaBlnet extends utils.Adapter {
                 case 0xA8:
                     uvr_mode_str = "1DL";
                     this.numberOfDataFrames = 1;
-                    uvr_type_code.push(data[HEADER_A8_DEVICE1_LENGTH_OFFSET]);
+                    uvr_type_code.push(data[HEADER_A8_DEVICE1_LENGTH_OFFSET].toString(16).toUpperCase());
                     break;
                 case 0xD1:
                     uvr_mode_str = "2DL";
                     this.numberOfDataFrames = 1;
-                    uvr_type_code.push(data[HEADER_D1_DEVICE1_LENGTH_OFFSET]);
-                    uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET]);
+                    uvr_type_code.push(data[HEADER_D1_DEVICE1_LENGTH_OFFSET].toString(16).toUpperCase());
+                    uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET].toString(16).toUpperCase());
                     break;
                 case 0xDC:
                     this.numberOfDataFrames = data[5];
                     uvr_mode_str = this.numberOfDataFrames + "CAN";
                     for (let i = 0; i < this.numberOfDataFrames; i++) {
-                        uvr_type_code.push(data[HEADER_DC_DEVICE1_LENGTH_OFFSET + i]);
+                        uvr_type_code.push(data[HEADER_DC_DEVICE1_LENGTH_OFFSET + i].toString(16).toUpperCase());
                     }
                     break;
                 default:
-                    throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16));
+                    throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16).toUpperCase());
             }
             this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
 
@@ -400,10 +400,10 @@ class TaBlnet extends utils.Adapter {
             for (let i = 0; i < this.numberOfDataFrames; i++) {
                 let uvr_type_str;
                 switch (uvr_type_code[i]) {
-                    case 0x5A:
+                    case "5A":
                         uvr_type_str = "UVR61-3";
                         break;
-                    case 0x76:
+                    case "76":
                         uvr_type_str = "UVR1611";
                         break;
                     default:
@@ -888,7 +888,7 @@ class TaBlnet extends utils.Adapter {
                             sData = JSON.stringify({
                                 "Header": {
                                     "Version": 7,
-                                    "Device": "80",
+                                    "Device": "8C",
                                     "Timestamp": 1733304802
                                 },
                                 "Data": {
