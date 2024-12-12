@@ -851,6 +851,7 @@ class TaBlnet extends utils.Adapter {
      */
     async fetchJSONDataFromDevice(canNode) {
         const hostname = this.config.ip_address;
+        const port = this.config.port;
         const username = this.config.expert_username;
         const password = this.config.expert_password;
 
@@ -874,7 +875,7 @@ class TaBlnet extends utils.Adapter {
                         const options = {
                             auth: username + ":" + password,
                             hostname: hostname,
-                            port: 80,
+                            port: port,
                             // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
                             path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O",
                             method: "GET"
