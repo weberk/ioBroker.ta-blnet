@@ -26,8 +26,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.26 (2024-12-12)
 
 -   used uvr_type_code as capital letter string
 -   node name for channel is now 4 digid

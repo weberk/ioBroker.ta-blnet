@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.25",
+    "version": "1.0.26",
     "messagebox": true,
     "news": {
+      "1.0.26": {
+        "en": "used uvr_type_code as capital letter string\nnode name for channel is now 4 digid",
+        "de": "verwendet uvr_type_code als großbuchstabenzeichenfolge\nknotenname für kanal ist jetzt 4 grabid",
+        "ru": "использованный uvr_type_code как строка заголовка\nимя узла канала теперь 4 digid",
+        "pt": "usado uvr_type_code como cadeia de letra de capital\nnome do nó para canal é agora 4 digid",
+        "nl": "gebruikte uvr_type_code als tekenreeks met hoofdletter\nknooppuntnaam voor kanaal is nu 4 digid",
+        "fr": "uvr_type_code utilisé comme chaîne de caractères majuscule\nnom du noeud pour le canal est maintenant 4 digid",
+        "it": "usato uvr_type_code come stringa della lettera di capitale\nnome nodo per canale è ora 4 digid",
+        "es": "utilizado uvr_type_code como cadena mayúscula\nnombre de nodo para canal es ahora 4 digid",
+        "pl": "used uvr _ type _ code as capital letter string\nnazwa węzła dla kanału jest teraz 4 digid",
+        "uk": "використовується uvr_type_code як рядок літери таблиці\nназва вузла для каналу тепер 4 див",
+        "zh-cn": "使用 uvr_type_code 作为大写字母字符串\n频道的节点名称现在是 4 digid"
+      },
       "1.0.25": {
         "en": "improved error handling on CMI return codes\nimproved node names",
         "de": "verbesserte Fehlerbehandlung bei CMI-Rückgabecodes\nverbesserte knotennamen",
@@ -81,19 +94,6 @@
         "pl": "zmienić nazwę adaptera i git repo z jOBroker.uvr16xx-blnet do jOBroker. ta- blnet\nopublikowany nowy pakiet do npm",
         "uk": "перейменований адаптер і git repo від ioBroker.uvr16xx-blnet до ioBroker. та-блнет\nопубліковано новий пакет на npm",
         "zh-cn": "将适配器和git repo从ioBroker.uvr16xx-blnet更名为ioBroker. 双蓝网\n已发布新软件包到 npm"
-      },
-      "1.0.19": {
-        "en": "removed onStateChange;\nstreamlined object node names;\nimproved node typing;\nexplicitely created every node;\nimproved outputs value filter;\nensured calls to setObjectNotExistsAsync happen only once;\nremoved data_frame_number parameter\nintroduced limit for poll intervall\nremoved obsolete react admin GUI settings and artefacts\nuse this.setTimeout instead of this.setInterval\nfinalized changes because of review findings",
-        "de": "auf der Karte Änderung;\nstreamlined objektknotennamen;\nverbesserter knotentyp;\nexplizit jeden knoten erstellt;\nverbesserte ausgangswertefilter;\nsichergestellte Anrufe ObjectNotExistsAsync passiert nur einmal;\nentfernt data_frame_number parameter\neinführungsgrenze für pollenintervall\nentfernte obsolete Reagieren Admin-GUI-Einstellungen und Artefakte\nverwenden. Menge Timeout statt dessen. Menge Interoperabilität\nabschließende änderungen aufgrund der untersuchungsergebnisse",
-        "ru": "удалены на государство изменение;\nупорядоченные имена узлов объекта;\nулучшенный тип узла;\nявно создал каждый узел;\nсовершенствование фильтра значений результатов;\nобеспеченные призывы ObjectNotExistsAsync происходит только один раз;\nудаленный параметр_frame_name\nвведенный предел для интервала опросаl\nудаленные устаревшие настройки GUI администратора и артефакты\nиспользуйте это. set Вместо этого тайм-аут. set Интервал\nокончательные изменения в связи с результатами обзора",
-        "pt": "removido no Estado Mudança;\nnome de nó de objeto simplificado;\nmelhorou a digitação do nó;\nexplicitamente criou cada nó;\nmelhorou o filtro de valor de saídas;\nchamadas garantidas para definir ObjectNotExistsAsync acontece apenas uma vez;\nparâmetro remove data_frame_number\nlimite introduzido para intervalo de votação\nremovido obsoleto reagir configurações de GUI de administrador e artefatos\nusa isto. conjunto Timeout em vez disso. conjunto Intervalo\nmudanças finalizadas devido aos achados de revisão",
-        "nl": "verwijderd opstaat verandering;\ngestroomlijnde objectnodenamen;\nverbeterde knooppunttypering;\nelke node expliciet geschapen;\neen verbeterde outputwaardefilter;\ngegarandeerde oproepen tot het instellen ObjectNotExistsAsync gebeurt slechts eenmaal;\ndata_frame_number parameter verwijderd\ningevoerd limiet voor poll intervall\nverwijderde verouderde reactie admin GUI instellingen en artefacten\ngebruik dit. ingesteld Time-out in plaats van dit. ingesteld Interval\ndefinitieve wijzigingen als gevolg van de bevindingen van de evaluatie",
-        "fr": "de l ' État Changement;\nles noms de nœuds d'objet simplifiés;\nune meilleure dactylographie des nœuds;\na créé explicitement chaque noeud;\namélioration du filtre à valeur de sortie;\ndes appels à définir ObjectNotExistsAsync n'arrive qu'une seule fois;\nparamètre data_frame_number supprimé\nlimite introduite pour l'intervalle de sondagel\nsupprimer les paramètres et les artefacts obsolètes de réaction admin GUI\nutilisez ça. ensemble Temps mort au lieu de ça. ensemble Intervalle\nles changements finalisés en raison des conclusions de l'examen",
-        "it": "rimosso suState Cambiamento;\nnomi dei nodi degli oggetti semplificati;\nmiglioramento della digitazione dei nodi;\nesplicitamente creato ogni nodo;\nfiltro valori di output migliorato;\nchiamate sicure per impostare ObjectNotExistsAsync avviene solo una volta;\nparametro data_frame_number rimosso\nlimite introdotto per intervallo di poll\nrimosso obsoleto reagiscono impostazioni e artefatti GUI amministratore\nusa questo. set Timeout invece di questo. set Intervallo\nmodifiche finalizzate a causa dei risultati di revisione",
-        "es": "estados Unidos Cambio;\nnombres de los nodos de objetos simplificados;\n- mejoramiento de los nodos;\ncreado explícitamente cada nodo;\nfiltro de valor de los productos mejorados;\nllamadas aseguradas para establecer ObjectNotExistsAsync sucede sólo una vez;\nparámetro eliminado data_frame_number\nlímite introducido para el intervalo de votación\nremovido obsoleto reaccionar los ajustes y artefactos del administrador GUI\nusa esto. set Tiempo libre en lugar de esto. set Interval\ncambios finalizados debido a las conclusiones del examen",
-        "pl": "usunięto onState Zmiana;\nusprawnione nazwy węzłów obiektowych;\nulepszone typowanie węzłów;\njasno stworzył każdy węzeł;\nulepszony filtr wartości wyjściowych;\nzapewnione wywołania do ustawienia ObjectNotExistsAsync zdarza się tylko raz;\nusunięty parametr data _ frame _ number\nwprowadzony limit dla sondażu intervall\nusunięte przestarzałe ustawienia interfejsu administratora i artefakty\nużyj tego. zestaw Czas zamiast tego. zestaw Przerwanie\nsfinalizowane zmiany z powodu wyników przeglądu",
-        "uk": "видалено onState Зміна;\nпотокові імена вузлів об'єкта;\nполіпшення типування вузлів;\nявно створенню кожного вузла;\nполіпшений фільтр значень виводів;\nзабезпечені дзвінки Об'єктNotExistsAsync один раз;\nвидалити дані_frame_number параметр\nвведений ліміт для інтервалу опитування\nвидалення застарілих реагувань адміністратора Налаштування та артефакти\nвикористовуйте це. Комплекти Час від цього. Комплекти Інтервал\nзаключені зміни через пошуки рецензій",
-        "zh-cn": "在状态上删除 变化;\n精简对象节点名称;\n改进节点打字;\n明确创建每个节点;\n改进产出值过滤器;\n确保呼叫设置 ObjectNoExists Async只发生一次;\n删除的数据_框架_数字参数\n引入的民调间隔限制l\n删除过时的反应管理界面设置和手工艺品\n用这个 设定 暂停而不是这个。 设定 间隔\n由于审查结果,最终更改"
       }
     },
     "titleLang": {
