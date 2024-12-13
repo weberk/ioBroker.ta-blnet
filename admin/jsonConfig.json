@@ -72,6 +72,7 @@
         "options2": {
             "type": "panel",
             "label": "CMI Only Settings",
+            "disabled": "data.selected_ta_logger === 'BL-NET'",
             "items": {
                 "expert_username": {
                     "type": "text",

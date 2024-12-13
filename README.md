@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   improved JSON Status Code logging
+
 ### 1.0.27 (2024-12-13)
 
 -   added additional sections processing to CMI mode
