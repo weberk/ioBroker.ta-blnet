@@ -96,16 +96,43 @@
                     "lg": 6,
                     "xl": 6
                 },
-                "can_node_list": {
-                    "type": "text",
-                    "label": "CAN Node List",
-                    "default": "1,2,3",
-                    "help": "Enter a comma-separated list of CAN node numbers",
+                "jsonHdr": {
+                    "type": "header",
+                    "text": "CAN Node Request Configuration",
+                    "size": 2
+                },
+                "jsonWarning": {
+                    "type": "staticText",
+                    "text": "WARNING: please ensure that the JSON data is correctly formatted",
+                    "style": {
+                        "color": "red"
+                    },
                     "xs": 12,
-                    "sm": 6,
-                    "md": 6,
+                    "sm": 12,
+                    "md": 12,
                     "lg": 6,
                     "xl": 6
+                },
+                "json": {
+                    "type": "jsonEditor",
+                    "label": "JSON editor",
+                    "delimiter": ";",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "jsonVal": {
+                    "type": "staticText",
+                    "text": "${data.json}",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 4,
+                    "xl": 4
                 }
             }
         }

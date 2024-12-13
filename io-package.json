@@ -1,203 +1,193 @@
 {
-  "common": {
-    "name": "ta-blnet",
-    "version": "1.0.27",
-    "messagebox": true,
-    "news": {
-      "1.0.27": {
-        "en": "added additional sections processing to CMI mode",
-        "de": "zusätzliche Abschnitte, die in CMI-Modus verarbeitet werden",
-        "ru": "добавлена дополнительная обработка разделов в режиме CMI",
-        "pt": "adicionado processamento de seções adicionais para o modo CMI",
-        "nl": "extra secties aan CMI-modus toevoegen",
-        "fr": "ajout de sections supplémentaires au mode CMI",
-        "it": "ulteriori sezioni di elaborazione in modalità CMI",
-        "es": "añadido secciones adicionales de procesamiento al modo CMI",
-        "pl": "dodano dodatkowe sekcje przetwarzania do trybu CMI",
-        "uk": "додано додаткову обробку секцій в режим CMI",
-        "zh-cn": "在 CMI 模式中添加额外的段落处理"
-      },
-      "1.0.26": {
-        "en": "used uvr_type_code as capital letter string\nnode name for channel is now 4 digid",
-        "de": "verwendet uvr_type_code als großbuchstabenzeichenfolge\nknotenname für kanal ist jetzt 4 grabid",
-        "ru": "использованный uvr_type_code как строка заголовка\nимя узла канала теперь 4 digid",
-        "pt": "usado uvr_type_code como cadeia de letra de capital\nnome do nó para canal é agora 4 digid",
-        "nl": "gebruikte uvr_type_code als tekenreeks met hoofdletter\nknooppuntnaam voor kanaal is nu 4 digid",
-        "fr": "uvr_type_code utilisé comme chaîne de caractères majuscule\nnom du noeud pour le canal est maintenant 4 digid",
-        "it": "usato uvr_type_code come stringa della lettera di capitale\nnome nodo per canale è ora 4 digid",
-        "es": "utilizado uvr_type_code como cadena mayúscula\nnombre de nodo para canal es ahora 4 digid",
-        "pl": "used uvr _ type _ code as capital letter string\nnazwa węzła dla kanału jest teraz 4 digid",
-        "uk": "використовується uvr_type_code як рядок літери таблиці\nназва вузла для каналу тепер 4 див",
-        "zh-cn": "使用 uvr_type_code 作为大写字母字符串\n频道的节点名称现在是 4 digid"
-      },
-      "1.0.25": {
-        "en": "improved error handling on CMI return codes\nimproved node names",
-        "de": "verbesserte Fehlerbehandlung bei CMI-Rückgabecodes\nverbesserte knotennamen",
-        "ru": "улучшенная обработка ошибок в кодах возврата CMI\nулучшенные имена узлов",
-        "pt": "melhor manipulação de erros em códigos de retorno CMI\nnomes de nó melhorados",
-        "nl": "verbeterde foutafhandeling op CMI retourcodes\nverbeterde nodenamen",
-        "fr": "amélioration du traitement des erreurs sur les codes de retour CMI\nnoms améliorés des nœuds",
-        "it": "migliore gestione degli errori sui codici di ritorno CMI\nnomi dei nodi migliorati",
-        "es": "mejor manejo de errores en los códigos de retorno CMI\nmejora de los nombres de los nodos",
-        "pl": "ulepszona obsługa błędów przy kodach zwrotnych CMI\nulepszone nazwy węzłów",
-        "uk": "покращена обробка помилок на кодах повернення CMI\nполіпшення назв вузлів",
-        "zh-cn": "改进 CMI 返回代码上的错误处理\n改进的节点名称"
-      },
-      "1.0.24": {
-        "en": "fixed lint errors",
-        "de": "feste flutfehler",
-        "ru": "погрешности фиксированного линта",
-        "pt": "erros do forro fixo",
-        "nl": "vaste pluisfouten",
-        "fr": "erreurs de linte corrigées",
-        "it": "errori di testo fissi",
-        "es": "errores de lint fijos",
-        "pl": "błędy stałe",
-        "uk": "виправлені помилки в розмітці",
-        "zh-cn": "修正错误"
-      },
-      "1.0.23": {
-        "en": "added initial CMI support",
-        "de": "anfängliche CMI-Unterstützung",
-        "ru": "добавлена первоначальная поддержка CMI",
-        "pt": "suporte CMI inicial adicionado",
-        "nl": "toegevoegde initiële CMI-ondersteuning",
-        "fr": "le soutien initial du CMI ajouté",
-        "it": "supporto CMI iniziale aggiunto",
-        "es": "apoyo inicial del CMI",
-        "pl": "dodane wstępne wsparcie CMI",
-        "uk": "додана початкова підтримка CMI",
-        "zh-cn": "增加了海事委员会的初步支助"
-      },
-      "1.0.22": {
-        "en": "fixed negative current_heat_power",
-        "de": "fester negativer strom_heat_power",
-        "ru": "фиксированный отрицательный ток_тепл_мощь",
-        "pt": "corrente negativa fixa_heat_power",
-        "nl": "vaste negatieve stroom_warmte_vermogen",
-        "fr": "valeur négative de courant_heat_power",
-        "it": "corrente negativa fissa_heat_power",
-        "es": "corriente negativa fija_heat_power",
-        "pl": "stały prąd ujemny _ ciepło _ moc",
-        "uk": "фіксований негативний струм_heat_power",
-        "zh-cn": "固定负电流_热力_功率"
-      },
-      "1.0.21": {
-        "en": "added 2DL reading\nrenamed main class to TaBlnet and port to 'TA port' \nfixed negative current_heat_power",
-        "de": "2DL Lesen\numbenannt Hauptklasse zu TaBlnet und Hafen zu 'TA-Port '\nfester negativer strom_heat_power",
-        "ru": "добавлено 2DL чтение\nпереименовал основной класс в TaBlnet и порт в порт TA \"\nфиксированный отрицательный ток_тепл_мощь",
-        "pt": "adicionado 2DL leitura\nrenomeado classe principal para TaBlnet e porta para porta de 'TA '\ncorrente negativa fixa_heat_power",
-        "nl": "2DL-lezen toegevoegd\nhernoemde hoofdklasse naar TaBlnet en poort naar 'TA poort '\nvaste negatieve stroom_warmte_vermogen",
-        "fr": "ajouté 2DL lecture\nrebaptisé classe principale en TaBlnet et port en port 'TA '\nvaleur négative de courant_heat_power",
-        "it": "aggiunto 2DL lettura\nrinominato classe principale a TaBlnet e porto a 'TA porto '\ncorrente negativa fissa_heat_power",
-        "es": "añadido 2DL lectura\nrenombrada clase principal a TaBlnet y puerto a puerto de 'TA '\ncorriente negativa fija_heat_power",
-        "pl": "dodano odczyt 2DL\nzmieniono nazwę klasy głównej na TaBlnet i port na 'TA port'\nstały prąd ujemny _ ciepło _ moc",
-        "uk": "додано 2DL читання\nперейменувати головний клас в Таблет і порт в порт \"ТА\" Р\nфіксований негативний струм_heat_power",
-        "zh-cn": "添加 2DL 读取\n将主类更名为 TaBlnet , 将端口更名为 'TA' 端口  '\n固定负电流_热力_功率"
-      }
+    "common": {
+        "name": "ta-blnet",
+        "version": "1.0.27",
+        "messagebox": true,
+        "news": {
+            "1.0.27": {
+                "en": "added additional sections processing to CMI mode",
+                "de": "zusätzliche Abschnitte, die in CMI-Modus verarbeitet werden",
+                "ru": "добавлена дополнительная обработка разделов в режиме CMI",
+                "pt": "adicionado processamento de seções adicionais para o modo CMI",
+                "nl": "extra secties aan CMI-modus toevoegen",
+                "fr": "ajout de sections supplémentaires au mode CMI",
+                "it": "ulteriori sezioni di elaborazione in modalità CMI",
+                "es": "añadido secciones adicionales de procesamiento al modo CMI",
+                "pl": "dodano dodatkowe sekcje przetwarzania do trybu CMI",
+                "uk": "додано додаткову обробку секцій в режим CMI",
+                "zh-cn": "在 CMI 模式中添加额外的段落处理"
+            },
+            "1.0.26": {
+                "en": "used uvr_type_code as capital letter string\nnode name for channel is now 4 digid",
+                "de": "verwendet uvr_type_code als großbuchstabenzeichenfolge\nknotenname für kanal ist jetzt 4 grabid",
+                "ru": "использованный uvr_type_code как строка заголовка\nимя узла канала теперь 4 digid",
+                "pt": "usado uvr_type_code como cadeia de letra de capital\nnome do nó para canal é agora 4 digid",
+                "nl": "gebruikte uvr_type_code als tekenreeks met hoofdletter\nknooppuntnaam voor kanaal is nu 4 digid",
+                "fr": "uvr_type_code utilisé comme chaîne de caractères majuscule\nnom du noeud pour le canal est maintenant 4 digid",
+                "it": "usato uvr_type_code come stringa della lettera di capitale\nnome nodo per canale è ora 4 digid",
+                "es": "utilizado uvr_type_code como cadena mayúscula\nnombre de nodo para canal es ahora 4 digid",
+                "pl": "used uvr _ type _ code as capital letter string\nnazwa węzła dla kanału jest teraz 4 digid",
+                "uk": "використовується uvr_type_code як рядок літери таблиці\nназва вузла для каналу тепер 4 див",
+                "zh-cn": "使用 uvr_type_code 作为大写字母字符串\n频道的节点名称现在是 4 digid"
+            },
+            "1.0.25": {
+                "en": "improved error handling on CMI return codes\nimproved node names",
+                "de": "verbesserte Fehlerbehandlung bei CMI-Rückgabecodes\nverbesserte knotennamen",
+                "ru": "улучшенная обработка ошибок в кодах возврата CMI\nулучшенные имена узлов",
+                "pt": "melhor manipulação de erros em códigos de retorno CMI\nnomes de nó melhorados",
+                "nl": "verbeterde foutafhandeling op CMI retourcodes\nverbeterde nodenamen",
+                "fr": "amélioration du traitement des erreurs sur les codes de retour CMI\nnoms améliorés des nœuds",
+                "it": "migliore gestione degli errori sui codici di ritorno CMI\nnomi dei nodi migliorati",
+                "es": "mejor manejo de errores en los códigos de retorno CMI\nmejora de los nombres de los nodos",
+                "pl": "ulepszona obsługa błędów przy kodach zwrotnych CMI\nulepszone nazwy węzłów",
+                "uk": "покращена обробка помилок на кодах повернення CMI\nполіпшення назв вузлів",
+                "zh-cn": "改进 CMI 返回代码上的错误处理\n改进的节点名称"
+            },
+            "1.0.24": {
+                "en": "fixed lint errors",
+                "de": "feste flutfehler",
+                "ru": "погрешности фиксированного линта",
+                "pt": "erros do forro fixo",
+                "nl": "vaste pluisfouten",
+                "fr": "erreurs de linte corrigées",
+                "it": "errori di testo fissi",
+                "es": "errores de lint fijos",
+                "pl": "błędy stałe",
+                "uk": "виправлені помилки в розмітці",
+                "zh-cn": "修正错误"
+            },
+            "1.0.23": {
+                "en": "added initial CMI support",
+                "de": "anfängliche CMI-Unterstützung",
+                "ru": "добавлена первоначальная поддержка CMI",
+                "pt": "suporte CMI inicial adicionado",
+                "nl": "toegevoegde initiële CMI-ondersteuning",
+                "fr": "le soutien initial du CMI ajouté",
+                "it": "supporto CMI iniziale aggiunto",
+                "es": "apoyo inicial del CMI",
+                "pl": "dodane wstępne wsparcie CMI",
+                "uk": "додана початкова підтримка CMI",
+                "zh-cn": "增加了海事委员会的初步支助"
+            },
+            "1.0.22": {
+                "en": "fixed negative current_heat_power",
+                "de": "fester negativer strom_heat_power",
+                "ru": "фиксированный отрицательный ток_тепл_мощь",
+                "pt": "corrente negativa fixa_heat_power",
+                "nl": "vaste negatieve stroom_warmte_vermogen",
+                "fr": "valeur négative de courant_heat_power",
+                "it": "corrente negativa fissa_heat_power",
+                "es": "corriente negativa fija_heat_power",
+                "pl": "stały prąd ujemny _ ciepło _ moc",
+                "uk": "фіксований негативний струм_heat_power",
+                "zh-cn": "固定负电流_热力_功率"
+            },
+            "1.0.21": {
+                "en": "added 2DL reading\nrenamed main class to TaBlnet and port to 'TA port' \nfixed negative current_heat_power",
+                "de": "2DL Lesen\numbenannt Hauptklasse zu TaBlnet und Hafen zu 'TA-Port '\nfester negativer strom_heat_power",
+                "ru": "добавлено 2DL чтение\nпереименовал основной класс в TaBlnet и порт в порт TA \"\nфиксированный отрицательный ток_тепл_мощь",
+                "pt": "adicionado 2DL leitura\nrenomeado classe principal para TaBlnet e porta para porta de 'TA '\ncorrente negativa fixa_heat_power",
+                "nl": "2DL-lezen toegevoegd\nhernoemde hoofdklasse naar TaBlnet en poort naar 'TA poort '\nvaste negatieve stroom_warmte_vermogen",
+                "fr": "ajouté 2DL lecture\nrebaptisé classe principale en TaBlnet et port en port 'TA '\nvaleur négative de courant_heat_power",
+                "it": "aggiunto 2DL lettura\nrinominato classe principale a TaBlnet e porto a 'TA porto '\ncorrente negativa fissa_heat_power",
+                "es": "añadido 2DL lectura\nrenombrada clase principal a TaBlnet y puerto a puerto de 'TA '\ncorriente negativa fija_heat_power",
+                "pl": "dodano odczyt 2DL\nzmieniono nazwę klasy głównej na TaBlnet i port na 'TA port'\nstały prąd ujemny _ ciepło _ moc",
+                "uk": "додано 2DL читання\nперейменувати головний клас в Таблет і порт в порт \"ТА\" Р\nфіксований негативний струм_heat_power",
+                "zh-cn": "添加 2DL 读取\n将主类更名为 TaBlnet , 将端口更名为 'TA' 端口  '\n固定负电流_热力_功率"
+            }
+        },
+        "titleLang": {
+            "en": "TA BL-NET",
+            "de": "TA BL-NET",
+            "ru": "ТА BL-NET",
+            "pt": "TA BL-NET",
+            "nl": "TA BL-NET",
+            "fr": "TA BL-NET",
+            "it": "TA BL-NET",
+            "es": "TA BL-NET",
+            "pl": "TA BL-NET",
+            "uk": "TA BL-NET",
+            "zh-cn": "TA BL-NET"
+        },
+        "desc": {
+            "en": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
+            "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des-Controllers von Technische Alternative über BL-NET.",
+            "ru": "Адаптер ioBroker для чтения входов и выходов контроллера от Technische Alternative с использованием BL-NET.",
+            "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador da Technische Alternative usando BL-NET.",
+            "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de-controller van Technische Alternative met behulp van BL-NET.",
+            "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur de Technische Alternative via BL-NET.",
+            "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller di Technische Alternative tramite BL-NET.",
+            "es": "Un adaptador ioBroker para leer entradas y salidas del controlador de Technische Alternative utilizando BL-NET.",
+            "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika firmy Technische Alternative za pomocą BL-NET.",
+            "uk": "Адаптер ioBroker для читання входів і виходів контролера від Technische Alternative за допомогою BL-NET.",
+            "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 控制器的输入和输出的 ioBroker 适配器。"
+        },
+        "authors": ["Klaus Weber <klausatweberesprit@gmail.com>"],
+        "keywords": ["BL-NET", "UVR1611", "UVR16x2", "solar", "BUSO", "Technische", "Alternative"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "ta-blnet.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
+        "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "climate-control",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "supportCustoms": false,
+        "eraseOnUpload": true,
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.0.23"
+            }
+        ]
     },
-    "titleLang": {
-      "en": "TA BL-NET",
-      "de": "TA BL-NET",
-      "ru": "ТА BL-NET",
-      "pt": "TA BL-NET",
-      "nl": "TA BL-NET",
-      "fr": "TA BL-NET",
-      "it": "TA BL-NET",
-      "es": "TA BL-NET",
-      "pl": "TA BL-NET",
-      "uk": "TA BL-NET",
-      "zh-cn": "TA BL-NET"
+    "native": {
+        "selected_ta_logger": "BL-NET",
+        "ip_address": "192.168.2.77",
+        "port": 40000,
+        "poll_interval": 30,
+        "expert_password": "password",
+        "expert_username": "expert",
+        "json": "{\n\t\"requests\": [\n\t\t{\n\t\t\t\"can_node_number\": 7,\n\t\t\t\"data_objects\": \"La,Ld,I,O,Na,Nd,D\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 11,\n\t\t\t\"data_objects\": \"I,O\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 45,\n\t\t\t\"data_objects\": \"I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld\"\n\t\t}\n\t]\n}"
     },
-    "desc": {
-      "en": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
-      "de": "Ein ioBroker-Adapter zum Auslesen von Ein- und Ausgängen des-Controllers von Technische Alternative über BL-NET.",
-      "ru": "Адаптер ioBroker для чтения входов и выходов контроллера от Technische Alternative с использованием BL-NET.",
-      "pt": "Um adaptador ioBroker para leitura de entradas e saídas do controlador da Technische Alternative usando BL-NET.",
-      "nl": "Een ioBroker-adapter voor het uitlezen van in- en uitgangen van de-controller van Technische Alternative met behulp van BL-NET.",
-      "fr": "Un adaptateur ioBroker pour lire les entrées et sorties du contrôleur de Technische Alternative via BL-NET.",
-      "it": "Un adattatore ioBroker per leggere ingressi e uscite del controller di Technische Alternative tramite BL-NET.",
-      "es": "Un adaptador ioBroker para leer entradas y salidas del controlador de Technische Alternative utilizando BL-NET.",
-      "pl": "Adapter ioBroker do odczytu wejść i wyjść sterownika firmy Technische Alternative za pomocą BL-NET.",
-      "uk": "Адаптер ioBroker для читання входів і виходів контролера від Technische Alternative за допомогою BL-NET.",
-      "zh-cn": "用于通过 BL-NET 读取 Technische Alternative 的 控制器的输入和输出的 ioBroker 适配器。"
-    },
-    "authors": [
-      "Klaus Weber <klausatweberesprit@gmail.com>"
-    ],
-    "keywords": [
-      "BL-NET",
-      "UVR1611",
-      "UVR16x2",
-      "solar",
-      "BUSO",
-      "Technische",
-      "Alternative"
-    ],
-    "licenseInformation": {
-      "type": "free",
-      "license": "MIT"
-    },
-    "platform": "Javascript/Node.js",
-    "icon": "ta-blnet.png",
-    "enabled": true,
-    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
-    "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
-    "loglevel": "info",
-    "tier": 3,
-    "mode": "daemon",
-    "type": "climate-control",
-    "compact": true,
-    "connectionType": "local",
-    "dataSource": "poll",
-    "adminUI": {
-      "config": "json"
-    },
-    "supportCustoms": false,
-    "eraseOnUpload": true,
-    "dependencies": [
-      {
-        "js-controller": ">=6.0.11"
-      }
-    ],
-    "globalDependencies": [
-      {
-        "admin": ">=7.0.23"
-      }
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "folder",
+            "common": {
+                "name": "Information",
+                "role": "meta"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
     ]
-  },
-  "native": {
-    "selected_ta_logger": "BL-NET",
-    "ip_address": "192.168.2.77",
-    "port": 40000,
-    "poll_interval": 30,
-    "can_node_list": "1,2,3",
-    "expert_password": "password",
-    "expert_username": "expert"
-  },
-  "objects": [],
-  "instanceObjects": [
-    {
-      "_id": "info",
-      "type": "folder",
-      "common": {
-        "name": "Information",
-        "role": "meta"
-      },
-      "native": {}
-    },
-    {
-      "_id": "info.connection",
-      "type": "state",
-      "common": {
-        "role": "indicator.connected",
-        "name": "Device or service connected",
-        "type": "boolean",
-        "read": true,
-        "write": false,
-        "def": false
-      },
-      "native": {}
-    }
-  ]
 }

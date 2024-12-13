@@ -30,6 +30,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 ### **WORK IN PROGRESS**
 
 -   improved JSON Status Code logging
+-   added data_objects per can_node to config for CMI requests
 
 ### 1.0.27 (2024-12-13)
 
