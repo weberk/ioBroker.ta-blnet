@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   added additional sections processing to CMI mode
+
 ### 1.0.26 (2024-12-12)
 
 -   used uvr_type_code as capital letter string

@@ -79,8 +79,45 @@ class TaBlnet extends utils.Adapter {
             "91": "UVR610",
             "92": "UVR67",
             "A3": "BL-NET"
-        }; // sections to be used for ioBroker adapter objects
-        this.cmiSections = ["Logging Analog", "Logging Digital", "Inputs", "Outputs", "Network Analog", "Network Digital", "DL-Bus"];
+        };
+        // Define sections to be used for ioBroker adapter objects CMI-JSON-API Version 7
+        // Parameter     Description            Supported devices
+        this.cmiSections = [
+            // La        Analog logging         x2-tech
+            "Logging Analog",
+            // Ld        Digital logging        x2-tech
+            "Logging Digital",
+            // I         Inputs                 1611, x2-tech
+            "Inputs",
+            // O         Outputs                1611, x2-tech
+            "Outputs",
+            // Na        Analog network inputs  1611
+            "Network Analog",
+            // Nd        Digital network inputs 1611
+            "Network Digital",
+            // D         DL-inputs              x2-tech
+            "DL-Bus",
+            // Sg        System-values: General x2-tech
+            "General",
+            // Sd        System-values: Date    x2-tech
+            "Date",
+            // St        System-values: Time    x2-tech
+            "Time",
+            // Ss        System-values: Sun     x2-tech
+            "Sun",
+            // Sp        System-values: Electrical power CAN-EZ2, CAN-EZ3
+            "Electrical power",
+            // Sp        System-values: Electrical power CAN-EZ2, CAN-EZ3
+            "Electrical Power",
+            // M         M-Bus                  CAN-BC2, RSM610-M, UVR610
+            "MBus",
+            // M         M-Bus                  CAN-BC2, RSM610-M, UVR610
+            "M-Bus",
+            // AM        Modbus                 CAN-BC2, UVR610S-MODB, CAN-EZ3
+            "Modbus",
+            // AK        KNX                    CAN-BC2
+            "KNX"
+        ];
     }
 
     /**
@@ -104,7 +141,7 @@ class TaBlnet extends utils.Adapter {
         //this.subscribeObjects(`system.adapter.${this.namespace}`);
 
         // Check if the selected TA logger has changed
-        const devicePath = this.namespace + "." + this.config.selected_ta_logger;
+        const devicePath = this.name2id(this.namespace + "." + this.config.selected_ta_logger);
         const initializedLogger = await this.getObjectAsync(devicePath);
         if (initializedLogger) {
             this.log.debug("onReady: Initialization time logger is the same as in configuration.");
@@ -518,198 +555,176 @@ class TaBlnet extends utils.Adapter {
                 }
                 // Create full path prefix
                 const path_pre = currentFrameName + ".";
+                let currentFolderName = "";
+                // iterate through all sections
+                for (const section of this.cmiSections) {
+                    // Check if stateValues of section is defined
+                    if (stateValues[i][section]) {
+                        // create folder node for section
+                        currentFolderName = this.name2id(path_pre + section);
+                        if (!this.initialized) {
+                            await this.setObjectNotExistsAsync(currentFolderName, {
+                                type: "folder",
+                                common: {
+                                    name: "Metrics for " + section,
+                                },
+                                native: {}
+                            });
+                        }
+                        // Declare objects for each section
+                        this.log.debug(this.name2id(section) + " status: " + JSON.stringify(stateValues[i][section]));
+                        for (const [key, value] of Object.entries(stateValues[i][section])) {
+                            const currentKeyName = this.name2id(currentFolderName + "." + key);
+                            if (!this.initialized) {
+                                //this.log.debug("creating currentKeyName: " + currentKeyName);
+                                await this.setObjectNotExistsAsync(currentKeyName, {
+                                    type: "state",
+                                    common: {
+                                        name: key,
+                                        type: "number",
+                                        role: "value",
+                                        unit: value.unit,
+                                        read: true,
+                                        write: false,
+                                    },
+                                    native: {},
+                                });
+                            }
+                            // Set the state value
+                            //this.log.debug("setting state value for currentKeyName: " + currentKeyName);
+                            await this.setState(currentKeyName, {
+                                val: value.value,
+                                ack: true
+                            });
+                        }
+                    } else {
+                        this.log.debug(this.name2id(section) + " section: " + stateValues[i][section]);
+                    }
+                }
+                // BL-NET selected
+                if (this.config.selected_ta_logger === "BL-NET") {
+                    // create folder node for speed_levels
+                    currentFolderName = this.name2id(path_pre + "speed_levels");
+                    if (!this.initialized) {
+                        await this.setObjectNotExistsAsync(currentFolderName, {
+                            type: "folder",
+                            common: {
+                                name: "Metrics for Speed Levels",
+                            },
+                            native: {}
+                        });
+                    }
+                    // Declare speed levels
+                    this.log.debug("speed_levels status: " + JSON.stringify(stateValues[i].speed_levels));
+                    if (stateValues[i].speed_levels) {
+                        for (const [key, value] of Object.entries(stateValues[i].speed_levels)) {
+                            const currentKeyName = this.name2id(currentFolderName + "." + key);
+                            if (!this.initialized) {
+                                await this.setObjectNotExistsAsync(currentKeyName, {
+                                    type: "state",
+                                    common: {
+                                        name: key,
+                                        type: "number",
+                                        role: "value.speed",
+                                        unit: value.type,
+                                        read: true,
+                                        write: false,
+                                    },
+                                    native: {},
+                                });
+                            }
+                            await this.setState(currentKeyName, {
+                                val: value.value,
+                                ack: true
+                            });
+                        }
+                    } else {
+                        this.log.error("stateValues.speed_levels is undefined or null");
+                    }
 
-                // create folder node for outputs
-                let currentFolderName = this.name2id(path_pre + "outputs");
-                if (!this.initialized) {
-                    await this.setObjectNotExistsAsync(currentFolderName, {
-                        type: "folder",
-                        common: {
-                            name: "metrics for outputs",
-                        },
-                        native: {}
-                    });
-                }
-                // Declare outputs
-                if (stateValues[i].outputs) {
-                    for (const [key, value] of Object.entries(stateValues[i].outputs)) {
-                        const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        if (!this.initialized) {
-                            await this.setObjectNotExistsAsync(currentKeyName, {
-                                type: "state",
-                                common: {
-                                    name: key,
-                                    type: "boolean",
-                                    role: "switch.enable",
-                                    unit: value.type,
-                                    read: true,
-                                    write: false,
-                                },
-                                native: {},
-                            });
-                        }
-                        await this.setState(currentKeyName, {
-                            val: value.value,
-                            ack: true
+                    // create folder node for thermal_energy_counters_status
+                    currentFolderName = this.name2id(path_pre + "thermal_energy_counters_status");
+                    if (!this.initialized) {
+                        await this.setObjectNotExistsAsync(currentFolderName, {
+                            type: "folder",
+                            common: {
+                                name: "Metrics for Thermal Energy Counters Activation",
+                            },
+                            native: {}
                         });
                     }
-                } else {
-                    this.log.error("stateValues.outputs is undefined or null");
-                }
-                // create folder node for speed_levels
-                currentFolderName = this.name2id(path_pre + "speed_levels");
-                if (!this.initialized) {
-                    await this.setObjectNotExistsAsync(currentFolderName, {
-                        type: "folder",
-                        common: {
-                            name: "metrics for speed levels",
-                        },
-                        native: {}
-                    });
-                }
-                // Declare speed levels
-                if (stateValues[i].speed_levels) {
-                    for (const [key, value] of Object.entries(stateValues[i].speed_levels)) {
-                        const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        if (!this.initialized) {
-                            await this.setObjectNotExistsAsync(currentKeyName, {
-                                type: "state",
-                                common: {
-                                    name: key,
-                                    type: "number",
-                                    role: "value.speed",
-                                    unit: value.type,
-                                    read: true,
-                                    write: false,
-                                },
-                                native: {},
+                    // Declare thermal energy counters status
+                    this.log.debug("thermal_energy_counters_status status: " + JSON.stringify(stateValues[i].thermal_energy_counters_status));
+                    if (stateValues[i].thermal_energy_counters_status) {
+                        for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters_status)) {
+                            const currentKeyName = this.name2id(currentFolderName + "." + key);
+                            if (!this.initialized) {
+                                await this.setObjectNotExistsAsync(currentKeyName, {
+                                    type: "state",
+                                    common: {
+                                        name: key,
+                                        type: "boolean",
+                                        role: "sensor.switch",
+                                        unit: value.type,
+                                        read: true,
+                                        write: false,
+                                    },
+                                    native: {},
+                                });
+                            }
+                            await this.setState(currentKeyName, {
+                                val: value.value,
+                                ack: true
                             });
                         }
-                        await this.setState(currentKeyName, {
-                            val: value.value,
-                            ack: true
+                    } else {
+                        this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
+                    }
+                    // create folder node for thermal_energy_counters
+                    currentFolderName = this.name2id(path_pre + "thermal_energy_counters");
+                    if (!this.initialized) {
+                        await this.setObjectNotExistsAsync(currentFolderName, {
+                            type: "folder",
+                            common: {
+                                name: "Metrics for Thermal Energy Counters",
+                            },
+                            native: {}
                         });
                     }
-                } else {
-                    this.log.error("stateValues.speed_levels is undefined or null");
-                }
-                // create folder node for inputs
-                currentFolderName = this.name2id(path_pre + "inputs");
-                if (!this.initialized) {
-                    await this.setObjectNotExistsAsync(currentFolderName, {
-                        type: "folder",
-                        common: {
-                            name: "metrics for inputs",
-                        },
-                        native: {}
-                    });
-                }
-                // Declare inputs
-                if (stateValues[i].inputs) {
-                    for (const [key, value] of Object.entries(stateValues[i].inputs)) {
-                        const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        if (!this.initialized) {
-                            await this.setObjectNotExistsAsync(currentKeyName, {
-                                type: "state",
-                                common: {
-                                    name: key,
-                                    type: "number",
-                                    role: "value",
-                                    unit: value.type,
-                                    read: true,
-                                    write: false,
-                                },
-                                native: {},
-                            });
-                        }
-                        await this.setState(currentKeyName, {
-                            val: value.value,
-                            ack: true
-                        });
-                    }
-                } else {
-                    this.log.error("stateValues.inputs is undefined or null");
-                }
-                // create folder node for thermal_energy_counters_status
-                currentFolderName = this.name2id(path_pre + "thermal_energy_counters_status");
-                if (!this.initialized) {
-                    await this.setObjectNotExistsAsync(currentFolderName, {
-                        type: "folder",
-                        common: {
-                            name: "metrics for thermal energy counters status",
-                        },
-                        native: {}
-                    });
-                }
-                // Declare thermal energy counters status
-                if (stateValues[i].thermal_energy_counters_status) {
-                    for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters_status)) {
-                        const currentKeyName = this.name2id(currentFolderName + "." + key);
-                        if (!this.initialized) {
-                            await this.setObjectNotExistsAsync(currentKeyName, {
-                                type: "state",
-                                common: {
-                                    name: key,
-                                    type: "boolean",
-                                    role: "sensor.switch",
-                                    unit: value.type,
-                                    read: true,
-                                    write: false,
-                                },
-                                native: {},
-                            });
-                        }
-                        await this.setState(currentKeyName, {
-                            val: value.value,
-                            ack: true
-                        });
-                    }
-                } else {
-                    this.log.error("stateValues.thermal_energy_counters_status is undefined or null");
-                }
-                // create folder node for thermal_energy_counters
-                currentFolderName = this.name2id(path_pre + "thermal_energy_counters");
-                if (!this.initialized) {
-                    await this.setObjectNotExistsAsync(currentFolderName, {
-                        type: "folder",
-                        common: {
-                            name: "metrics for thermal energy counters",
-                        },
-                        native: {}
-                    });
-                }
-                // Declare thermal energy counters
-                if (stateValues[i].thermal_energy_counters) {
-                    for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
-                        const currentKeyName = this.name2id(currentFolderName + "." + key);
+                    // Declare thermal energy counters
+                    this.log.debug("thermal_energy_counters status: " + JSON.stringify(stateValues[i].thermal_energy_counters));
+                    if (stateValues[i].thermal_energy_counters) {
+                        for (const [key, value] of Object.entries(stateValues[i].thermal_energy_counters)) {
+                            const currentKeyName = this.name2id(currentFolderName + "." + key);
 
-                        let currentRole = "";
-                        if (key.startsWith("current_heat_power")) {
-                            currentRole = "value.power";
-                        } else if (key.startsWith("total_heat_energy")) {
-                            currentRole = "value.energy";
-                        }
-                        if (!this.initialized) {
-                            await this.setObjectNotExistsAsync(currentKeyName, {
-                                type: "state",
-                                common: {
-                                    name: key,
-                                    type: "number",
-                                    role: currentRole,
-                                    unit: value.type,
-                                    read: true,
-                                    write: false,
-                                },
-                                native: {},
+                            let currentRole = "";
+                            if (key.startsWith("current_heat_power")) {
+                                currentRole = "value.power";
+                            } else if (key.startsWith("total_heat_energy")) {
+                                currentRole = "value.energy";
+                            }
+                            if (!this.initialized) {
+                                await this.setObjectNotExistsAsync(currentKeyName, {
+                                    type: "state",
+                                    common: {
+                                        name: key,
+                                        type: "number",
+                                        role: currentRole,
+                                        unit: value.type,
+                                        read: true,
+                                        write: false,
+                                    },
+                                    native: {},
+                                });
+                            }
+                            await this.setState(currentKeyName, {
+                                val: value.value,
+                                ack: true
                             });
                         }
-                        await this.setState(currentKeyName, {
-                            val: value.value,
-                            ack: true
-                        });
+                    } else {
+                        this.log.error("stateValues.thermal_energy_counters is undefined or null");
                     }
-                } else {
-                    this.log.error("stateValues.thermal_energy_counters is undefined or null");
                 }
             }
         } else {
@@ -752,6 +767,7 @@ class TaBlnet extends utils.Adapter {
                             const response2 = this.readBlock(data, 1 + LATEST_SIZE, LATEST_SIZE);
                             if (response2) {
                                 const currentUvrRecord2 = this.parseUvrRecordFromBuffer(response2);
+                                this.log.debug("UVR record created from binary record 2: " + JSON.stringify(currentUvrRecord2));
                                 stateValuesArray.push(currentUvrRecord2);
                             }
                         }
@@ -878,234 +894,17 @@ class TaBlnet extends utils.Adapter {
                             port: port,
                             // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
                             path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O",
+                            //path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld",
                             method: "GET"
                         };
                         this.log.debug("Sending request to " + hostname + " with options: " + JSON.stringify(options));
-                        // first use static response string for testing
+                        // if attempt== 1 use static response string sData for testing
                         if (10 == attempt) {
                             // http://192.168.30.40/INCLUDE/api.cgi?jsonnode=2&jsonparam=La,Ld,I,O,Na,Nd,D
                             // sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
                             // http://1234:1234@192.168.30.40/INCLUDE/api.cgi?jsonnode=7&jsonparam=I,O
-                            sData = JSON.stringify({
-                                "Header": {
-                                    "Version": 7,
-                                    "Device": "8C",
-                                    "Timestamp": 1733304802
-                                },
-                                "Data": {
-                                    "Inputs": [{
-                                        "Number": 1,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 2,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 3,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 4,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 5,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 6,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 7,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 8,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 9,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 10,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 11,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "43"
-                                        }
-                                    }, {
-                                        "Number": 12,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 13,
-                                        "AD": "A",
-                                        "Value": {
-                                            "Value": 1459.2,
-                                            "Unit": "1"
-                                        }
-                                    }, {
-                                        "Number": 14,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "43"
-                                        }
-                                    }, {
-                                        "Number": 15,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "43"
-                                        }
-                                    }, {
-                                        "Number": 16,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "43"
-                                        }
-                                    }],
-                                    "Outputs": [{
-                                        "Number": 1,
-                                        "AD": "A",
-                                        "Value": {
-                                            "State": 0,
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 2,
-                                        "AD": "A",
-                                        "Value": {
-                                            "State": 0,
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 3,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 4,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 5,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 6,
-                                        "AD": "A",
-                                        "Value": {
-                                            "State": 0,
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 7,
-                                        "AD": "A",
-                                        "Value": {
-                                            "State": 0,
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 8,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 9,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 10,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 11,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 12,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }, {
-                                        "Number": 13,
-                                        "AD": "D",
-                                        "Value": {
-                                            "Value": 0,
-                                            "Unit": "0"
-                                        }
-                                    }]
-                                },
-                                "Status": "OK",
-                                "Status code": 0
-                            });
+                            // sData = JSON.stringify({"Header": {"Version": 7,"Device": "91","Timestamp": 1733315261},"Data": {"Logging Analog": [{"Number": 1,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 3,"AD": "A","Value": {"Value": 301,"Unit": "69"}},{"Number": 4,"AD": "A","Value": {"Value": 367,"Unit": "69"}},{"Number": 5,"AD": "A","Value": {"Value": 1966,"Unit": "69"}},{"Number": 6,"AD": "A","Value": {"Value": 122,"Unit": "69"}},{"Number": 7,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 8,"AD": "A","Value": {"Value": 21235,"Unit": "11"}},{"Number": 9,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 10,"AD": "A","Value": {"Value": 7,"Unit": "69"}},{"Number": 11,"AD": "A","Value": {"Value": 24823.6,"Unit": "11"}},{"Number": 12,"AD": "A","Value": {"Value": 1618,"Unit": "11"}},{"Number": 13,"AD": "A","Value": {"Value": 2082,"Unit": "69"}},{"Number": 14,"AD": "A","Value": {"Value": 64387.5,"Unit": "11"}},{"Number": 15,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 16,"AD": "A","Value": {"Value": 2.87,"Unit": "10"}},{"Number": 17,"AD": "A","Value": {"Value": 191038.6,"Unit": "11"}},{"Number": 18,"AD": "A","Value": {"Value": 30.2,"Unit": "11"}},{"Number": 19,"AD": "A","Value": {"Value": 900,"Unit": "69"}},{"Number": 20,"AD": "A","Value": {"Value": 65295.2,"Unit": "11"}},{"Number": 21,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 22,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 23,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 24,"AD": "A","Value": {"Value": 287,"Unit": "3"}},{"Number": 25,"AD": "A","Value": {"Value": 2,"Unit": "69"}},{"Number": 26,"AD": "A","Value": {"Value": 2261,"Unit": "11"}},{"Number": 27,"AD": "A","Value": {"Value": 3.92,"Unit": "10"}},{"Number": 28,"AD": "A","Value": {"Value": 275722.4,"Unit": "11"}},{"Number": 29,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 30,"AD": "A","Value": {"Value": 26602,"Unit": "28"}},{"Number": 31,"AD": "A","Value": {"Value": 0,"Unit": "8"}},{"Number": 32,"AD": "A","Value": {"Value": 223,"Unit": "69"}},{"Number": 33,"AD": "A","Value": {"Value": 6688.5,"Unit": "11"}},{"Number": 35,"AD": "A","Value": {"Value": 678,"Unit": "69"}},{"Number": 36,"AD": "A","Value": {"Value": 27676.8,"Unit": "11"}},{"Number": 38,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 39,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 40,"AD": "A","Value": {"Value": 154.3,"Unit": "11"}},{"Number": 41,"AD": "A","Value": {"Value": 28,"Unit": "69"}},{"Number": 42,"AD": "A","Value": {"Value": 11873,"Unit": "11"}},{"Number": 43,"AD": "A","Value": {"Value": 406.9,"Unit": "11"}},{"Number": 44,"AD": "A","Value": {"Value": 81,"Unit": "69"}},{"Number": 45,"AD": "A","Value": {"Value": 13617.5,"Unit": "11"}},{"Number": 46,"AD": "A","Value": {"Value": 11.1,"Unit": "11"}},{"Number": 47,"AD": "A","Value": {"Value": 292,"Unit": "69"}},{"Number": 48,"AD": "A","Value": {"Value": 4223.2,"Unit": "11"}},{"Number": 49,"AD": "A","Value": {"Value": 11.7,"Unit": "11"}},{"Number": 50,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 51,"AD": "A","Value": {"Value": 9715,"Unit": "11"}},{"Number": 52,"AD": "A","Value": {"Value": 313,"Unit": "69"}},{"Number": 53,"AD": "A","Value": {"Value": 43554.5,"Unit": "11"}},{"Number": 54,"AD": "A","Value": {"Value": 831,"Unit": "69"}},{"Number": 55,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 56,"AD": "A","Value": {"Value": 74,"Unit": "8"}},{"Number": 57,"AD": "A","Value": {"Value": 10697.9,"Unit": "11"}},{"Number": 58,"AD": "A","Value": {"Value": 10120.9,"Unit": "11"}},{"Number": 59,"AD": "A","Value": {"Value": 9,"Unit": "69"}},{"Number": 60,"AD": "A","Value": {"Value": 0.1,"Unit": "58"}},{"Number": 61,"AD": "A","Value": {"Value": 10,"Unit": "69"}},{"Number": 62,"AD": "A","Value": {"Value": 1.1,"Unit": "58"}},{"Number": 63,"AD": "A","Value": {"Value": 769,"Unit": "11"}},{"Number": 64,"AD": "A","Value": {"Value": 185,"Unit": "69"}}],"Logging Digital": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 15,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 18,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 19,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 20,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 21,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Inputs": [{"Number": 1,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 2,"AD": "A","Value": {"Value": 24.9,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "1"}},{"Number": 4,"AD": "A","Value": {"Value": 0,"Unit": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}}],"Outputs": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "A","Value": {"State": 0,"Value": 0,"Unit": "8"}}],"DL-Bus": [{"Number": 1,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 285,"Unit": "3"}},{"Number": 4,"AD": "A","Value": {"Value": 67.9,"Unit": "8"}},{"Number": 5,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 2.7,"Unit": "1"}},{"Number": 7,"AD": "A","Value": {"Value": 5.4,"Unit": "52"}},{"Number": 8,"AD": "A","Value": {"Value": -0.2,"Unit": "1"}},{"Number": 9,"AD": "A","Value": {"Value": 56.4,"Unit": "1"}},{"Number": 10,"AD": "A","Value": {"Value": 60.1,"Unit": "1"}},{"Number": 11,"AD": "A","Value": {"Value": 32.4,"Unit": "1"}},{"Number": 12,"AD": "A","Value": {"Value": 33.9,"Unit": "1"}},{"Number": 13,"AD": "A","Value": {"Value": 36.4,"Unit": "1"}}],"General": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 5,"Unit": "0"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "A","Value": {"Value": 17968,"Unit": "0"}},{"Number": 15,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 16,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 17,"AD": "D","Value": {"Value": 0,"Unit": "44"}}],"Date": [{"Number": 1,"AD": "A","Value": {"Value": 4,"Unit": "0"}},{"Number": 2,"AD": "A","Value": {"Value": 12,"Unit": "0"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "0"}},{"Number": 4,"AD": "A","Value": {"Value": 3,"Unit": "0"}},{"Number": 5,"AD": "A","Value": {"Value": 49,"Unit": "0"}},{"Number": 6,"AD": "A","Value": {"Value": 339,"Unit": "0"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Time": [{"Number": 1,"AD": "A","Value": {"Value": 42,"Unit": "4"}},{"Number": 2,"AD": "A","Value": {"Value": 27,"Unit": "5"}},{"Number": 3,"AD": "A","Value": {"Value": 12,"Unit": "15"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 747,"Unit": "60"}}],"Sun": [{"Number": 1,"AD": "A","Value": {"Value": 455,"Unit": "60"}},{"Number": 2,"AD": "A","Value": {"Value": 965,"Unit": "60"}},{"Number": 3,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 4,"AD": "A","Value": {"Value": 292,"Unit": "5"}},{"Number": 5,"AD": "A","Value": {"Value": 218,"Unit": "5"}},{"Number": 6,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 7,"AD": "A","Value": {"Value": 18.5,"Unit": "54"}},{"Number": 8,"AD": "A","Value": {"Value": 188.9,"Unit": "54"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "A","Value": {"Value": 710,"Unit": "60"}}]},"Status": "OK","Status code": 0});
+
 
                             res.data = JSON.parse(sData);
                             res.httpStatusCode = 200;
@@ -1266,19 +1065,19 @@ class TaBlnet extends utils.Adapter {
             S16: [31, 32]
         },
         OUTPUTS: {
-            A01: [33, 0x01],
-            A02: [33, 0x02],
-            A03: [33, 0x04],
-            A04: [33, 0x08],
-            A05: [33, 0x10],
-            A06: [33, 0x20],
-            A07: [33, 0x40],
-            A08: [33, 0x80],
-            A09: [34, 0x01],
-            A10: [34, 0x02],
-            A11: [34, 0x04],
-            A12: [34, 0x08],
-            A13: [34, 0x10]
+            D01: [33, 0x01],
+            D02: [33, 0x02],
+            D03: [33, 0x04],
+            D04: [33, 0x08],
+            D05: [33, 0x10],
+            D06: [33, 0x20],
+            D07: [33, 0x40],
+            D08: [33, 0x80],
+            D09: [34, 0x01],
+            D10: [34, 0x02],
+            D11: [34, 0x04],
+            D12: [34, 0x08],
+            D13: [34, 0x10]
         },
         SPEED_LEVELS: {
             DzA1: 35,
@@ -1317,9 +1116,9 @@ class TaBlnet extends utils.Adapter {
      */
     parseUvrRecordFromBuffer(response) {
         const uvrRecord = {
-            outputs: {},
+            Outputs: {},
             speed_levels: {},
-            inputs: {},
+            Inputs: {},
             thermal_energy_counters_status: {},
             thermal_energy_counters: {}
         };
@@ -1329,14 +1128,14 @@ class TaBlnet extends utils.Adapter {
 
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
-            uvrRecord.outputs[key] = {
-                value: (response[value[0]] & value[1]) ? true : false,
-                type: defaultUnit
+            uvrRecord.Outputs[key] = {
+                value: (response[value[0]] & value[1]) ? 1 : 0,
+                unit: this.cmiUnits[43] // Digital unit
             };
         }
 
         // Log outputs
-        this.log.debug("Outputs: " + JSON.stringify(uvrRecord.outputs));
+        //this.log.debug("Outputs: " + JSON.stringify(uvrRecord.Outputs));
 
         // Speed levels
         for (const [key, value] of Object.entries(indexes.SPEED_LEVELS)) {
@@ -1350,12 +1149,12 @@ class TaBlnet extends utils.Adapter {
             }
             uvrRecord.speed_levels[key] = {
                 value: finalValue,
-                type: defaultUnit
+                unit: defaultUnit
             };
         }
 
         // Log speed levels
-        this.log.debug("Speed levels: " + JSON.stringify(uvrRecord.speed_levels));
+        //this.log.debug("Speed levels: " + JSON.stringify(uvrRecord.speed_levels));
 
         // Inputs
         for (const [key, value] of Object.entries(indexes.SENSORS)) {
@@ -1363,6 +1162,7 @@ class TaBlnet extends utils.Adapter {
             const localValue = this.byte2short(response[value[0]], response[value[1]]);
             let finalValue;
             let finalUnit;
+            let finalKey = key.replace("S", "A"); // default for sensor is analog
             if (typeof localValue === "number") {
                 const highByte = localValue >> 8;
                 const lowByte = localValue & 0xFF;
@@ -1387,7 +1187,8 @@ class TaBlnet extends utils.Adapter {
                         break;
                     case 0x10:
                         finalValue = (localValue & 0x8000) ? 1 : 0;
-                        finalUnit = "digital"; // Digital unit (no direct match in cmiUnits)
+                        finalUnit = this.cmiUnits[43]; // Digital unit
+                        finalKey = key.replace("S", "D"); // Digital input
                         break;
                     case 0x20: // TYPE_TEMP
                         finalValue = input / 10.0;
@@ -1412,26 +1213,26 @@ class TaBlnet extends utils.Adapter {
             } else {
                 this.log.error("Invalid subValue structure for " + key + ": " + JSON.stringify(localValue));
             }
-            uvrRecord.inputs[key] = {
+            uvrRecord.Inputs[finalKey] = {
                 value: finalValue,
-                type: finalUnit
+                unit: finalUnit
             };
         }
 
         // Log inputs
-        this.log.debug("Inputs: " + JSON.stringify(uvrRecord.inputs));
+        //this.log.debug("Inputs: " + JSON.stringify(uvrRecord.Inputs));
 
         // Thermal energy counters status
         for (const [key, value] of Object.entries(indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS)) {
             const wmz = response[value[0]];
             uvrRecord.thermal_energy_counters_status[key] = {
                 value: (wmz & value[1]) ? true : false,
-                type: defaultUnit
+                unit: defaultUnit
             };
         }
 
         // Log thermal energy counters status
-        this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
+        //this.log.debug("Thermal energy counters status: " + JSON.stringify(uvrRecord.thermal_energy_counters_status));
 
         // Thermal energy counters 1 active?
         const unitKW = this.cmiUnits[10]; // kW
@@ -1458,7 +1259,7 @@ class TaBlnet extends utils.Adapter {
 
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: finalValue,
-                type: unitKW
+                unit: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
                 value: this.byte2short(
@@ -1466,16 +1267,16 @@ class TaBlnet extends utils.Adapter {
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]],
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0,
-                type: unitKWh
+                unit: unitKWh
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: 0,
-                type: unitKW
+                unit: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
                 value: 0,
-                type: unitKWh
+                unit: unitKWh
             };
         }
         // Thermal energy counters 2 active?
@@ -1500,7 +1301,7 @@ class TaBlnet extends utils.Adapter {
             finalValue = finalValue / 100; // Convert to kW with decimal places
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: finalValue,
-                type: unitKW
+                unit: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
                 value: this.byte2short(
@@ -1508,68 +1309,50 @@ class TaBlnet extends utils.Adapter {
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 + this.byte2short(
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]],
                     response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0,
-                type: unitKWh
+                unit: unitKWh
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: 0,
-                type: unitKW
+                unit: unitKW
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
                 value: 0,
-                type: unitKWh
+                unit: unitKWh
             };
         }
 
         // Log thermal energy counters
-        this.log.debug("Thermal energy counters: " + JSON.stringify(uvrRecord.thermal_energy_counters));
+        //this.log.debug("Thermal energy counters: " + JSON.stringify(uvrRecord.thermal_energy_counters));
 
         return uvrRecord;
     }
 
     parseUvrRecordFromJSON(jsonObject) {
         const uvrRecord = {
-            outputs: {},
-            speed_levels: {},
-            inputs: {},
-            thermal_energy_counters_status: {},
-            thermal_energy_counters: {}
+            // outputs: {},
+            // speed_levels: {},
+            // inputs: {},
+            // thermal_energy_counters_status: {},
+            // thermal_energy_counters: {}
         };
-
+        // Options for sections: Inputs, Outputs, DL-Bus, Network Analog, Network Digital, Logging Analog, Logging Digital, General, Date, Time, Sun, ...
         // Helper function to parse sections
         const parseSection = (sectionName, data) => {
-            switch (sectionName) {
-                case "Inputs":
-                    data.forEach(input => {
-                        const inputKey = `S${String(input.Number).padStart(2, "0")}`;
-                        const unitIndex = input.Value.Unit;
-                        const unitString = this.cmiUnits[unitIndex];
-                        uvrRecord.inputs[inputKey] = {
-                            value: input.Value.Value,
-                            type: unitString
-                        };
-                    });
-                    break;
-                case "Outputs":
-                    data.forEach(output => {
-                        const outputKey = `A${String(output.Number).padStart(2, "0")}`;
-                        const unitIndex = output.Value.Unit;
-                        const unitString = this.cmiUnits[unitIndex];
-                        uvrRecord.outputs[outputKey] = {
-                            value: output.Value.State === 1,
-                            type: unitString
-                        };
-                    });
-                    break;
-                    // Add cases for other sections as needed
-                    // For example, "Logging Analog", "Logging Digital", etc.
-                default:
-                    break;
-            }
+            uvrRecord[sectionName] = {};
+            data.forEach(entry => {
+                const entryKey = `${entry.AD}${String(entry.Number).padStart(2, "0")}`;
+                const unitIndex = entry.Value.Unit;
+                const unitString = this.cmiUnits[unitIndex];
+                uvrRecord[sectionName][entryKey] = {
+                    value: entry.Value.Value,
+                    unit: unitString
+                };
+            });
         };
 
-        // Iterate over cmiSections and parse each section if it exists in the input
-        this.cmiSections.forEach(section => {
+        // Iterate over each section in the input JSON and parse it
+        Object.keys(jsonObject.Data).forEach(section => {
             if (jsonObject.Data[section]) {
                 parseSection(section, jsonObject.Data[section]);
             }
@@ -1658,8 +1441,10 @@ class TaBlnet extends utils.Adapter {
         return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
     }
 
+    // replace FORBIDDEN_CHARS by '_'
     name2id(pName) {
-        const FORBIDDEN_CHARS = /[^._\-/ :!#$%&()+=@^{}|~\p{Ll}\p{Lu}\p{Nd}]+/gu;
+        const FORBIDDEN_CHARS = /[^._\-/:!#$%&()+=@^{}|~\p{Ll}\p{Lu}\p{Nd}]+/gu;
+        pName = pName.toLowerCase();
         return (pName || "").replace(FORBIDDEN_CHARS, "_");
     }
 
@@ -1747,20 +1532,24 @@ class TaBlnet extends utils.Adapter {
         this.log.debug("Objects to be deleted for: " + instanceId);
 
         this.initialized = false;
+        const checkNameBLNET = this.name2id(instanceId + ".BL-NET");
+        const checkNameCMI = this.name2id(instanceId + ".CMI");
         // delete device tree
         try {
-            await this.delObjectAsync(instanceId + ".BL-NET", {
+            this.log.debug("Deleting objects under " + checkNameBLNET);
+            await this.delObjectAsync(checkNameBLNET, {
                 recursive: true
             });
         } catch (error) {
-            this.log.warn(`Error deleting object ${instanceId + ".BL-NET"}: ${error.message}`);
+            this.log.warn(`Error deleting object ${checkNameBLNET}: ${error.message}`);
         }
         try {
-            await this.delObjectAsync(instanceId + ".CMI", {
+            this.log.debug("Deleting objects under " + checkNameCMI);
+            await this.delObjectAsync(checkNameCMI, {
                 recursive: true
             });
         } catch (error) {
-            this.log.warn(`Error deleting object ${instanceId + ".CMI"}: ${error.message}`);
+            this.log.warn(`Error deleting object ${checkNameCMI}: ${error.message}`);
         }
         // delete some objects under the folder info, but info.connection
         try {
