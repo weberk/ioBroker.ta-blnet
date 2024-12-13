@@ -26,8 +26,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.28 (2024-12-13)
 
 -   improved JSON Status Code logging
 -   added data_objects per can_node to config for CMI requests
