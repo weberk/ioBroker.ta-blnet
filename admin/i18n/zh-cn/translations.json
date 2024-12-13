@@ -14,5 +14,10 @@
     "Expert Username": "专家用户名",
     "Enter the username for expert access": "输入专家访问的用户名",
     "Expert Password": "专家密码",
-    "Enter the password for expert access": "输入专家访问密码"
+    "Enter the password for expert access": "输入专家访问密码",
+    "WARNING: please ensure that the JSON data is correctly formatted": "警告：请确保 JSON 数据格式正确",
+    "CAN Node Request Configuration": "CAN节点请求配置",
+    "JSON Editor": "JSON编辑器",
+    "Data Object Name": "数据对象名称",
+    "Description": "描述"
 }

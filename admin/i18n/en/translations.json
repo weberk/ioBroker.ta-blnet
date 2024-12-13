@@ -14,5 +14,8 @@
     "Expert Username": "Expert Username",
     "Enter the username for expert access": "Enter the username for expert access",
     "Expert Password": "Expert Password",
-    "Enter the password for expert access": "Enter the password for expert access"
+    "Enter the password for expert access": "Enter the password for expert access",
+    "WARNING: please ensure that the JSON data is correctly formatted": "WARNING: please ensure that the JSON data is correctly formatted",
+    "CAN Node Request Configuration": "CAN Node Request Configuration",
+    "JSON Editor": "JSON Editor"
 }

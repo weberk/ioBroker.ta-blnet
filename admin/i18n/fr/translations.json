@@ -14,5 +14,10 @@
     "Expert Username": "Nom d'utilisateur expert",
     "Enter the username for expert access": "Entrez le nom d'utilisateur pour l'accès expert",
     "Expert Password": "Mot de passe expert",
-    "Enter the password for expert access": "Entrez le mot de passe pour l'accès expert"
+    "Enter the password for expert access": "Entrez le mot de passe pour l'accès expert",
+    "WARNING: please ensure that the JSON data is correctly formatted": "ATTENTION : veuillez vous assurer que les données JSON sont correctement formatées",
+    "CAN Node Request Configuration": "Configuration de demande de nœud CAN",
+    "JSON Editor": "Éditeur JSON",
+    "Data Object Name": "Nom de l'objet de données",
+    "Description": "Description"
 }

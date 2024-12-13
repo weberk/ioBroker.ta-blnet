@@ -115,7 +115,7 @@
                 },
                 "json": {
                     "type": "jsonEditor",
-                    "label": "JSON editor",
+                    "label": "JSON Editor",
                     "delimiter": ";",
                     "newLine": true,
                     "xs": 12,
@@ -133,6 +133,16 @@
                     "md": 6,
                     "lg": 4,
                     "xl": 4
+                },
+                "jsonText": {
+                    "type": "staticText",
+                    "text": "Data Object Name \u00A0\u00A0\u2013\u00A0\u00A0 Description<br>I \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Inputs<br>O \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Outputs<br>D \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 DL-inputs<br>Sg \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 System-values: General<br>Sd \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 System-values: Date<br>St \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 System-values: Time<br>Ss \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 System-values: Sun<br>Sp \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Electrical power<br>Na \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Analog network inputs<br>Nd \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Digital network inputs<br>M \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 M-Bus<br>AM \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Modbus<br>AK \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 KNX<br>La \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Analog logging<br>Ld \u00A0\u00A0\u00A0\u00A0\u2013\u00A0\u00A0\u00A0 Digital logging",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 6,
+                    "xl": 6
                 }
             }
         }

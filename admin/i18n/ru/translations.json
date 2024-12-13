@@ -14,5 +14,10 @@
     "Expert Username": "Экспертное имя пользователя",
     "Enter the username for expert access": "Введите имя пользователя для экспертного доступа",
     "Expert Password": "Экспертный пароль",
-    "Enter the password for expert access": "Введите пароль для экспертного доступа"
+    "Enter the password for expert access": "Введите пароль для экспертного доступа",
+    "WARNING: please ensure that the JSON data is correctly formatted": "ВНИМАНИЕ: убедитесь, что данные JSON имеют правильный формат.",
+    "CAN Node Request Configuration": "Конфигурация запроса узла CAN",
+    "JSON Editor": "Редактор JSON",
+    "Data Object Name": "Имя объекта данных",
+    "Description": "Описание"
 }

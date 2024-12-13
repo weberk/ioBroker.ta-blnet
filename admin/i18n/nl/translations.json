@@ -14,5 +14,10 @@
     "Expert Username": "Expert-gebruikersnaam",
     "Enter the username for expert access": "Voer de gebruikersnaam in voor experttoegang",
     "Expert Password": "Expertwachtwoord",
-    "Enter the password for expert access": "Voer het wachtwoord in voor deskundige toegang"
+    "Enter the password for expert access": "Voer het wachtwoord in voor deskundige toegang",
+    "WARNING: please ensure that the JSON data is correctly formatted": "WAARSCHUWING: zorg ervoor dat de JSON-gegevens correct zijn geformatteerd",
+    "CAN Node Request Configuration": "Configuratie CAN-knooppuntverzoek",
+    "JSON Editor": "JSON-editor",
+    "Data Object Name": "Naam van gegevensobject",
+    "Description": "Beschrijving"
 }
