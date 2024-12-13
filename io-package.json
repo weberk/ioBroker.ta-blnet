@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.28",
+    "version": "1.0.29",
     "messagebox": true,
     "news": {
+      "1.0.29": {
+        "en": "added translation and documentation to data object config",
+        "de": "übersetzung und dokumentation zum datenobjekt config",
+        "ru": "добавлен перевод и документация к конфигурации объекта данных",
+        "pt": "adicionado tradução e documentação para configuração de objeto de dados",
+        "nl": "vertaling en documentatie toegevoegd aan data object config",
+        "fr": "traduction et documentation ajoutées à la configuration de l'objet de données",
+        "it": "traduzione e documentazione aggiuntiva alla configurazione degli oggetti di dati",
+        "es": "traducción agregada y documentación a los datos objeto config",
+        "pl": "dodane tłumaczenie i dokumentacja do konfiguracji obiektu danych",
+        "uk": "додано переклад та документацію на налаштування об’єкта даних",
+        "zh-cn": "在数据对象配置中添加翻译和文档"
+      },
       "1.0.28": {
         "en": "improved JSON Status Code logging\nadded data_objects per can_node to config for CMI requests",
         "de": "verbesserte JSON Status Code Protokollierung\nhinzugefügt data_objects per can_node, um CMI-Anfragen zu konfiszieren",
@@ -81,19 +94,6 @@
         "pl": "dodane wstępne wsparcie CMI",
         "uk": "додана початкова підтримка CMI",
         "zh-cn": "增加了海事委员会的初步支助"
-      },
-      "1.0.22": {
-        "en": "fixed negative current_heat_power",
-        "de": "fester negativer strom_heat_power",
-        "ru": "фиксированный отрицательный ток_тепл_мощь",
-        "pt": "corrente negativa fixa_heat_power",
-        "nl": "vaste negatieve stroom_warmte_vermogen",
-        "fr": "valeur négative de courant_heat_power",
-        "it": "corrente negativa fissa_heat_power",
-        "es": "corriente negativa fija_heat_power",
-        "pl": "stały prąd ujemny _ ciepło _ moc",
-        "uk": "фіксований негативний струм_heat_power",
-        "zh-cn": "固定负电流_热力_功率"
       }
     },
     "titleLang": {

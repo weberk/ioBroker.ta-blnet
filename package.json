@@ -1,6 +1,6 @@
 {
   "name": "iobroker.ta-blnet",
-  "version": "1.0.28",
+  "version": "1.0.29",
   "description": "An ioBroker adapter for reading inputs and outputs of the climate controller from Technische Alternative using BL-NET.",
   "author": {
     "name": "Klaus Weber",
