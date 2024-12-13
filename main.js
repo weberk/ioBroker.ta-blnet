@@ -930,29 +930,32 @@ class TaBlnet extends utils.Adapter {
                                         res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
                                         // Check CMI status code
                                         switch (res.data["Status code"]) {
+                                            case 0:
+                                                this.log.info("OK: " + res.data["Status code"] + " - " + res.data.Status);
+                                                break;
                                             case 1:
-                                                this.log.warn("NODE ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 2:
-                                                this.log.warn("FAIL: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 3:
-                                                this.log.error("SYNTAX ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 4:
-                                                this.log.warn("TOO MANY REQUESTS: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 5:
-                                                this.log.warn("DEVICE NOT SUPPORTED: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 6:
-                                                this.log.error("TOO FEW ARGUMENTS: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             case 7:
-                                                this.log.warn("CAN BUSY: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                                 break;
                                             default:
-                                                this.log.error("UNKNOWN ERROR: " + res.data["Status code"] + " - " + res.data.Status);
+                                                this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
                                         }
                                         // Log dump of the data
                                         this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
