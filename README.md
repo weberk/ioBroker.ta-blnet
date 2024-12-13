@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   added translation and documentation to data object config
+
 ### 1.0.28 (2024-12-13)
 
 -   improved JSON Status Code logging
