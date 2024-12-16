@@ -370,7 +370,7 @@ class TaBlnet extends utils.Adapter {
                         const currentUvrJSONRecord = this.parseUvrRecordFromJSON(res.data);
                         stateValuesArray.push(currentUvrJSONRecord);
                     } catch (error) {
-                        this.log.error(`Error fetching data for CAN node ${data_frame_index}: ${error.message}`);
+                        this.log.error("Error fetching data for CAN node " + data_frame_index + ": " + error.message);
                     }
                 }
                 // Update deviceInfo with the fetched data
@@ -1433,7 +1433,7 @@ class TaBlnet extends utils.Adapter {
         const parseSection = (sectionName, data) => {
             uvrRecord[sectionName] = {};
             data.forEach(entry => {
-                const entryKey = `${entry.AD}${String(entry.Number).padStart(2, "0")}`;
+                const entryKey = entry.AD + String(entry.Number).padStart(2, "0");
                 const unitIndex = entry.Value.Unit;
                 const unitString = this.cmiUnits[unitIndex];
                 uvrRecord[sectionName][entryKey] = {
@@ -1634,7 +1634,7 @@ class TaBlnet extends utils.Adapter {
                 recursive: true,
             });
         } catch (error) {
-            this.log.warn(`Error deleting object ${checkNameBLNET}: ${error.message}`);
+            this.log.warn("Error deleting object " + checkNameBLNET + ": " + error.message);
         }
         try {
             this.log.debug("Deleting objects under " + checkNameCMI);
@@ -1642,7 +1642,7 @@ class TaBlnet extends utils.Adapter {
                 recursive: true,
             });
         } catch (error) {
-            this.log.warn(`Error deleting object ${checkNameCMI}: ${error.message}`);
+            this.log.warn("Error deleting object " + checkNameCMI + ": " + error.message);
         }
         // delete some objects under the folder info, but info.connection
         try {
@@ -1657,7 +1657,7 @@ class TaBlnet extends utils.Adapter {
                 }
             }
         } catch (error) {
-            this.log.error(`Error deleting objects under ${instanceId}: ${error.message}`);
+            this.log.error("Error deleting objects under " + instanceId + ": " + error.message);
         }
     }
 }

@@ -29,7 +29,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 
 ### **WORK IN PROGRESS**
 
--   added eslint9 config
+-   added eslint9 config, removed eslint8 config
 
 ### 1.0.29 (2024-12-13)
 
