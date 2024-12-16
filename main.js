@@ -14,12 +14,13 @@ const http = require("node:http");
 
 /**
  * Adapter class for UVR16xx BL-NET devices.
- * @extends utils.Adapter
+ *
  */
 class TaBlnet extends utils.Adapter {
     /**
      * Constructor for the adapter instance
-     * @param {Partial<utils.AdapterOptions>} [options={}]
+     *
+     * @param {Partial<utils.AdapterOptions>} [options={}] - The adapter options.
      */
     constructor(options) {
         // Call the parent constructor with the adapter name and options
@@ -47,15 +48,90 @@ class TaBlnet extends utils.Adapter {
         this.systemConfiguration = {
             success: false,
             stateValues: {},
-            deviceInfo: {}
+            deviceInfo: {},
         };
 
         // define constants
 
         // Topics according TA Documentation "CMI-JSON-API Version 7"
-        this.cmiUnits = ["", "°C", "W/m²", "l/h", "sec", "min", "l/Imp", "K", "%", "", "kW", "kWh", "MWh", "V", "mA", "hr", "Days", "Imp", "kΩ", "l", "km/h",
-            "Hz", "l/min", "bar", "", "km", "m", "mm", "m³", "", "", "", "", "", "", "l/d", "m/s", "m³/min", "m³/h", "m³/d", "mm/min", "mm/h", "mm/d", "ON/OFF",
-            "NO/YES", "", "°C", "", "", "", "€", "$", "g/m³", "", "°", "", "°", "sec", "", "%", "h", "", "", "A", "", "mbar", "Pa", "ppm", "", "W", "t", "kg", "g", "cm", "K", "lx", "Bg/m³"
+        this.cmiUnits = [
+            "", // index 0
+            "°C", // index 1
+            "W/m²", // index 2
+            "l/h", // index 3
+            "sec", // index 4
+            "min", // index 5
+            "l/Imp", // index 6
+            "K", // index 7
+            "%", // index 8
+            "", // index 9
+            "kW", // index 10
+            "kWh", // index 11
+            "MWh", // index 12
+            "V", // index 13
+            "mA", // index 14
+            "hr", // index 15
+            "Days", // index 16
+            "Imp", // index 17
+            "kΩ", // index 18
+            "l", // index 19
+            "km/h", // index 20
+            "Hz", // index 21
+            "l/min", // index 22
+            "bar", // index 23
+            "", // index 24
+            "km", // index 25
+            "m", // index 26
+            "mm", // index 27
+            "m³", // index 28
+            "", // index 29
+            "", // index 30
+            "", // index 31
+            "", // index 32
+            "", // index 33
+            "", // index 34
+            "l/d", // index 35
+            "m/s", // index 36
+            "m³/min", // index 37
+            "m³/h", // index 38
+            "m³/d", // index 39
+            "mm/min", // index 40
+            "mm/h", // index 41
+            "mm/d", // index 42
+            "ON/OFF", // index 43
+            "NO/YES", // index 44
+            "", // index 45
+            "°C", // index 46
+            "", // index 47
+            "", // index 48
+            "", // index 49
+            "€", // index 50
+            "$", // index 51
+            "g/m³", // index 52
+            "", // index 53
+            "°", // index 54
+            "", // index 55
+            "°", // index 56
+            "sec", // index 57
+            "", // index 58
+            "%", // index 59
+            "h", // index 60
+            "", // index 61
+            "", // index 62
+            "A", // index 63
+            "", // index 64
+            "mbar", // index 65
+            "Pa", // index 66
+            "ppm", // index 67
+            "", // index 68
+            "W", // index 69
+            "t", // index 70
+            "kg", // index 71
+            "g", // index 72
+            "cm", // index 73
+            "K", // index 74
+            "lx", // index 75
+            "Bg/m³", // index 76
         ];
         // CMI-JSON-API Version 7
         this.cmiAttachedDevices = {
@@ -78,7 +154,7 @@ class TaBlnet extends utils.Adapter {
             "8F": "CAN-EZ3",
             "91": "UVR610",
             "92": "UVR67",
-            "A3": "BL-NET"
+            "A3": "BL-NET",
         };
         // Define sections to be used for ioBroker adapter objects CMI-JSON-API Version 7
         // Parameter     Description            Supported devices
@@ -116,7 +192,7 @@ class TaBlnet extends utils.Adapter {
             // AM        Modbus                 CAN-BC2, UVR610S-MODB, CAN-EZ3
             "Modbus",
             // AK        KNX                    CAN-BC2
-            "KNX"
+            "KNX",
         ];
         // this.config.can_node_list
         this.can_node_list = {};
@@ -232,7 +308,8 @@ class TaBlnet extends utils.Adapter {
 
     /**
      * Reads the system configuration from the device.
-     * @returns {Promise<{success: boolean, stateValues: Object, deviceInfo: Object}>} - The result of the read with success status, state values, device info, and units.
+     *
+     * @returns {Promise<{success: boolean, stateValues: object, deviceInfo: object}>} - The result of the read with success status, state values, device info, and units.
      */
     async readSystemConfiguration() {
         let deviceInfo;
@@ -253,18 +330,16 @@ class TaBlnet extends utils.Adapter {
                             stateValuesArray.push(currentStateValuesArray[j]);
                         }
                     }
-
                 } catch (error) {
                     this.log.error("readSystemConfiguration reading stateValues failed: " + error);
                     return {
                         success: false,
                         stateValues: [],
-                        deviceInfo: {}
+                        deviceInfo: {},
                     };
                 }
-            }
-            // CMI selected
-            else {
+            } else {
+                // CMI selected
                 // check the CAN nodes from CMI configuration
                 const canNodesArray = this.jsConfigObject.requests.map(request => request.can_node_number);
                 this.log.info("CAN Node Numbers Array: " + JSON.stringify(canNodesArray));
@@ -276,7 +351,7 @@ class TaBlnet extends utils.Adapter {
                     channelNodes: canNodesArray,
                     module_id: "--",
                     firmware_version: "--",
-                    transmission_mode: "--"
+                    transmission_mode: "--",
                 };
 
                 // Fetch JSON data from device for each CAN node and update deviceInfo
@@ -308,7 +383,7 @@ class TaBlnet extends utils.Adapter {
             return {
                 success: false,
                 stateValues: [],
-                deviceInfo: {}
+                deviceInfo: {},
             };
         }
 
@@ -318,7 +393,7 @@ class TaBlnet extends utils.Adapter {
         return {
             success: true,
             stateValues: stateValuesArray,
-            deviceInfo: deviceInfo
+            deviceInfo: deviceInfo,
         };
     }
 
@@ -329,7 +404,7 @@ class TaBlnet extends utils.Adapter {
      * module ID, UVR mode, UVR type, firmware version, and transmission mode. It processes
      * the received data and returns an object containing these details.
      *
-     * @returns {Promise<Object>} An object containing the device information:
+     * @returns {Promise<object>} An object containing the device information:
      * - {string} uvr_mode - The UVR mode (e.g., "1DL", "2DL", "CAN").
      * - {Array<string>} uvr_type_str - The UVR type(s) as strings (e.g., ["UVR61-3", "UVR1611"]).
      * - {Array<number>} uvr_type_code - The UVR type(s) as numbers.
@@ -337,13 +412,11 @@ class TaBlnet extends utils.Adapter {
      * - {string} module_id - The module ID of the BL-NET device.
      * - {string} firmware_version - The firmware version of the BL-NET device.
      * - {string} transmission_mode - The transmission mode (e.g., "Current Data").
-     *
      * @throws {Error} If there is an error during communication with the device.
-     */
-    async read_BLNET_DeviceInfo() {
+     */ async read_BLNET_DeviceInfo() {
         // Define constants
         const VERSION_REQUEST = 0x81;
-        const HEADER_READ = 0xAA;
+        const HEADER_READ = 0xaa;
         const FIRMWARE_REQUEST = 0x82;
         const MODE_REQUEST = 0x21;
         const devices = [];
@@ -418,18 +491,18 @@ class TaBlnet extends utils.Adapter {
             //   } HEADER_DC_Frame8
             this.uvr_mode = data[1]; // identifier
             switch (this.uvr_mode) {
-                case 0xA8:
+                case 0xa8:
                     uvr_mode_str = "1DL";
                     this.numberOfDataFrames = 1;
                     uvr_type_code.push(data[HEADER_A8_DEVICE1_LENGTH_OFFSET].toString(16).toUpperCase());
                     break;
-                case 0xD1:
+                case 0xd1:
                     uvr_mode_str = "2DL";
                     this.numberOfDataFrames = 1;
                     uvr_type_code.push(data[HEADER_D1_DEVICE1_LENGTH_OFFSET].toString(16).toUpperCase());
                     uvr_type_code.push(data[HEADER_D1_DEVICE2_LENGTH_OFFSET].toString(16).toUpperCase());
                     break;
-                case 0xDC:
+                case 0xdc:
                     this.numberOfDataFrames = data[5];
                     uvr_mode_str = this.numberOfDataFrames + "CAN";
                     for (let i = 0; i < this.numberOfDataFrames; i++) {
@@ -440,8 +513,6 @@ class TaBlnet extends utils.Adapter {
                     throw new Error("Unknown mode: 0x" + this.uvr_mode.toString(16).toUpperCase());
             }
             this.log.debug("Received UVR mode of BL-NET: " + uvr_mode_str);
-
-
 
             // derive device type as a string from length of data record of a data frame
             for (let i = 0; i < this.numberOfDataFrames; i++) {
@@ -484,7 +555,7 @@ class TaBlnet extends utils.Adapter {
                 channelNodes: frameIndexArray,
                 module_id: "0x" + module_id.toUpperCase(),
                 firmware_version: firmwareVersion,
-                transmission_mode: transmission_mode
+                transmission_mode: transmission_mode,
             };
         } catch (error) {
             this.log.error("Error during communication with device: " + error);
@@ -498,10 +569,6 @@ class TaBlnet extends utils.Adapter {
      * Declares various objects (device information, outputs, speed levels, inputs, thermal energy counters status, and thermal energy counters)
      * based on the provided system configuration.
      *
-     * @param {Object} systemConfiguration - The system configuration object.
-     * @param {Object} systemConfiguration.units - The units for the inputs.
-     * @param {Object} systemConfiguration.deviceInfo - The device information.
-     * @param {Object} systemConfiguration.stateValues - The state values containing uvrRecords.
      * @returns {Promise<void>} - A promise that resolves when all objects have been declared.
      */
     async declareOrUpdateObjects() {
@@ -517,9 +584,9 @@ class TaBlnet extends utils.Adapter {
                     type: "device",
                     common: {
                         name: "Door to Climate Controls",
-                        role: "gateway"
+                        role: "gateway",
                     },
-                    native: {}
+                    native: {},
                 });
             }
             // Declare device information
@@ -533,14 +600,14 @@ class TaBlnet extends utils.Adapter {
                             type: "string",
                             role: "info",
                             read: true,
-                            write: false
+                            write: false,
                         },
                         native: {},
                     });
                 }
                 await this.setState(currentKeyName, {
                     val: JSON.stringify(value),
-                    ack: true
+                    ack: true,
                 });
             }
         } else {
@@ -560,7 +627,7 @@ class TaBlnet extends utils.Adapter {
                             name: "Channel " + deviceInfo.channelNodes[i] + " (" + this.config.selected_ta_logger + ")",
                             role: "climate",
                         },
-                        native: {}
+                        native: {},
                     });
                 }
                 // Create full path prefix
@@ -578,7 +645,7 @@ class TaBlnet extends utils.Adapter {
                                 common: {
                                     name: "Metrics for " + section,
                                 },
-                                native: {}
+                                native: {},
                             });
                         }
                         // Declare objects for each section
@@ -604,7 +671,7 @@ class TaBlnet extends utils.Adapter {
                             //this.log.debug("setting state value for currentKeyName: " + currentKeyName);
                             await this.setState(currentKeyName, {
                                 val: value.value,
-                                ack: true
+                                ack: true,
                             });
                         }
                     } else {
@@ -621,7 +688,7 @@ class TaBlnet extends utils.Adapter {
                             common: {
                                 name: "Metrics for Speed Levels",
                             },
-                            native: {}
+                            native: {},
                         });
                     }
                     // Declare speed levels
@@ -645,7 +712,7 @@ class TaBlnet extends utils.Adapter {
                             }
                             await this.setState(currentKeyName, {
                                 val: value.value,
-                                ack: true
+                                ack: true,
                             });
                         }
                     } else {
@@ -660,7 +727,7 @@ class TaBlnet extends utils.Adapter {
                             common: {
                                 name: "Metrics for Thermal Energy Counters Activation",
                             },
-                            native: {}
+                            native: {},
                         });
                     }
                     // Declare thermal energy counters status
@@ -684,7 +751,7 @@ class TaBlnet extends utils.Adapter {
                             }
                             await this.setState(currentKeyName, {
                                 val: value.value,
-                                ack: true
+                                ack: true,
                             });
                         }
                     } else {
@@ -698,7 +765,7 @@ class TaBlnet extends utils.Adapter {
                             common: {
                                 name: "Metrics for Thermal Energy Counters",
                             },
-                            native: {}
+                            native: {},
                         });
                     }
                     // Declare thermal energy counters
@@ -729,7 +796,7 @@ class TaBlnet extends utils.Adapter {
                             }
                             await this.setState(currentKeyName, {
                                 val: value.value,
-                                ack: true
+                                ack: true,
                             });
                         }
                     } else {
@@ -749,12 +816,13 @@ class TaBlnet extends utils.Adapter {
      * It parses the response data and updates the state values accordingly.
      *
      * @async
-     * @returns {Promise<Object>} A promise that resolves to an object containing the state values.
+     * @param {number} data_frame_index - The index of the data frame to fetch state values for.
+     * @returns {Promise<object>} A promise that resolves to an object containing the state values.
      * @throws {Error} If there is an error during communication with the device or if the response format is unexpected.
      */
     async fetchStateValuesFromDevice(data_frame_index) {
         const stateValuesArray = [];
-        const READ_CURRENT_DATA = 0xAB; // Command byte to read current data
+        const READ_CURRENT_DATA = 0xab; // Command byte to read current data
         const LATEST_SIZE = 56; // Size of one UVR1611 record
 
         try {
@@ -783,19 +851,18 @@ class TaBlnet extends utils.Adapter {
                         }
                         this.log.debug("fetchStateValuesFromDevice successful.");
                         return stateValuesArray; // Return the state values
-                    } else {
-                        this.log.debug("Invalid response from device");
-                        throw new Error("Invalid response from device");
                     }
+                    // else: Invalid response
+                    this.log.debug("Invalid response from device");
+                    throw new Error("Invalid response from device");
                 } else {
                     // Unexpected response
                     this.log.debug("Unexpected data format");
                     this.logHexDump("fetchStateValuesFromDevice", data); // Log hex dump of the data
                     throw new Error("Unexpected data format");
                 }
-            }
-            // CMI selected
-            else {
+            } else {
+                // CMI selected
                 this.log.debug("fetchStateValuesFromDevice CMI for CAN node id: " + data_frame_index);
                 const data = await this.fetchJSONDataFromDevice(data_frame_index);
 
@@ -808,11 +875,10 @@ class TaBlnet extends utils.Adapter {
 
                     this.log.debug("fetchStateValuesFromDevice successful.");
                     return stateValuesArray; // Return the state values
-                } else {
-                    this.log.debug("Invalid response from device");
-                    throw new Error("Invalid response from device");
                 }
-
+                // else: Invalid response
+                this.log.debug("Invalid response from device");
+                throw new Error("Invalid response from device");
             }
         } catch (error) {
             this.log.error("Error during communication with device: " + error);
@@ -840,19 +906,19 @@ class TaBlnet extends utils.Adapter {
                         const data = await this.sendCommand(command);
                         this.log.debug("Sent command as attempt: " + attempt);
 
-                        if (data && data.length > 3) { // Treat responses like "BA 02 BC" as invalid, infact 0x=02 means to retry after 2 seconds
+                        if (data && data.length > 3) {
+                            // Treat responses like "BA 02 BC" as invalid, infact 0x=02 means to retry after 2 seconds
                             resolve(data); // Successfully, exit the loop
                             // Log hex dump of the data
                             this.logHexDump("fetchDataBlockFromDevice", data);
                             return;
-                        } else {
-                            // Ignore the non-expected short response
-                            this.log.debug("Invalid short response from device");
-                            // Log hex dump of the data
-                            this.logHexDump("fetchDataBlockFromDevice", data);
-                            if (attempt >= maxRetries) {
-                                reject(new Error("Max retries reached. Unable to communicate with device."));
-                            }
+                        }
+                        // else - ignore the non-expected short response
+                        this.log.debug("Invalid short response from device");
+                        // Log hex dump of the data
+                        this.logHexDump("fetchDataBlockFromDevice", data);
+                        if (attempt >= maxRetries) {
+                            reject(new Error("Max retries reached. Unable to communicate with device."));
                         }
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
@@ -872,7 +938,7 @@ class TaBlnet extends utils.Adapter {
      * Fetches JSON data from a device with retry logic.
      *
      * @param {number} canNode - The CAN node to query.
-     * @returns {Promise<{data: Object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
+     * @returns {Promise<{data: object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
      * @throws {Error} If the maximum number of retries is reached.
      */
     async fetchJSONDataFromDevice(canNode) {
@@ -894,7 +960,7 @@ class TaBlnet extends utils.Adapter {
                         data: {},
                         httpStatusCode: 0,
                         httpStatusMessage: "",
-                        debug: ""
+                        debug: "",
                     };
                     try {
                         let sData = "";
@@ -908,7 +974,7 @@ class TaBlnet extends utils.Adapter {
                             // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O",
                             // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld",
                             path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=" + data_objects,
-                            method: "GET"
+                            method: "GET",
                         };
                         this.log.debug("Sending request to " + hostname + " with options: " + JSON.stringify(options));
                         // if attempt== 1 use static response string sData for testing
@@ -919,7 +985,6 @@ class TaBlnet extends utils.Adapter {
                             // sData = JSON.stringify({"Header": {"Version": 7,"Device": "91","Timestamp": 1733315261},"Data": {"Logging Analog": [{"Number": 1,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 3,"AD": "A","Value": {"Value": 301,"Unit": "69"}},{"Number": 4,"AD": "A","Value": {"Value": 367,"Unit": "69"}},{"Number": 5,"AD": "A","Value": {"Value": 1966,"Unit": "69"}},{"Number": 6,"AD": "A","Value": {"Value": 122,"Unit": "69"}},{"Number": 7,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 8,"AD": "A","Value": {"Value": 21235,"Unit": "11"}},{"Number": 9,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 10,"AD": "A","Value": {"Value": 7,"Unit": "69"}},{"Number": 11,"AD": "A","Value": {"Value": 24823.6,"Unit": "11"}},{"Number": 12,"AD": "A","Value": {"Value": 1618,"Unit": "11"}},{"Number": 13,"AD": "A","Value": {"Value": 2082,"Unit": "69"}},{"Number": 14,"AD": "A","Value": {"Value": 64387.5,"Unit": "11"}},{"Number": 15,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 16,"AD": "A","Value": {"Value": 2.87,"Unit": "10"}},{"Number": 17,"AD": "A","Value": {"Value": 191038.6,"Unit": "11"}},{"Number": 18,"AD": "A","Value": {"Value": 30.2,"Unit": "11"}},{"Number": 19,"AD": "A","Value": {"Value": 900,"Unit": "69"}},{"Number": 20,"AD": "A","Value": {"Value": 65295.2,"Unit": "11"}},{"Number": 21,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 22,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 23,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 24,"AD": "A","Value": {"Value": 287,"Unit": "3"}},{"Number": 25,"AD": "A","Value": {"Value": 2,"Unit": "69"}},{"Number": 26,"AD": "A","Value": {"Value": 2261,"Unit": "11"}},{"Number": 27,"AD": "A","Value": {"Value": 3.92,"Unit": "10"}},{"Number": 28,"AD": "A","Value": {"Value": 275722.4,"Unit": "11"}},{"Number": 29,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 30,"AD": "A","Value": {"Value": 26602,"Unit": "28"}},{"Number": 31,"AD": "A","Value": {"Value": 0,"Unit": "8"}},{"Number": 32,"AD": "A","Value": {"Value": 223,"Unit": "69"}},{"Number": 33,"AD": "A","Value": {"Value": 6688.5,"Unit": "11"}},{"Number": 35,"AD": "A","Value": {"Value": 678,"Unit": "69"}},{"Number": 36,"AD": "A","Value": {"Value": 27676.8,"Unit": "11"}},{"Number": 38,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 39,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 40,"AD": "A","Value": {"Value": 154.3,"Unit": "11"}},{"Number": 41,"AD": "A","Value": {"Value": 28,"Unit": "69"}},{"Number": 42,"AD": "A","Value": {"Value": 11873,"Unit": "11"}},{"Number": 43,"AD": "A","Value": {"Value": 406.9,"Unit": "11"}},{"Number": 44,"AD": "A","Value": {"Value": 81,"Unit": "69"}},{"Number": 45,"AD": "A","Value": {"Value": 13617.5,"Unit": "11"}},{"Number": 46,"AD": "A","Value": {"Value": 11.1,"Unit": "11"}},{"Number": 47,"AD": "A","Value": {"Value": 292,"Unit": "69"}},{"Number": 48,"AD": "A","Value": {"Value": 4223.2,"Unit": "11"}},{"Number": 49,"AD": "A","Value": {"Value": 11.7,"Unit": "11"}},{"Number": 50,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 51,"AD": "A","Value": {"Value": 9715,"Unit": "11"}},{"Number": 52,"AD": "A","Value": {"Value": 313,"Unit": "69"}},{"Number": 53,"AD": "A","Value": {"Value": 43554.5,"Unit": "11"}},{"Number": 54,"AD": "A","Value": {"Value": 831,"Unit": "69"}},{"Number": 55,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 56,"AD": "A","Value": {"Value": 74,"Unit": "8"}},{"Number": 57,"AD": "A","Value": {"Value": 10697.9,"Unit": "11"}},{"Number": 58,"AD": "A","Value": {"Value": 10120.9,"Unit": "11"}},{"Number": 59,"AD": "A","Value": {"Value": 9,"Unit": "69"}},{"Number": 60,"AD": "A","Value": {"Value": 0.1,"Unit": "58"}},{"Number": 61,"AD": "A","Value": {"Value": 10,"Unit": "69"}},{"Number": 62,"AD": "A","Value": {"Value": 1.1,"Unit": "58"}},{"Number": 63,"AD": "A","Value": {"Value": 769,"Unit": "11"}},{"Number": 64,"AD": "A","Value": {"Value": 185,"Unit": "69"}}],"Logging Digital": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 15,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 18,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 19,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 20,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 21,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Inputs": [{"Number": 1,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 2,"AD": "A","Value": {"Value": 24.9,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "1"}},{"Number": 4,"AD": "A","Value": {"Value": 0,"Unit": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}}],"Outputs": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "A","Value": {"State": 0,"Value": 0,"Unit": "8"}}],"DL-Bus": [{"Number": 1,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 285,"Unit": "3"}},{"Number": 4,"AD": "A","Value": {"Value": 67.9,"Unit": "8"}},{"Number": 5,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 2.7,"Unit": "1"}},{"Number": 7,"AD": "A","Value": {"Value": 5.4,"Unit": "52"}},{"Number": 8,"AD": "A","Value": {"Value": -0.2,"Unit": "1"}},{"Number": 9,"AD": "A","Value": {"Value": 56.4,"Unit": "1"}},{"Number": 10,"AD": "A","Value": {"Value": 60.1,"Unit": "1"}},{"Number": 11,"AD": "A","Value": {"Value": 32.4,"Unit": "1"}},{"Number": 12,"AD": "A","Value": {"Value": 33.9,"Unit": "1"}},{"Number": 13,"AD": "A","Value": {"Value": 36.4,"Unit": "1"}}],"General": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 5,"Unit": "0"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "A","Value": {"Value": 17968,"Unit": "0"}},{"Number": 15,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 16,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 17,"AD": "D","Value": {"Value": 0,"Unit": "44"}}],"Date": [{"Number": 1,"AD": "A","Value": {"Value": 4,"Unit": "0"}},{"Number": 2,"AD": "A","Value": {"Value": 12,"Unit": "0"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "0"}},{"Number": 4,"AD": "A","Value": {"Value": 3,"Unit": "0"}},{"Number": 5,"AD": "A","Value": {"Value": 49,"Unit": "0"}},{"Number": 6,"AD": "A","Value": {"Value": 339,"Unit": "0"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Time": [{"Number": 1,"AD": "A","Value": {"Value": 42,"Unit": "4"}},{"Number": 2,"AD": "A","Value": {"Value": 27,"Unit": "5"}},{"Number": 3,"AD": "A","Value": {"Value": 12,"Unit": "15"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 747,"Unit": "60"}}],"Sun": [{"Number": 1,"AD": "A","Value": {"Value": 455,"Unit": "60"}},{"Number": 2,"AD": "A","Value": {"Value": 965,"Unit": "60"}},{"Number": 3,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 4,"AD": "A","Value": {"Value": 292,"Unit": "5"}},{"Number": 5,"AD": "A","Value": {"Value": 218,"Unit": "5"}},{"Number": 6,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 7,"AD": "A","Value": {"Value": 18.5,"Unit": "54"}},{"Number": 8,"AD": "A","Value": {"Value": 188.9,"Unit": "54"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "A","Value": {"Value": 710,"Unit": "60"}}]},"Status": "OK","Status code": 0});
                             //sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
 
-
                             res.data = JSON.parse(sData);
                             res.httpStatusCode = 200;
                             res.httpStatusMessage = "OK";
@@ -929,92 +994,92 @@ class TaBlnet extends utils.Adapter {
                             this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
                             return; // Exit the loop on success
                         }
-                        const req = http.request(options, httpResult => {
-                            if (httpResult.statusCode == 200) {
-                                // Successfully connected to CMI
-                                httpResult.on("data", d => {
-                                    sData += d;
-                                });
-                                httpResult.on("end", () => {
-                                    // Parse HTTP message into object
-                                    try {
-                                        res.data = JSON.parse(sData);
-                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                        res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                        res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
-                                        // Check CMI status code
-                                        switch (res.data["Status code"]) {
-                                            case 0:
-                                                this.log.info("OK: " + res.data["Status code"] + " - " + res.data.Status);
-                                                break;
-                                            case 1:
-                                                this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 2:
-                                                this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 3:
-                                                this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 4:
-                                                this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 5:
-                                                this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 6:
-                                                this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            case 7:
-                                                this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                break;
-                                            default:
-                                                this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                        const req = http
+                            .request(options, httpResult => {
+                                if (httpResult.statusCode == 200) {
+                                    // Successfully connected to CMI
+                                    httpResult.on("data", d => {
+                                        sData += d;
+                                    });
+                                    httpResult.on("end", () => {
+                                        // Parse HTTP message into object
+                                        try {
+                                            res.data = JSON.parse(sData);
+                                            res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                                            res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+                                            // Check CMI status code
+                                            switch (res.data["Status code"]) {
+                                                case 0:
+                                                    this.log.info("OK: " + res.data["Status code"] + " - " + res.data.Status);
+                                                    break;
+                                                case 1:
+                                                    this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 2:
+                                                    this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 3:
+                                                    this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 4:
+                                                    this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 5:
+                                                    this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 6:
+                                                    this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                case 7:
+                                                    this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                    break;
+                                                default:
+                                                    this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                            }
+                                            // Log dump of the data
+                                            this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
+                                            if (res.data["Status code"] === 0) {
+                                                resolve(res); // Resolve the promise with the result
+                                                return; // Exit the loop on success
+                                            }
+                                        } catch (err) {
+                                            res.data = {};
+                                            res.httpStatusCode = 998;
+                                            res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
+                                            this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
                                         }
-                                        // Log dump of the data
-                                        this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
-                                        if (res.data["Status code"] === 0) {
-                                            resolve(res); // Resolve the promise with the result
-                                            return; // Exit the loop on success
-                                        }
-                                    } catch (err) {
-                                        res.data = {};
-                                        res.httpStatusCode = 998;
-                                        res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
-                                        this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
+                                    });
+                                } else {
+                                    res.data = {};
+                                    res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                                    res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
+                                    this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
+                                    // Log semantic error messages based on HTTP status code
+                                    switch (res.httpStatusCode) {
+                                        case 300:
+                                            this.log.error("NO LIVE DATA - Data in global context store not found");
+                                            break;
+                                        case 401:
+                                            this.log.error("WRONG USER OR PASSWORD");
+                                            break;
+                                        default:
+                                            this.log.error("OTHER HTTP ERROR");
                                     }
-                                });
-                            } else {
-                                res.data = {};
-                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
-                                this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
-                                // Log semantic error messages based on HTTP status code
-                                switch (res.httpStatusCode) {
-                                    case 300:
-                                        this.log.error("NO LIVE DATA - Data in global context store not found");
-                                        break;
-                                    case 401:
-                                        this.log.error("WRONG USER OR PASSWORD");
-                                        break;
-                                    default:
-                                        this.log.error("OTHER HTTP ERROR");
                                 }
-                            }
-                        }).on("error", error => {
-                            res.data = {};
-                            res.httpStatusCode = 999;
-                            res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
-                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
-                            this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
-
-                        });
+                            })
+                            .on("error", error => {
+                                res.data = {};
+                                res.httpStatusCode = 999;
+                                res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
+                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
+                                this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
+                            });
 
                         req.end(); // end request
 
                         this.log.debug("Sent request as attempt: " + attempt);
-
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
                     }
@@ -1042,13 +1107,13 @@ class TaBlnet extends utils.Adapter {
             S03: [5, 6],
             S04: [7, 8],
             S05: [9, 10],
-            S06: [11, 12]
+            S06: [11, 12],
         },
         OUTPUTS: {
-            OUTPUT_BYTE1: 13
+            OUTPUT_BYTE1: 13,
         },
         SPEED_LEVELS: {
-            SPEED: 14
+            SPEED: 14,
         },
         ANALOG_OUTPUT: 15,
         HEAT_METER: 16,
@@ -1056,9 +1121,9 @@ class TaBlnet extends utils.Adapter {
         SOLAR1: {
             POWER: [19, 20],
             KWH: [21, 22],
-            MWH: [23, 24]
+            MWH: [23, 24],
         },
-        CHECKSUM: 25
+        CHECKSUM: 25,
     };
 
     static CURRENT_DATA_UVR1611 = {
@@ -1079,7 +1144,7 @@ class TaBlnet extends utils.Adapter {
             S13: [25, 26],
             S14: [27, 28],
             S15: [29, 30],
-            S16: [31, 32]
+            S16: [31, 32],
         },
         OUTPUTS: {
             D01: [33, 0x01],
@@ -1094,42 +1159,42 @@ class TaBlnet extends utils.Adapter {
             D10: [34, 0x02],
             D11: [34, 0x04],
             D12: [34, 0x08],
-            D13: [34, 0x10]
+            D13: [34, 0x10],
         },
         SPEED_LEVELS: {
             DzA1: 35,
             DzA2: 36,
             DzA6: 37,
-            DzA7: 38
+            DzA7: 38,
         },
         THERMAL_ENERGY_COUNTERS: {
             HEAT_METER_STATUS: {
                 wmz1: [39, 0x01],
-                wmz2: [39, 0x02]
+                wmz2: [39, 0x02],
             },
             SOLAR1: {
                 CURRENT_HEAT_POWER1: [40, 41, 42, 43],
                 TOTAL_HEAT_ENERGY1: {
                     KWH: [44, 45],
-                    MWH: [46, 47]
-                }
+                    MWH: [46, 47],
+                },
             },
             SOLAR2: {
                 CURRENT_HEAT_POWER2: [48, 49, 50, 51],
                 TOTAL_HEAT_ENERGY2: {
                     KWH: [52, 53],
-                    MWH: [54, 55]
-                }
-            }
+                    MWH: [54, 55],
+                },
+            },
         },
-        CHECKSUM: 56
+        CHECKSUM: 56,
     };
 
     /**
      * Parses the UVR1611 response and extracts various data points into a structured record.
      *
      * @param {Uint8Array} response - The response data from the UVR1611 device.
-     * @returns {Object} uvrRecord - The parsed UVR1611 record containing outputs, speed levels, inputs, and thermal energy counters.
+     * @returns {object} uvrRecord - The parsed UVR1611 record containing outputs, speed levels, inputs, and thermal energy counters.
      */
     parseUvrRecordFromBuffer(response) {
         const uvrRecord = {
@@ -1137,7 +1202,7 @@ class TaBlnet extends utils.Adapter {
             speed_levels: {},
             Inputs: {},
             thermal_energy_counters_status: {},
-            thermal_energy_counters: {}
+            thermal_energy_counters: {},
         };
 
         const indexes = TaBlnet.CURRENT_DATA_UVR1611;
@@ -1146,8 +1211,8 @@ class TaBlnet extends utils.Adapter {
         // Outputs
         for (const [key, value] of Object.entries(indexes.OUTPUTS)) {
             uvrRecord.Outputs[key] = {
-                value: (response[value[0]] & value[1]) ? 1 : 0,
-                unit: this.cmiUnits[43] // Digital unit
+                value: response[value[0]] & value[1] ? 1 : 0,
+                unit: this.cmiUnits[43], // Digital unit
             };
         }
 
@@ -1158,15 +1223,15 @@ class TaBlnet extends utils.Adapter {
         for (const [key, value] of Object.entries(indexes.SPEED_LEVELS)) {
             // Process speed levels: filter bits
             const SPEED_ACTIVE = 0x80;
-            const SPEED_MASK = 0x1F;
+            const SPEED_MASK = 0x1f;
             const localValue = response[value];
             let finalValue;
             if (typeof localValue === "number") {
-                finalValue = (localValue & SPEED_ACTIVE) ? (localValue & SPEED_MASK) : null;
+                finalValue = localValue & SPEED_ACTIVE ? localValue & SPEED_MASK : null;
             }
             uvrRecord.speed_levels[key] = {
                 value: finalValue,
-                unit: defaultUnit
+                unit: defaultUnit,
             };
         }
 
@@ -1182,18 +1247,18 @@ class TaBlnet extends utils.Adapter {
             let finalKey = key.replace("S", "A"); // default for sensor is analog
             if (typeof localValue === "number") {
                 const highByte = localValue >> 8;
-                const lowByte = localValue & 0xFF;
+                const lowByte = localValue & 0xff;
                 const signBit = highByte & 0x80;
                 const unitBits = highByte & 0x70;
-                let input = this.byte2short(lowByte, highByte & 0x0F);
+                let input = this.byte2short(lowByte, highByte & 0x0f);
                 // converts a 12-bit signed integer to a 16-bit signed integer using two's complement representation.
                 if (signBit) {
                     // Restore bits 4, 5, 6 with 1, since this is a negative number
-                    input = input | 0xF000;
+                    input = input | 0xf000;
                     // Invert the bits (ensure 16-bit operation)
-                    input = (~input & 0xFFFF);
+                    input = ~input & 0xffff;
                     // Add 1 to the inverted bits
-                    input = (input + 1) & 0xFFFF;
+                    input = (input + 1) & 0xffff;
                     // Set the value to negative
                     input = -input;
                 }
@@ -1203,7 +1268,7 @@ class TaBlnet extends utils.Adapter {
                         finalUnit = this.cmiUnits[0]; // No unit
                         break;
                     case 0x10:
-                        finalValue = (localValue & 0x8000) ? 1 : 0;
+                        finalValue = localValue & 0x8000 ? 1 : 0;
                         finalUnit = this.cmiUnits[43]; // Digital unit
                         finalKey = key.replace("S", "D"); // Digital input
                         break;
@@ -1216,11 +1281,11 @@ class TaBlnet extends utils.Adapter {
                         finalUnit = this.cmiUnits[3]; // l/h
                         break;
                     case 0x60: // Power per square meter:
-                        finalValue = (localValue & 0x8000) ? 1 : 0;
+                        finalValue = localValue & 0x8000 ? 1 : 0;
                         finalUnit = this.cmiUnits[2]; // W/m²
                         break;
                     case 0x70: // TYPE_RAS: Room temperature sensor in Celsius (using °C)
-                        finalValue = (input & 0x1FF) / 10.0;
+                        finalValue = (input & 0x1ff) / 10.0;
                         finalUnit = this.cmiUnits[1]; // °C
                         break;
                     default:
@@ -1232,7 +1297,7 @@ class TaBlnet extends utils.Adapter {
             }
             uvrRecord.Inputs[finalKey] = {
                 value: finalValue,
-                unit: finalUnit
+                unit: finalUnit,
             };
         }
 
@@ -1243,8 +1308,8 @@ class TaBlnet extends utils.Adapter {
         for (const [key, value] of Object.entries(indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS)) {
             const wmz = response[value[0]];
             uvrRecord.thermal_energy_counters_status[key] = {
-                value: (wmz & value[1]) ? true : false,
-                unit: defaultUnit
+                value: wmz & value[1] ? true : false,
+                unit: defaultUnit,
             };
         }
 
@@ -1254,19 +1319,18 @@ class TaBlnet extends utils.Adapter {
         // Thermal energy counters 1 active?
         const unitKW = this.cmiUnits[10]; // kW
         const unitKWh = this.cmiUnits[11]; // kWh
-        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] &
-            indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
-
+        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[0]] & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz1[1]) {
             const value = this.byte2int(
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[0]], // lowLow1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[1]], // lowHigh1
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[2]], // highLow1
-                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]] // highHigh1
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.CURRENT_HEAT_POWER1[3]], // highHigh1
             );
             let finalValue = value;
             // Check for negative values and convert to two's complement
-            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
-                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
+            if (value & 0x80000000) {
+                // Check if the highest bit (32nd bit) is set
+                finalValue = -((~finalValue + 1) & 0xffffffff); // Calculate the two's complement and negate the value
             }
             // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
             // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
@@ -1276,40 +1340,45 @@ class TaBlnet extends utils.Adapter {
 
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: finalValue,
-                unit: unitKW
+                unit: unitKW,
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
-                value: this.byte2short(
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]]) / 10.0 + this.byte2short(
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]]) * 1000.0,
-                unit: unitKWh
+                value:
+                    this.byte2short(
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[0]], // cause line break
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.KWH[1]],
+                    ) /
+                        10.0 +
+                    this.byte2short(
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[0]], // cause line break
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR1.TOTAL_HEAT_ENERGY1.MWH[1]],
+                    ) *
+                        1000.0,
+                unit: unitKWh,
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power1"] = {
                 value: 0,
-                unit: unitKW
+                unit: unitKW,
             };
             uvrRecord.thermal_energy_counters["total_heat_energy1"] = {
                 value: 0,
-                unit: unitKWh
+                unit: unitKWh,
             };
         }
         // Thermal energy counters 2 active?
-        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[0]] &
-            indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
-
+        if (response[indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[0]] & indexes.THERMAL_ENERGY_COUNTERS.HEAT_METER_STATUS.wmz2[1]) {
             const value = this.byte2int(
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[0]], // lowLow2
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[1]], // lowHigh2
                 response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[2]], // highLow2
-                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]] // highHigh2
+                response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.CURRENT_HEAT_POWER2[3]], // highHigh2
             );
             let finalValue = value;
             // Check for negative values and convert to two's complement
-            if (value & 0x80000000) { // Check if the highest bit (32nd bit) is set
-                finalValue = -((~finalValue + 1) & 0xFFFFFFFF); // Calculate the two's complement and negate the value
+            if (value & 0x80000000) {
+                // Check if the highest bit (32nd bit) is set
+                finalValue = -((~finalValue + 1) & 0xffffffff); // Calculate the two's complement and negate the value
             }
             // The 4 bytes represent the instantaneous power with a resolution of 1/10 kW and several decimal places,
             // but the entire value is transposed by a factor of 256 in order to store it in a 32-bit integer
@@ -1318,24 +1387,30 @@ class TaBlnet extends utils.Adapter {
             finalValue = finalValue / 100; // Convert to kW with decimal places
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: finalValue,
-                unit: unitKW
+                unit: unitKW,
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
-                value: this.byte2short(
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]]) / 10.0 + this.byte2short(
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]],
-                    response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]]) * 1000.0,
-                unit: unitKWh
+                value:
+                    this.byte2short(
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[0]], // cause line break
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.KWH[1]],
+                    ) /
+                        10.0 +
+                    this.byte2short(
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[0]], // cause line break
+                        response[indexes.THERMAL_ENERGY_COUNTERS.SOLAR2.TOTAL_HEAT_ENERGY2.MWH[1]],
+                    ) *
+                        1000.0,
+                unit: unitKWh,
             };
         } else {
             uvrRecord.thermal_energy_counters["current_heat_power2"] = {
                 value: 0,
-                unit: unitKW
+                unit: unitKW,
             };
             uvrRecord.thermal_energy_counters["total_heat_energy2"] = {
                 value: 0,
-                unit: unitKWh
+                unit: unitKWh,
             };
         }
 
@@ -1363,7 +1438,7 @@ class TaBlnet extends utils.Adapter {
                 const unitString = this.cmiUnits[unitIndex];
                 uvrRecord[sectionName][entryKey] = {
                     value: entry.Value.Value,
-                    unit: unitString
+                    unit: unitString,
                 };
             });
         };
@@ -1386,7 +1461,7 @@ class TaBlnet extends utils.Adapter {
      * @throws {Error} - Throws an error if the connection is closed unexpectedly or if there is a connection error.
      */
     async sendCommand(command) {
-        const sleep = (ms) => {
+        const sleep = ms => {
             return new Promise(resolve => {
                 this.setTimeout(resolve, ms, ms);
             });
@@ -1403,12 +1478,12 @@ class TaBlnet extends utils.Adapter {
                 this.logHexDump("Sent command", command); // Log hex dump of the command
             });
 
-            client.on("data", (data) => {
+            client.on("data", data => {
                 client.destroy();
                 resolve(data);
             });
 
-            client.on("error", (err) => {
+            client.on("error", err => {
                 client.destroy();
                 reject(err);
             });
@@ -1442,7 +1517,7 @@ class TaBlnet extends utils.Adapter {
      * @returns {number} The resulting short integer.
      */
     byte2short(lo, hi) {
-        return (hi << 8) | (lo & 0xFF);
+        return (hi << 8) | (lo & 0xff);
     }
 
     /**
@@ -1455,7 +1530,7 @@ class TaBlnet extends utils.Adapter {
      * @returns {number} The 32-bit integer formed by combining the four bytes.
      */
     byte2int(lo_lo, lo_hi, hi_lo, hi_hi) {
-        return (this.byte2short(lo_lo, lo_hi) & 0xFFFF) | (this.byte2short(hi_lo, hi_hi) << 16);
+        return (this.byte2short(lo_lo, lo_hi) & 0xffff) | (this.byte2short(hi_lo, hi_hi) << 16);
     }
 
     // replace FORBIDDEN_CHARS by '_'
@@ -1505,6 +1580,7 @@ class TaBlnet extends utils.Adapter {
             }
             callback();
         } catch (e) {
+            this.log.error("Error during unload: " + e.message);
             callback();
         }
     }
@@ -1555,7 +1631,7 @@ class TaBlnet extends utils.Adapter {
         try {
             this.log.debug("Deleting objects under " + checkNameBLNET);
             await this.delObjectAsync(checkNameBLNET, {
-                recursive: true
+                recursive: true,
             });
         } catch (error) {
             this.log.warn(`Error deleting object ${checkNameBLNET}: ${error.message}`);
@@ -1563,7 +1639,7 @@ class TaBlnet extends utils.Adapter {
         try {
             this.log.debug("Deleting objects under " + checkNameCMI);
             await this.delObjectAsync(checkNameCMI, {
-                recursive: true
+                recursive: true,
             });
         } catch (error) {
             this.log.warn(`Error deleting object ${checkNameCMI}: ${error.message}`);
@@ -1573,10 +1649,11 @@ class TaBlnet extends utils.Adapter {
             const objects = await this.getForeignObjectsAsync(instanceId + ".*");
             for (const id in objects) {
                 if (Object.prototype.hasOwnProperty.call(objects, id)) {
-                    if (!id.includes(".info.connection"))
+                    if (!id.includes(".info.connection")) {
                         await this.delObjectAsync(id, {
-                            recursive: true
+                            recursive: true,
                         });
+                    }
                 }
             }
         } catch (error) {
@@ -1589,9 +1666,9 @@ class TaBlnet extends utils.Adapter {
 if (require.main !== module) {
     // Export the constructor in compact mode for use as a module
     /**
-     * @param {Partial<utils.AdapterOptions>} [options={}]
+     * @param {Partial<utils.AdapterOptions>} [options={}] - Adapter options
      */
-    module.exports = (options) => new TaBlnet(options);
+    module.exports = options => new TaBlnet(options);
 } else {
     // Otherwise, start the instance directly when run as a standalone script
     new TaBlnet();
