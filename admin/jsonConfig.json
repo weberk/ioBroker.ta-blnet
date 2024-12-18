@@ -59,8 +59,6 @@
                     "label": "TA Port",
                     "default": 40000,
                     "help": "Enter the port number for the logging device",
-                    "min": 1024,
-                    "max": 49151,
                     "xs": 12,
                     "sm": 6,
                     "md": 6,

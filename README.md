@@ -26,6 +26,11 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+-   removed port number constraint to allow port 80 for CMI
+
 ### 1.0.30 (2024-12-16)
 
 -   added eslint9 config, removed eslint8 config
