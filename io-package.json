@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "messagebox": true,
     "news": {
+      "1.0.31": {
+        "en": "removed port number constraint to allow port 80 for CMI",
+        "de": "entfernte Portnummer constraint, um Port 80 für CMI zu ermöglichen",
+        "ru": "удаленное ограничение номера порта, чтобы разрешить порт 80 для CMI",
+        "pt": "restrições de número de porta removida para permitir a porta 80 para CMI",
+        "nl": "poortnummerbeperking verwijderd om poort 80 voor CMI mogelijk te maken",
+        "fr": "suppression de la contrainte du numéro de port pour permettre le port 80 pour CMI",
+        "it": "vincolo del numero di porta rimosso per consentire la porta 80 per CMI",
+        "es": "límite de puerto eliminado para permitir el puerto 80 para CMI",
+        "pl": "usunięte ograniczenie liczby portów, aby umożliwić port 80 dla CMI",
+        "uk": "видалити номер порту обмеження, щоб дозволити порту 80 для CMI",
+        "zh-cn": "取消端口号码限制, 允许端口 80 用于 CMI"
+      },
       "1.0.30": {
         "en": "added eslint9 config, removed eslint8 config",
         "de": "hinzugefügt eslint9 config, entfernt eslint8 config",
@@ -81,19 +94,6 @@
         "pl": "ulepszona obsługa błędów przy kodach zwrotnych CMI\nulepszone nazwy węzłów",
         "uk": "покращена обробка помилок на кодах повернення CMI\nполіпшення назв вузлів",
         "zh-cn": "改进 CMI 返回代码上的错误处理\n改进的节点名称"
-      },
-      "1.0.24": {
-        "en": "fixed lint errors",
-        "de": "feste flutfehler",
-        "ru": "погрешности фиксированного линта",
-        "pt": "erros do forro fixo",
-        "nl": "vaste pluisfouten",
-        "fr": "erreurs de linte corrigées",
-        "it": "errori di testo fissi",
-        "es": "errores de lint fijos",
-        "pl": "błędy stałe",
-        "uk": "виправлені помилки в розмітці",
-        "zh-cn": "修正错误"
       }
     },
     "titleLang": {
