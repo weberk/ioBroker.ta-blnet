@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.31",
+    "version": "1.0.32",
     "messagebox": true,
     "news": {
+      "1.0.32": {
+        "en": "introduced increasing wait time between successive CMI request attempts",
+        "de": "einführung zunehmender Wartezeit zwischen aufeinanderfolgenden CMI-Anforderungsversuchen",
+        "ru": "ввели увеличение времени ожидания между последовательными запросами CMI",
+        "pt": "aumento do tempo de espera entre tentativas sucessivas de solicitação do CMI",
+        "nl": "verhoogde wachttijd tussen opeenvolgende CMI-verzoekpogingen",
+        "fr": "introduit un temps d'attente croissant entre les tentatives successives de demande CMI",
+        "it": "introdotto crescente tempo di attesa tra i successivi tentativi di richiesta CMI",
+        "es": "tiempo de espera cada vez mayor entre intentos sucesivos de solicitud del CMI",
+        "pl": "wprowadzono zwiększenie czasu oczekiwania pomiędzy kolejnymi próbami CMI",
+        "uk": "запроваджено збільшення часу очікування між спробами запиту CMI",
+        "zh-cn": "在连续的海事委员会请求之间增加等待时间"
+      },
       "1.0.31": {
         "en": "removed port number constraint to allow port 80 for CMI",
         "de": "entfernte Portnummer constraint, um Port 80 für CMI zu ermöglichen",
@@ -81,19 +94,6 @@
         "pl": "used uvr _ type _ code as capital letter string\nnazwa węzła dla kanału jest teraz 4 digid",
         "uk": "використовується uvr_type_code як рядок літери таблиці\nназва вузла для каналу тепер 4 див",
         "zh-cn": "使用 uvr_type_code 作为大写字母字符串\n频道的节点名称现在是 4 digid"
-      },
-      "1.0.25": {
-        "en": "improved error handling on CMI return codes\nimproved node names",
-        "de": "verbesserte Fehlerbehandlung bei CMI-Rückgabecodes\nverbesserte knotennamen",
-        "ru": "улучшенная обработка ошибок в кодах возврата CMI\nулучшенные имена узлов",
-        "pt": "melhor manipulação de erros em códigos de retorno CMI\nnomes de nó melhorados",
-        "nl": "verbeterde foutafhandeling op CMI retourcodes\nverbeterde nodenamen",
-        "fr": "amélioration du traitement des erreurs sur les codes de retour CMI\nnoms améliorés des nœuds",
-        "it": "migliore gestione degli errori sui codici di ritorno CMI\nnomi dei nodi migliorati",
-        "es": "mejor manejo de errores en los códigos de retorno CMI\nmejora de los nombres de los nodos",
-        "pl": "ulepszona obsługa błędów przy kodach zwrotnych CMI\nulepszone nazwy węzłów",
-        "uk": "покращена обробка помилок на кодах повернення CMI\nполіпшення назв вузлів",
-        "zh-cn": "改进 CMI 返回代码上的错误处理\n改进的节点名称"
       }
     },
     "titleLang": {
