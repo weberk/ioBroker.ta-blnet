@@ -1086,9 +1086,10 @@ class TaBlnet extends utils.Adapter {
                     // Log the res object for debugging purposes
                     this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
 
-                    // Wait for 62 seconds before the next attempt
+                    // Wait for >=60 seconds before the next attempt
                     if (attempt < maxRetries) {
-                        await new Promise(resolve => this.setTimeout(resolve, 62000, 62000));
+                        const waitTime = Math.floor(60000 * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
+                        await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
                     }
                 }
                 reject(new Error("Max retries reached. Unable to communicate with device."));
@@ -1463,7 +1464,7 @@ class TaBlnet extends utils.Adapter {
     async sendCommand(command) {
         const sleep = ms => {
             return new Promise(resolve => {
-                this.setTimeout(resolve, ms, ms);
+                this.setTimeout(resolve, ms, undefined);
             });
         };
 
