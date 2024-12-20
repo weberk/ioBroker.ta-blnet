@@ -951,6 +951,7 @@ class TaBlnet extends utils.Adapter {
 
         return new Promise((resolve, reject) => {
             const maxRetries = 5; // Maximum number of retries
+            const minTimeoutAfterError = 60000; // Minimum timeout after an error in milliseconds
             let attempt = 0; // Current attempt
 
             const attemptFetch = async () => {
@@ -958,13 +959,12 @@ class TaBlnet extends utils.Adapter {
                     attempt++;
                     const res = {
                         data: {},
-                        httpStatusCode: 0,
+                        httpStatusCode: -7,
                         httpStatusMessage: "",
                         debug: "",
                     };
                     try {
                         let sData = "";
-
                         // Start HTTP request
                         const options = {
                             auth: username + ":" + password,
@@ -992,108 +992,113 @@ class TaBlnet extends utils.Adapter {
                             resolve(res); // Resolve the promise with the result
                             // Log  dump of the data
                             this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
-                            return; // Exit the loop on success
+                            return; // Exit the loop and the whole fetchJSONDataFromDevice on success
                         }
-                        const req = http
-                            .request(options, httpResult => {
-                                if (httpResult.statusCode == 200) {
-                                    // Successfully connected to CMI
-                                    httpResult.on("data", d => {
-                                        sData += d;
-                                    });
-                                    httpResult.on("end", () => {
-                                        // Parse HTTP message into object
-                                        try {
-                                            res.data = JSON.parse(sData);
-                                            res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                            res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
-                                            // Check CMI status code
-                                            switch (res.data["Status code"]) {
-                                                case 0:
-                                                    this.log.info("OK: " + res.data["Status code"] + " - " + res.data.Status);
-                                                    break;
-                                                case 1:
-                                                    this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 2:
-                                                    this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 3:
-                                                    this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 4:
-                                                    this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 5:
-                                                    this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 6:
-                                                    this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                case 7:
-                                                    this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                    break;
-                                                default:
-                                                    this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                        const reqPromise = new Promise((resolveRequest, rejectRequest) => {
+                            const req = http
+                                .request(options, httpResult => {
+                                    if (httpResult.statusCode == 200) {
+                                        // Successfully connected to CMI
+
+                                        httpResult.on("data", d => {
+                                            sData += d;
+                                        }); // End of req.on("data")
+
+                                        httpResult.on("end", async () => {
+                                            // Parse HTTP message into object
+                                            try {
+                                                res.data = JSON.parse(sData);
+                                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                                                res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+                                                // Check CMI status code
+                                                switch (res.data["Status code"]) {
+                                                    case 0:
+                                                        // Log the res object for debugging purposes
+                                                        this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
+                                                        resolveRequest(res); // Resolve the promise with the result
+                                                        resolve(res); // Resolve the outer promise
+                                                        return; // Exit the loop and the whole fetchJSONDataFromDevice on success
+                                                    case 1:
+                                                        this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 2:
+                                                        this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 3:
+                                                        this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 4:
+                                                        this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 5:
+                                                        this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 6:
+                                                        this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    case 7:
+                                                        this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                        break;
+                                                    default:
+                                                        this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                                }
+                                                // If we reach this point, the CMI returned an business logic error
+                                                rejectRequest(new Error("Non-zero status code"));
+                                            } catch (err) {
+                                                // Error parsing the result
+                                                res.data = sData;
+                                                res.httpStatusCode = 998;
+                                                res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
+                                                this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
+                                                rejectRequest(err);
                                             }
-                                            // Log dump of the data
-                                            this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
-                                            if (res.data["Status code"] === 0) {
-                                                resolve(res); // Resolve the promise with the result
-                                                return; // Exit the loop on success
-                                            }
-                                        } catch (err) {
-                                            res.data = {};
-                                            res.httpStatusCode = 998;
-                                            res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
-                                            this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
-                                        }
-                                    });
-                                } else {
-                                    res.data = {};
-                                    res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                    res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
-                                    this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
-                                    // Log semantic error messages based on HTTP status code
-                                    switch (res.httpStatusCode) {
-                                        case 300:
-                                            this.log.error("NO LIVE DATA - Data in global context store not found");
-                                            break;
-                                        case 401:
-                                            this.log.error("WRONG USER OR PASSWORD");
-                                            break;
-                                        default:
-                                            this.log.error("OTHER HTTP ERROR");
+                                        }); // End of req.on("end")
+                                    } else {
+                                        // Invalid response from CMI
+                                        res.data = sData;
+                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                                        res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                                        res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
+                                        this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
+                                        rejectRequest(new Error("Invalid response"));
                                     }
-                                }
-                            })
-                            .on("error", error => {
-                                res.data = {};
-                                res.httpStatusCode = 999;
-                                res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
-                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
-                                this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
-                            });
+                                }) // End of req.on("response")
+                                .on("error", async error => {
+                                    res.data = {};
+                                    res.httpStatusCode = 999;
+                                    res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
+                                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
+                                    this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
+                                    rejectRequest(error);
+                                });
 
-                        req.end(); // end request
+                            // Finish the request preparation and send it
+                            req.end(); // end request
+                            this.log.debug("Sending request as attempt: " + attempt);
+                        }); // End of reqPromise
 
-                        this.log.debug("Sent request as attempt: " + attempt);
+                        await reqPromise; // Wait for the request to complete
+
+                        // Wait for >=60 seconds before the next attempt
+                        if (attempt < maxRetries) {
+                            const waitTime = Math.floor(minTimeoutAfterError * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
+                            await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
+                        }
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
-                    }
+                        // Wait for >=60 seconds before the next attempt
+                        if (attempt < maxRetries) {
+                            const waitTime = Math.floor(minTimeoutAfterError * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
+                            await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
+                        }
+                    } // End of try-catch
+
                     // Log the res object for debugging purposes
                     this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
-
-                    // Wait for >=60 seconds before the next attempt
-                    if (attempt < maxRetries) {
-                        const waitTime = Math.floor(60000 * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
-                        await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
-                    }
-                }
+                } // End of for loop
                 reject(new Error("Max retries reached. Unable to communicate with device."));
-            };
+            }; // End of attemptFetch
 
             this.log.debug("Initiate attempt to fetch JSON data from CMI");
             attemptFetch(); // Start with the first attempt
