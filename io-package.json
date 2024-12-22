@@ -1,9 +1,22 @@
 {
   "common": {
     "name": "ta-blnet",
-    "version": "1.0.34",
+    "version": "1.0.35",
     "messagebox": true,
     "news": {
+      "1.0.35": {
+        "en": "port number is taken from config for communication with CMI",
+        "de": "portnummer wird von config für die Kommunikation mit CMI genommen",
+        "ru": "номер порта взят из конфигурации для связи с CMI",
+        "pt": "número da porta é retirado de configuração para comunicação com CMI",
+        "nl": "poortnummer is afkomstig van configuratie voor communicatie met CMI",
+        "fr": "numéro de port est pris de config pour la communication avec CMI",
+        "it": "il numero di porta è preso da config per la comunicazione con CMI",
+        "es": "port number is taken from config for communication with CMI",
+        "pl": "numer portu jest pobierany z konfigu do komunikacji z CMI",
+        "uk": "номер порту взято з конфігурації для спілкування з CMI",
+        "zh-cn": "端口号码取自配置, 用于与 CMI 通信"
+      },
       "1.0.34": {
         "en": "improved retry logic for requests to CMI",
         "de": "verbesserte Retry-Logik für Anfragen an CMI",
@@ -80,19 +93,6 @@
         "pl": "dodane tłumaczenie i dokumentacja do konfiguracji obiektu danych",
         "uk": "додано переклад та документацію на налаштування об’єкта даних",
         "zh-cn": "在数据对象配置中添加翻译和文档"
-      },
-      "1.0.28": {
-        "en": "improved JSON Status Code logging\nadded data_objects per can_node to config for CMI requests",
-        "de": "verbesserte JSON Status Code Protokollierung\nhinzugefügt data_objects per can_node, um CMI-Anfragen zu konfiszieren",
-        "ru": "улучшенная регистрация кода состояния JSON\nдобавленные данные_объекты на can_node для настройки для запросов CMI",
-        "pt": "log de código de estado melhorado JSON\nadicionado data_objects per can_node to config for CMI requests",
-        "nl": "verbeterde JSON Status Code logging\ndata_objecten per can_node toegevoegd om te configureren voor CMI-verzoeken",
-        "fr": "amélioration de l'enregistrement du code de statut JSON\najouté data_objects par can_node à la configuration pour les requêtes CMI",
-        "it": "migliorato JSON Status Code registrazione\naggiunto data_objects per can_node a config per le richieste CMI",
-        "es": "mejoramiento del Código de Estado de JSON\nañadido data_objects per can_node para configurar las solicitudes CMI",
-        "pl": "poprawiony kod statusu JSON\ndodano data _ objects per can _ node do konfiguracji dla żądań CMI",
-        "uk": "покращений журналювання коду JSON Статус\njavaScript licenses API Веб-сайт Go1.13.8",
-        "zh-cn": "改进JSON状态代码记录\n为 CMI 请求添加数据_objects per can_node 到配置"
       }
     },
     "titleLang": {
