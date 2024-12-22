@@ -371,6 +371,11 @@ class TaBlnet extends utils.Adapter {
                         stateValuesArray.push(currentUvrJSONRecord);
                     } catch (error) {
                         this.log.error("Error fetching data for CAN node " + data_frame_index + ": " + error.message);
+                        return {
+                            success: false,
+                            stateValues: [],
+                            deviceInfo: {},
+                        };
                     }
                 }
                 // Update deviceInfo with the fetched data
@@ -558,7 +563,7 @@ class TaBlnet extends utils.Adapter {
                 transmission_mode: transmission_mode,
             };
         } catch (error) {
-            this.log.error("Error during communication with device: " + error);
+            this.log.error("Error during communication with BL-NET: " + error);
             throw error;
         } finally {
             this.log.debug("End readDeviceInfo");
@@ -917,9 +922,6 @@ class TaBlnet extends utils.Adapter {
                         this.log.debug("Invalid short response from device");
                         // Log hex dump of the data
                         this.logHexDump("fetchDataBlockFromDevice", data);
-                        if (attempt >= maxRetries) {
-                            reject(new Error("Max retries reached. Unable to communicate with device."));
-                        }
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
                         if (attempt >= maxRetries) {
@@ -927,6 +929,7 @@ class TaBlnet extends utils.Adapter {
                         }
                     }
                 }
+                reject(new Error("Max retries reached. Unable to communicate with device."));
             };
 
             this.log.debug("Initiate attempt to fetch data block from BL-NET");
@@ -942,156 +945,25 @@ class TaBlnet extends utils.Adapter {
      * @throws {Error} If the maximum number of retries is reached.
      */
     async fetchJSONDataFromDevice(canNode) {
-        const hostname = this.config.ip_address;
-        const port = this.config.port;
-        const username = this.config.expert_username;
-        const password = this.config.expert_password;
-        const data_objects = this.jsConfigObject.requests.find(req => req.can_node_number === canNode).data_objects;
-        this.log.debug("fetchJSONDataFromDevice for CAN node: " + canNode + " with data_objects: " + JSON.stringify(data_objects));
-
         return new Promise((resolve, reject) => {
             const maxRetries = 5; // Maximum number of retries
-            const minTimeoutAfterError = 60000; // Minimum timeout after an error in milliseconds
             let attempt = 0; // Current attempt
 
             const attemptFetch = async () => {
                 while (attempt < maxRetries) {
                     attempt++;
-                    const res = {
+                    let res = {
                         data: {},
                         httpStatusCode: -7,
                         httpStatusMessage: "",
                         debug: "",
                     };
                     try {
-                        let sData = "";
-                        // Start HTTP request
-                        const options = {
-                            auth: username + ":" + password,
-                            hostname: hostname,
-                            port: port,
-                            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
-                            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O",
-                            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld",
-                            path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=" + data_objects,
-                            method: "GET",
-                        };
-                        this.log.debug("Sending request to " + hostname + " with options: " + JSON.stringify(options));
-                        // if attempt== 1 use static response string sData for testing
-                        if (10 == attempt) {
-                            // http://192.168.30.40/INCLUDE/api.cgi?jsonnode=2&jsonparam=La,Ld,I,O,Na,Nd,D
-                            // sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
-                            // http://1234:1234@192.168.30.40/INCLUDE/api.cgi?jsonnode=7&jsonparam=I,O
-                            // sData = JSON.stringify({"Header": {"Version": 7,"Device": "91","Timestamp": 1733315261},"Data": {"Logging Analog": [{"Number": 1,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 3,"AD": "A","Value": {"Value": 301,"Unit": "69"}},{"Number": 4,"AD": "A","Value": {"Value": 367,"Unit": "69"}},{"Number": 5,"AD": "A","Value": {"Value": 1966,"Unit": "69"}},{"Number": 6,"AD": "A","Value": {"Value": 122,"Unit": "69"}},{"Number": 7,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 8,"AD": "A","Value": {"Value": 21235,"Unit": "11"}},{"Number": 9,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 10,"AD": "A","Value": {"Value": 7,"Unit": "69"}},{"Number": 11,"AD": "A","Value": {"Value": 24823.6,"Unit": "11"}},{"Number": 12,"AD": "A","Value": {"Value": 1618,"Unit": "11"}},{"Number": 13,"AD": "A","Value": {"Value": 2082,"Unit": "69"}},{"Number": 14,"AD": "A","Value": {"Value": 64387.5,"Unit": "11"}},{"Number": 15,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 16,"AD": "A","Value": {"Value": 2.87,"Unit": "10"}},{"Number": 17,"AD": "A","Value": {"Value": 191038.6,"Unit": "11"}},{"Number": 18,"AD": "A","Value": {"Value": 30.2,"Unit": "11"}},{"Number": 19,"AD": "A","Value": {"Value": 900,"Unit": "69"}},{"Number": 20,"AD": "A","Value": {"Value": 65295.2,"Unit": "11"}},{"Number": 21,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 22,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 23,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 24,"AD": "A","Value": {"Value": 287,"Unit": "3"}},{"Number": 25,"AD": "A","Value": {"Value": 2,"Unit": "69"}},{"Number": 26,"AD": "A","Value": {"Value": 2261,"Unit": "11"}},{"Number": 27,"AD": "A","Value": {"Value": 3.92,"Unit": "10"}},{"Number": 28,"AD": "A","Value": {"Value": 275722.4,"Unit": "11"}},{"Number": 29,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 30,"AD": "A","Value": {"Value": 26602,"Unit": "28"}},{"Number": 31,"AD": "A","Value": {"Value": 0,"Unit": "8"}},{"Number": 32,"AD": "A","Value": {"Value": 223,"Unit": "69"}},{"Number": 33,"AD": "A","Value": {"Value": 6688.5,"Unit": "11"}},{"Number": 35,"AD": "A","Value": {"Value": 678,"Unit": "69"}},{"Number": 36,"AD": "A","Value": {"Value": 27676.8,"Unit": "11"}},{"Number": 38,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 39,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 40,"AD": "A","Value": {"Value": 154.3,"Unit": "11"}},{"Number": 41,"AD": "A","Value": {"Value": 28,"Unit": "69"}},{"Number": 42,"AD": "A","Value": {"Value": 11873,"Unit": "11"}},{"Number": 43,"AD": "A","Value": {"Value": 406.9,"Unit": "11"}},{"Number": 44,"AD": "A","Value": {"Value": 81,"Unit": "69"}},{"Number": 45,"AD": "A","Value": {"Value": 13617.5,"Unit": "11"}},{"Number": 46,"AD": "A","Value": {"Value": 11.1,"Unit": "11"}},{"Number": 47,"AD": "A","Value": {"Value": 292,"Unit": "69"}},{"Number": 48,"AD": "A","Value": {"Value": 4223.2,"Unit": "11"}},{"Number": 49,"AD": "A","Value": {"Value": 11.7,"Unit": "11"}},{"Number": 50,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 51,"AD": "A","Value": {"Value": 9715,"Unit": "11"}},{"Number": 52,"AD": "A","Value": {"Value": 313,"Unit": "69"}},{"Number": 53,"AD": "A","Value": {"Value": 43554.5,"Unit": "11"}},{"Number": 54,"AD": "A","Value": {"Value": 831,"Unit": "69"}},{"Number": 55,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 56,"AD": "A","Value": {"Value": 74,"Unit": "8"}},{"Number": 57,"AD": "A","Value": {"Value": 10697.9,"Unit": "11"}},{"Number": 58,"AD": "A","Value": {"Value": 10120.9,"Unit": "11"}},{"Number": 59,"AD": "A","Value": {"Value": 9,"Unit": "69"}},{"Number": 60,"AD": "A","Value": {"Value": 0.1,"Unit": "58"}},{"Number": 61,"AD": "A","Value": {"Value": 10,"Unit": "69"}},{"Number": 62,"AD": "A","Value": {"Value": 1.1,"Unit": "58"}},{"Number": 63,"AD": "A","Value": {"Value": 769,"Unit": "11"}},{"Number": 64,"AD": "A","Value": {"Value": 185,"Unit": "69"}}],"Logging Digital": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 15,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 18,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 19,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 20,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 21,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Inputs": [{"Number": 1,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 2,"AD": "A","Value": {"Value": 24.9,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "1"}},{"Number": 4,"AD": "A","Value": {"Value": 0,"Unit": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}}],"Outputs": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "A","Value": {"State": 0,"Value": 0,"Unit": "8"}}],"DL-Bus": [{"Number": 1,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 285,"Unit": "3"}},{"Number": 4,"AD": "A","Value": {"Value": 67.9,"Unit": "8"}},{"Number": 5,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 2.7,"Unit": "1"}},{"Number": 7,"AD": "A","Value": {"Value": 5.4,"Unit": "52"}},{"Number": 8,"AD": "A","Value": {"Value": -0.2,"Unit": "1"}},{"Number": 9,"AD": "A","Value": {"Value": 56.4,"Unit": "1"}},{"Number": 10,"AD": "A","Value": {"Value": 60.1,"Unit": "1"}},{"Number": 11,"AD": "A","Value": {"Value": 32.4,"Unit": "1"}},{"Number": 12,"AD": "A","Value": {"Value": 33.9,"Unit": "1"}},{"Number": 13,"AD": "A","Value": {"Value": 36.4,"Unit": "1"}}],"General": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 5,"Unit": "0"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "A","Value": {"Value": 17968,"Unit": "0"}},{"Number": 15,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 16,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 17,"AD": "D","Value": {"Value": 0,"Unit": "44"}}],"Date": [{"Number": 1,"AD": "A","Value": {"Value": 4,"Unit": "0"}},{"Number": 2,"AD": "A","Value": {"Value": 12,"Unit": "0"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "0"}},{"Number": 4,"AD": "A","Value": {"Value": 3,"Unit": "0"}},{"Number": 5,"AD": "A","Value": {"Value": 49,"Unit": "0"}},{"Number": 6,"AD": "A","Value": {"Value": 339,"Unit": "0"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Time": [{"Number": 1,"AD": "A","Value": {"Value": 42,"Unit": "4"}},{"Number": 2,"AD": "A","Value": {"Value": 27,"Unit": "5"}},{"Number": 3,"AD": "A","Value": {"Value": 12,"Unit": "15"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 747,"Unit": "60"}}],"Sun": [{"Number": 1,"AD": "A","Value": {"Value": 455,"Unit": "60"}},{"Number": 2,"AD": "A","Value": {"Value": 965,"Unit": "60"}},{"Number": 3,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 4,"AD": "A","Value": {"Value": 292,"Unit": "5"}},{"Number": 5,"AD": "A","Value": {"Value": 218,"Unit": "5"}},{"Number": 6,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 7,"AD": "A","Value": {"Value": 18.5,"Unit": "54"}},{"Number": 8,"AD": "A","Value": {"Value": 188.9,"Unit": "54"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "A","Value": {"Value": 710,"Unit": "60"}}]},"Status": "OK","Status code": 0});
-                            //sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
-
-                            res.data = JSON.parse(sData);
-                            res.httpStatusCode = 200;
-                            res.httpStatusMessage = "OK";
-                            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
-                            resolve(res); // Resolve the promise with the result
-                            // Log  dump of the data
-                            this.log.debug("fetchJSONDataFromDevice: " + JSON.stringify(res.data));
-                            return; // Exit the loop and the whole fetchJSONDataFromDevice on success
-                        }
-                        const reqPromise = new Promise((resolveRequest, rejectRequest) => {
-                            const req = http
-                                .request(options, httpResult => {
-                                    if (httpResult.statusCode == 200) {
-                                        // Successfully connected to CMI
-
-                                        httpResult.on("data", d => {
-                                            sData += d;
-                                        }); // End of req.on("data")
-
-                                        httpResult.on("end", async () => {
-                                            // Parse HTTP message into object
-                                            try {
-                                                res.data = JSON.parse(sData);
-                                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                                res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
-                                                // Check CMI status code
-                                                switch (res.data["Status code"]) {
-                                                    case 0:
-                                                        // Log the res object for debugging purposes
-                                                        this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
-                                                        resolveRequest(res); // Resolve the promise with the result
-                                                        resolve(res); // Resolve the outer promise
-                                                        return; // Exit the loop and the whole fetchJSONDataFromDevice on success
-                                                    case 1:
-                                                        this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 2:
-                                                        this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 3:
-                                                        this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 4:
-                                                        this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 5:
-                                                        this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 6:
-                                                        this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    case 7:
-                                                        this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                        break;
-                                                    default:
-                                                        this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
-                                                }
-                                                // If we reach this point, the CMI returned an business logic error
-                                                rejectRequest(new Error("Non-zero status code"));
-                                            } catch (err) {
-                                                // Error parsing the result
-                                                res.data = sData;
-                                                res.httpStatusCode = 998;
-                                                res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
-                                                this.log.error("Error parsing result on attempt " + attempt + ": " + err.message);
-                                                rejectRequest(err);
-                                            }
-                                        }); // End of req.on("end")
-                                    } else {
-                                        // Invalid response from CMI
-                                        res.data = sData;
-                                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
-                                        res.httpStatusMessage = httpResult.statusMessage || "No status message";
-                                        res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
-                                        this.log.error("Invalid response from device on attempt " + attempt + ": " + res.httpStatusMessage);
-                                        rejectRequest(new Error("Invalid response"));
-                                    }
-                                }) // End of req.on("response")
-                                .on("error", async error => {
-                                    res.data = {};
-                                    res.httpStatusCode = 999;
-                                    res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
-                                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
-                                    this.log.error("Error during communication with device on attempt " + attempt + ": " + error.message);
-                                    rejectRequest(error);
-                                });
-
-                            // Finish the request preparation and send it
-                            req.end(); // end request
-                            this.log.debug("Sending request as attempt: " + attempt);
-                        }); // End of reqPromise
-
-                        await reqPromise; // Wait for the request to complete
-
-                        // Wait for >=60 seconds before the next attempt
-                        if (attempt < maxRetries) {
-                            const waitTime = Math.floor(minTimeoutAfterError * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
-                            await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
-                        }
+                        res = await this.sendHttpRequest(canNode); // Wait for the request to complete
+                        resolve(res); // Successfully, exit the loop
+                        return;
                     } catch (error) {
                         this.log.error("Error during communication with device on attempt " + attempt + ": " + error);
-                        // Wait for >=60 seconds before the next attempt
-                        if (attempt < maxRetries) {
-                            const waitTime = Math.floor(minTimeoutAfterError * (0.8 + 0.2 * attempt)); // Increase wait time by 20% on each attempt
-                            await new Promise(resolve => this.setTimeout(resolve, waitTime, undefined));
-                        }
                     } // End of try-catch
 
                     // Log the res object for debugging purposes
@@ -1195,6 +1067,146 @@ class TaBlnet extends utils.Adapter {
         },
         CHECKSUM: 56,
     };
+
+    /**
+     * Sends an HTTP request to the specified CAN node and returns the response.
+     *
+     * @param {number} canNode - The CAN node to query.
+     * @returns {Promise<{data: object, httpStatusCode: number, httpStatusMessage: string, debug: string}>} A promise that resolves with the fetched data or rejects with an error.
+     * @throws {Error} If there is an error during the HTTP request.
+     */
+    async sendHttpRequest(canNode) {
+        const sleep = ms => {
+            return new Promise(resolve => {
+                this.setTimeout(resolve, ms, undefined);
+            });
+        };
+        let sData = "";
+        const minRetryDelayMs = 60000; // Minimum delay in milliseconds between successive requests to prevent errors
+
+        const hostname = this.config.ip_address;
+        const port = 80; // this.config.port;
+        const username = this.config.expert_username;
+        const password = this.config.expert_password;
+        const data_objects = this.jsConfigObject.requests.find(req => req.can_node_number === canNode).data_objects;
+        this.log.debug("sendHttpRequest to CAN node: " + canNode + " with data_objects: " + JSON.stringify(data_objects));
+
+        let res = {
+            data: {},
+            httpStatusCode: -7,
+            httpStatusMessage: "",
+            debug: "",
+        };
+        const debug = false;
+        // if attempt== 1 use static response string sData for testing
+        if (debug) {
+            // http://192.168.30.40/INCLUDE/api.cgi?jsonnode=2&jsonparam=La,Ld,I,O,Na,Nd,D
+            //sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
+            // http://1234:1234@192.168.30.40/INCLUDE/api.cgi?jsonnode=7&jsonparam=I,O
+            // sData = JSON.stringify({"Header": {"Version": 7,"Device": "91","Timestamp": 1733315261},"Data": {"Logging Analog": [{"Number": 1,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 3,"AD": "A","Value": {"Value": 301,"Unit": "69"}},{"Number": 4,"AD": "A","Value": {"Value": 367,"Unit": "69"}},{"Number": 5,"AD": "A","Value": {"Value": 1966,"Unit": "69"}},{"Number": 6,"AD": "A","Value": {"Value": 122,"Unit": "69"}},{"Number": 7,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 8,"AD": "A","Value": {"Value": 21235,"Unit": "11"}},{"Number": 9,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 10,"AD": "A","Value": {"Value": 7,"Unit": "69"}},{"Number": 11,"AD": "A","Value": {"Value": 24823.6,"Unit": "11"}},{"Number": 12,"AD": "A","Value": {"Value": 1618,"Unit": "11"}},{"Number": 13,"AD": "A","Value": {"Value": 2082,"Unit": "69"}},{"Number": 14,"AD": "A","Value": {"Value": 64387.5,"Unit": "11"}},{"Number": 15,"AD": "A","Value": {"Value": 0,"Unit": "10"}},{"Number": 16,"AD": "A","Value": {"Value": 2.87,"Unit": "10"}},{"Number": 17,"AD": "A","Value": {"Value": 191038.6,"Unit": "11"}},{"Number": 18,"AD": "A","Value": {"Value": 30.2,"Unit": "11"}},{"Number": 19,"AD": "A","Value": {"Value": 900,"Unit": "69"}},{"Number": 20,"AD": "A","Value": {"Value": 65295.2,"Unit": "11"}},{"Number": 21,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 22,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 23,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 24,"AD": "A","Value": {"Value": 287,"Unit": "3"}},{"Number": 25,"AD": "A","Value": {"Value": 2,"Unit": "69"}},{"Number": 26,"AD": "A","Value": {"Value": 2261,"Unit": "11"}},{"Number": 27,"AD": "A","Value": {"Value": 3.92,"Unit": "10"}},{"Number": 28,"AD": "A","Value": {"Value": 275722.4,"Unit": "11"}},{"Number": 29,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}},{"Number": 30,"AD": "A","Value": {"Value": 26602,"Unit": "28"}},{"Number": 31,"AD": "A","Value": {"Value": 0,"Unit": "8"}},{"Number": 32,"AD": "A","Value": {"Value": 223,"Unit": "69"}},{"Number": 33,"AD": "A","Value": {"Value": 6688.5,"Unit": "11"}},{"Number": 35,"AD": "A","Value": {"Value": 678,"Unit": "69"}},{"Number": 36,"AD": "A","Value": {"Value": 27676.8,"Unit": "11"}},{"Number": 38,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 39,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 40,"AD": "A","Value": {"Value": 154.3,"Unit": "11"}},{"Number": 41,"AD": "A","Value": {"Value": 28,"Unit": "69"}},{"Number": 42,"AD": "A","Value": {"Value": 11873,"Unit": "11"}},{"Number": 43,"AD": "A","Value": {"Value": 406.9,"Unit": "11"}},{"Number": 44,"AD": "A","Value": {"Value": 81,"Unit": "69"}},{"Number": 45,"AD": "A","Value": {"Value": 13617.5,"Unit": "11"}},{"Number": 46,"AD": "A","Value": {"Value": 11.1,"Unit": "11"}},{"Number": 47,"AD": "A","Value": {"Value": 292,"Unit": "69"}},{"Number": 48,"AD": "A","Value": {"Value": 4223.2,"Unit": "11"}},{"Number": 49,"AD": "A","Value": {"Value": 11.7,"Unit": "11"}},{"Number": 50,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 51,"AD": "A","Value": {"Value": 9715,"Unit": "11"}},{"Number": 52,"AD": "A","Value": {"Value": 313,"Unit": "69"}},{"Number": 53,"AD": "A","Value": {"Value": 43554.5,"Unit": "11"}},{"Number": 54,"AD": "A","Value": {"Value": 831,"Unit": "69"}},{"Number": 55,"AD": "A","Value": {"Value": 0,"Unit": "69"}},{"Number": 56,"AD": "A","Value": {"Value": 74,"Unit": "8"}},{"Number": 57,"AD": "A","Value": {"Value": 10697.9,"Unit": "11"}},{"Number": 58,"AD": "A","Value": {"Value": 10120.9,"Unit": "11"}},{"Number": 59,"AD": "A","Value": {"Value": 9,"Unit": "69"}},{"Number": 60,"AD": "A","Value": {"Value": 0.1,"Unit": "58"}},{"Number": 61,"AD": "A","Value": {"Value": 10,"Unit": "69"}},{"Number": 62,"AD": "A","Value": {"Value": 1.1,"Unit": "58"}},{"Number": 63,"AD": "A","Value": {"Value": 769,"Unit": "11"}},{"Number": 64,"AD": "A","Value": {"Value": 185,"Unit": "69"}}],"Logging Digital": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 15,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 18,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 19,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 20,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 21,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Inputs": [{"Number": 1,"AD": "A","Value": {"Value": 378,"Unit": "3"}},{"Number": 2,"AD": "A","Value": {"Value": 24.9,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "1"}},{"Number": 4,"AD": "A","Value": {"Value": 0,"Unit": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 28.1,"Unit": "1"}}],"Outputs": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 1,"Unit": "43"}},{"Number": 10,"AD": "A","Value": {"State": 0,"Value": 0,"Unit": "8"}}],"DL-Bus": [{"Number": 1,"AD": "A","Value": {"Value": 76.7,"Unit": "1"}},{"Number": 2,"AD": "A","Value": {"Value": 67,"Unit": "1"}},{"Number": 3,"AD": "A","Value": {"Value": 285,"Unit": "3"}},{"Number": 4,"AD": "A","Value": {"Value": 67.9,"Unit": "8"}},{"Number": 5,"AD": "A","Value": {"Value": 8.3,"Unit": "46","RAS": "3"}},{"Number": 6,"AD": "A","Value": {"Value": 2.7,"Unit": "1"}},{"Number": 7,"AD": "A","Value": {"Value": 5.4,"Unit": "52"}},{"Number": 8,"AD": "A","Value": {"Value": -0.2,"Unit": "1"}},{"Number": 9,"AD": "A","Value": {"Value": 56.4,"Unit": "1"}},{"Number": 10,"AD": "A","Value": {"Value": 60.1,"Unit": "1"}},{"Number": 11,"AD": "A","Value": {"Value": 32.4,"Unit": "1"}},{"Number": 12,"AD": "A","Value": {"Value": 33.9,"Unit": "1"}},{"Number": 13,"AD": "A","Value": {"Value": 36.4,"Unit": "1"}}],"General": [{"Number": 1,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 2,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 3,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 5,"Unit": "0"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 11,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 12,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 13,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 14,"AD": "A","Value": {"Value": 17968,"Unit": "0"}},{"Number": 15,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 16,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 17,"AD": "D","Value": {"Value": 0,"Unit": "44"}}],"Date": [{"Number": 1,"AD": "A","Value": {"Value": 4,"Unit": "0"}},{"Number": 2,"AD": "A","Value": {"Value": 12,"Unit": "0"}},{"Number": 3,"AD": "A","Value": {"Value": 24,"Unit": "0"}},{"Number": 4,"AD": "A","Value": {"Value": 3,"Unit": "0"}},{"Number": 5,"AD": "A","Value": {"Value": 49,"Unit": "0"}},{"Number": 6,"AD": "A","Value": {"Value": 339,"Unit": "0"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 8,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 9,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 10,"AD": "D","Value": {"Value": 0,"Unit": "43"}}],"Time": [{"Number": 1,"AD": "A","Value": {"Value": 42,"Unit": "4"}},{"Number": 2,"AD": "A","Value": {"Value": 27,"Unit": "5"}},{"Number": 3,"AD": "A","Value": {"Value": 12,"Unit": "15"}},{"Number": 4,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 5,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 6,"AD": "D","Value": {"Value": 0,"Unit": "43"}},{"Number": 7,"AD": "D","Value": {"Value": 0,"Unit": "44"}},{"Number": 8,"AD": "A","Value": {"Value": 747,"Unit": "60"}}],"Sun": [{"Number": 1,"AD": "A","Value": {"Value": 455,"Unit": "60"}},{"Number": 2,"AD": "A","Value": {"Value": 965,"Unit": "60"}},{"Number": 3,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 4,"AD": "A","Value": {"Value": 292,"Unit": "5"}},{"Number": 5,"AD": "A","Value": {"Value": 218,"Unit": "5"}},{"Number": 6,"AD": "A","Value": {"Value": 0,"Unit": "5"}},{"Number": 7,"AD": "A","Value": {"Value": 18.5,"Unit": "54"}},{"Number": 8,"AD": "A","Value": {"Value": 188.9,"Unit": "54"}},{"Number": 9,"AD": "D","Value": {"Value": 1,"Unit": "44"}},{"Number": 10,"AD": "A","Value": {"Value": 710,"Unit": "60"}}]},"Status": "OK","Status code": 0});
+            //sData = JSON.stringify({ "Header":{ "Version":7, "Device":"88", "Timestamp":1733303178 }, "Data":{ "Logging Analog":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":7, "AD":"A", "Value":{ "Value":58.7, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":9, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":10, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":11, "AD":"A", "Value":{ "Value":0, "Unit":"0" } }, { "Number":12, "AD":"A", "Value":{ "Value":80.3, "Unit":"8" } }, { "Number":13, "AD":"A", "Value":{ "Value":2.7, "Unit":"1" } }, { "Number":14, "AD":"A", "Value":{ "Value":-0.3, "Unit":"1" } }, { "Number":15, "AD":"A", "Value":{ "Value":4.9, "Unit":"52" } }, { "Number":17, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":18, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":25, "AD":"A", "Value":{ "Value":11.2, "Unit":"1" } }, { "Number":26, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":27, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":28, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":29, "AD":"A", "Value":{ "Value":65.0, "Unit":"8" } }, { "Number":30, "AD":"A", "Value":{ "Value":0.00, "Unit":"13" } }, { "Number":31, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":32, "AD":"A", "Value":{ "Value":301.2, "Unit":"11" } }, { "Number":33, "AD":"A", "Value":{ "Value":0.09, "Unit":"10" } }, { "Number":34, "AD":"A", "Value":{ "Value":6079.4, "Unit":"11" } }, { "Number":35, "AD":"A", "Value":{ "Value":0.00, "Unit":"10" } }, { "Number":36, "AD":"A", "Value":{ "Value":23728.8, "Unit":"11" } }, { "Number":37, "AD":"A", "Value":{ "Value":473.29, "Unit":"50" } }, { "Number":38, "AD":"A", "Value":{ "Value":1425.18, "Unit":"50" } }], "Logging Digital":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":2, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":3, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":4, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":8, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":9, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":10, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":11, "AD":"D", "Value":{ "Value":1, "Unit":"43" } }, { "Number":12, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":13, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":14, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":15, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":16, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Inputs":[ { "Number":1, "AD":"A", "Value":{ "Value":11.1, "Unit":"1" } }, { "Number":2, "AD":"A", "Value":{ "Value":26, "Unit":"3" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.6, "Unit":"1" } }, { "Number":4, "AD":"A", "Value":{ "Value":35.7, "Unit":"1" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }], "Outputs":[ { "Number":1, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":5, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":6, "AD":"D", "Value":{ "Value":0, "Unit":"43" } }, { "Number":7, "AD":"A", "Value":{ "State":1, "Value":65.0, "Unit":"8" } }, { "Number":8, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }, { "Number":10, "AD":"A", "Value":{ "State":0, "Value":0.00, "Unit":"13" } }], "DL-Bus":[ { "Number":1, "AD":"A", "Value":{ "Value":23.0, "Unit":"46", "RAS":"0" } }, { "Number":2, "AD":"A", "Value":{ "Value":22.5, "Unit":"1" } }, { "Number":3, "AD":"A", "Value":{ "Value":32.9, "Unit":"8" } }, { "Number":4, "AD":"A", "Value":{ "Value":5.4, "Unit":"1" } }, { "Number":5, "AD":"A", "Value":{ "Value":971.9, "Unit":"65" } }, { "Number":6, "AD":"A", "Value":{ "Value":6.4, "Unit":"52" } }, { "Number":10, "AD":"A", "Value":{ "Value":58.6, "Unit":"8" } }, { "Number":11, "AD":"A", "Value":{ "Value":16.8, "Unit":"1" } }, { "Number":12, "AD":"A", "Value":{ "Value":8.6, "Unit":"1" } }, { "Number":13, "AD":"A", "Value":{ "Value":8.5, "Unit":"52" } }, { "Number":19, "AD":"A", "Value":{ "Value":0, "Unit":"3" } }, { "Number":20, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }, { "Number":21, "AD":"A", "Value":{ "Value":16.9, "Unit":"1" } }]}, "Status":"OK", "Status code":0 });
+
+            res.data = JSON.parse(sData);
+            res.httpStatusCode = 200;
+            res.httpStatusMessage = "OK";
+            res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+            return new Promise(resolve => resolve(res)); // Return a new promise for debugging purposes
+        }
+
+        // Start HTTP request
+        const options = {
+            auth: username + ":" + password,
+            hostname: hostname,
+            port: port,
+            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=La,Ld,I,O,Na,Nd,D",
+            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O",
+            // path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld",
+            path: "/INCLUDE/api.cgi?jsonnode=" + canNode + "&jsonparam=" + data_objects,
+            method: "GET",
+        };
+        this.log.debug("Sending request to " + hostname + " with options: " + JSON.stringify(options));
+
+        await sleep(minRetryDelayMs); // Wait for the specified delay before sending the next command
+        return new Promise((resolveRequest, rejectRequest) => {
+            const req = http
+                .request(options, httpResult => {
+                    if (httpResult.statusCode == 200) {
+                        // Successfully connected to CMI
+                        httpResult.on("data", d => {
+                            sData += d;
+                        }); // End of req.on("data")
+
+                        httpResult.on("end", async () => {
+                            // Parse HTTP message into object
+                            try {
+                                res.data = JSON.parse(sData);
+                                res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                                res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                                res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " CMI Code: " + res.data["Status code"];
+                                // Check CMI status code
+                                switch (res.data["Status code"]) {
+                                    case 0:
+                                        // Log the res object for debugging purposes
+                                        this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
+                                        resolveRequest(res); // Resolve the promise with the fine result
+                                        break;
+                                    case 1:
+                                        this.log.warn("NODE ERROR: Node not available (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 2:
+                                        this.log.warn("FAIL: Failure during the CAN-request/parameter not available for this device (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 3:
+                                        this.log.error("SYNTAX ERROR: Error in the request String (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 4:
+                                        this.log.warn("TOO MANY REQUESTS: Only one request per minute is permitted (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 5:
+                                        this.log.warn("DEVICE NOT SUPPORTED: Device not supported (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 6:
+                                        this.log.error("TOO FEW ARGUMENTS: jsonnode or jsonparam not set (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    case 7:
+                                        this.log.warn("CAN BUSY: CAN Bus is busy (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                        break;
+                                    default:
+                                        this.log.error("UNKNOWN ERROR: Any other error (" + res.data["Status code"] + " - " + res.data.Status + ")");
+                                }
+                                // Resolve the promise with a potentially erroneous state, unless it has already been resolved in case 0
+                                rejectRequest(res);
+                            } catch (err) {
+                                // Error parsing the result
+                                res.data = sData;
+                                res.httpStatusCode = 998;
+                                res.httpStatusMessage = "RESULT FROM HOST NOT PARSEABLE (" + err.message + ")";
+                                this.log.error("Error parsing result: " + err.message);
+                                rejectRequest(res);
+                            }
+                        }); // End of req.on("end")
+                    } else {
+                        // Invalid response from CMI
+                        res.data = sData;
+                        res.httpStatusCode = httpResult.statusCode ? httpResult.statusCode : -1;
+                        res.httpStatusMessage = httpResult.statusMessage || "No status message";
+                        res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage;
+                        this.log.error("Invalid response from device: " + res.httpStatusMessage);
+                        rejectRequest(res);
+                    }
+                }) // End of req.on("response")
+                .on("error", async error => {
+                    res.data = {};
+                    res.httpStatusCode = 999;
+                    res.httpStatusMessage = "WRONG HOSTNAME, IP ADDRESS OR C.M.I. NOT REACHABLE: " + error.message;
+                    res.debug = "Call to " + hostname + " returning " + res.httpStatusCode + ": " + res.httpStatusMessage + " (Error: " + error.message + ")";
+                    this.log.error("Error during communication with device: " + error.message);
+                    rejectRequest(res);
+                }); // End of req.on("error")
+            // Finish the request preparation and send it
+            req.end();
+        }); // End of promise
+    }
 
     /**
      * Parses the UVR1611 response and extracts various data points into a structured record.
@@ -1467,13 +1479,14 @@ class TaBlnet extends utils.Adapter {
      * @throws {Error} - Throws an error if the connection is closed unexpectedly or if there is a connection error.
      */
     async sendCommand(command) {
+        const minRetryDelayMs = 2000; // Minimum delay in milliseconds between successive requests to prevent errors
         const sleep = ms => {
             return new Promise(resolve => {
-                this.setTimeout(resolve, ms, undefined);
+            this.setTimeout(resolve, ms, undefined);
             });
         };
 
-        await sleep(2000); // Wait two seconds between commands
+        await sleep(minRetryDelayMs); // Wait for the specified delay before sending the next command
         return new Promise((resolve, reject) => {
             const ipAddress = this.config.ip_address; // IP address from the config
             const port = this.config.port; // Port from the config
