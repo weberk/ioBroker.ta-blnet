@@ -26,8 +26,7 @@ You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.34 (2024-12-22)
 
 - improved retry logic for requests to CMI
 
