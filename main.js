@@ -1085,7 +1085,7 @@ class TaBlnet extends utils.Adapter {
         const minRetryDelayMs = 60000; // Minimum delay in milliseconds between successive requests to prevent errors
 
         const hostname = this.config.ip_address;
-        const port = 80; // this.config.port;
+        const port = this.config.port;
         const username = this.config.expert_username;
         const password = this.config.expert_password;
         const data_objects = this.jsConfigObject.requests.find(req => req.can_node_number === canNode).data_objects;
@@ -1147,7 +1147,7 @@ class TaBlnet extends utils.Adapter {
                                 switch (res.data["Status code"]) {
                                     case 0:
                                         // Log the res object for debugging purposes
-                                        this.log.debug("Response object on attempt " + attempt + ": " + JSON.stringify(res));
+                                        this.log.debug("Response object: " + JSON.stringify(res));
                                         resolveRequest(res); // Resolve the promise with the fine result
                                         break;
                                     case 1:
@@ -1482,7 +1482,7 @@ class TaBlnet extends utils.Adapter {
         const minRetryDelayMs = 2000; // Minimum delay in milliseconds between successive requests to prevent errors
         const sleep = ms => {
             return new Promise(resolve => {
-            this.setTimeout(resolve, ms, undefined);
+                this.setTimeout(resolve, ms, undefined);
             });
         };
 
