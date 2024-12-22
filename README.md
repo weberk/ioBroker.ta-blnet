@@ -13,14 +13,39 @@
 
 ## ta-blnet adapter for ioBroker
 
-An ioBroker adapter for reading data from one or up to eight climate controllers by [Technische Alternative](http://www.ta.co.at) using BL-NET.
+An ioBroker adapter for reading data from one or up to eight climate controllers by [Technische Alternative](http://www.ta.co.at) using BL-NET. Or an infinite number of climate controllers connected to CMI.
 
-After installation, you need to create an instance and configure custom values for the IP address, port number, and update interval that the instance should use.
+After installation, you need to create an instance and configure custom values i.e. for the IP address, port number, and update interval that the instance should use.
 
-Please ensure that you own the BL-NET device and not the newer CMI product. A BL-NET device looks like this:
+Please ensure that you own the BL-NET device or the newer CMI product. 
+
+BL-NET device looks like this:
 ![BL-NET](doc/BL-NET.png)
 You can find the manual of BL-NET here: https://www.ta.co.at/fileadmin/Downloads/Betriebsanleitungen/00_Auslauftypen/BL-NET/Manual_BL-Net_V2.19-2_EN.pdf
 
+CMI device looks like this:
+![BL-NET](doc/CMI.png)
+You can find the manual of CMI here: [https://www.ta.co.at/download/datei/805](https://www.ta.co.at/download/datei/805)
+
+## Adapter Description
+
+The adapter regularly reads the current data from your heating control system. It establishes contact over Ethernet with:
+
+- the BL-NET Bootloader or
+- the CMI Control and Monitoring Interface.
+
+The BL-NET and CMI are products of the company 'Technische Alternative' and allow the data of various heating controls to be read out and buffered via CAN bus or data line bus.
+
+## Installation
+
+The installation can be done via:
+
+- **ioBroker GUI**: Go to Expert mode > Adapter > Install from URL and enter `https://github.com/weberk/ioBroker.ta-blnet`
+- **CLI**: Run the following command:
+    ```sh
+    iobroker url iobroker.ta-blnet@latest
+    ```
+  
 ## Changelog
 
 <!--
