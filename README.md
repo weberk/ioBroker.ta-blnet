@@ -51,8 +51,7 @@ The installation can be done via:
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
-
-### **WORK IN PROGRESS**
+### 1.0.36 (2025-01-04)
 
 - added CMI support to adapters summary description
 

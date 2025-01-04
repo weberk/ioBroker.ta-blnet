@@ -1,203 +1,203 @@
 {
-    "common": {
-        "name": "ta-blnet",
-        "version": "1.0.35",
-        "messagebox": true,
-        "news": {
-            "1.0.35": {
-                "en": "port number is taken from config for communication with CMI",
-                "de": "portnummer wird von config für die Kommunikation mit CMI genommen",
-                "ru": "номер порта взят из конфигурации для связи с CMI",
-                "pt": "número da porta é retirado de configuração para comunicação com CMI",
-                "nl": "poortnummer is afkomstig van configuratie voor communicatie met CMI",
-                "fr": "numéro de port est pris de config pour la communication avec CMI",
-                "it": "il numero di porta è preso da config per la comunicazione con CMI",
-                "es": "port number is taken from config for communication with CMI",
-                "pl": "numer portu jest pobierany z konfigu do komunikacji z CMI",
-                "uk": "номер порту взято з конфігурації для спілкування з CMI",
-                "zh-cn": "端口号码取自配置, 用于与 CMI 通信"
-            },
-            "1.0.34": {
-                "en": "improved retry logic for requests to CMI",
-                "de": "verbesserte Retry-Logik für Anfragen an CMI",
-                "ru": "улучшенная логика ретрита для запросов в CMI",
-                "pt": "melhorou a lógica de retificação para pedidos de CMI",
-                "nl": "verbeterde retry logica voor verzoeken aan CMI",
-                "fr": "une meilleure logique de ré-essai pour les demandes à CMI",
-                "it": "migliore logica di riprova per richieste a CMI",
-                "es": "mejora de la lógica de retry para las solicitudes a CMI",
-                "pl": "ulepszona logika ponownego rozpatrywania wniosków o CMI",
-                "uk": "вдосконалена логіка для запитів до CMI",
-                "zh-cn": "改进对 CMI 请求的重试逻辑"
-            },
-            "1.0.33": {
-                "en": "Improved error handling for calls to CMI JSON API",
-                "de": "Verbesserte Fehlerbehandlung für Aufrufe der CMI JSON API",
-                "ru": "Улучшена обработка ошибок для вызовов CMI JSON API",
-                "pt": "Melhorado o tratamento de erros para chamadas à API JSON do CMI",
-                "nl": "Verbeterde foutafhandeling voor oproepen naar de CMI JSON API",
-                "fr": "Amélioration de la gestion des erreurs pour les appels à l'API JSON de CMI",
-                "it": "Migliorata la gestione degli errori per le chiamate all'API JSON di CMI",
-                "es": "Mejora del manejo de errores para llamadas a la API JSON de CMI",
-                "pl": "Ulepszono obsługę błędów dla wywołań do API JSON CMI",
-                "zh-cn": "改进了对CMI JSON API调用的错误处理",
-                "uk": "Покращена обробка помилок для викликів CMI JSON API"
-            },
-            "1.0.32": {
-                "en": "introduced increasing wait time between successive CMI request attempts",
-                "de": "einführung zunehmender Wartezeit zwischen aufeinanderfolgenden CMI-Anforderungsversuchen",
-                "ru": "ввели увеличение времени ожидания между последовательными запросами CMI",
-                "pt": "aumento do tempo de espera entre tentativas sucessivas de solicitação do CMI",
-                "nl": "verhoogde wachttijd tussen opeenvolgende CMI-verzoekpogingen",
-                "fr": "introduit un temps d'attente croissant entre les tentatives successives de demande CMI",
-                "it": "introdotto crescente tempo di attesa tra i successivi tentativi di richiesta CMI",
-                "es": "tiempo de espera cada vez mayor entre intentos sucesivos de solicitud del CMI",
-                "pl": "wprowadzono zwiększenie czasu oczekiwania pomiędzy kolejnymi próbami CMI",
-                "uk": "запроваджено збільшення часу очікування між спробами запиту CMI",
-                "zh-cn": "在连续的海事委员会请求之间增加等待时间"
-            },
-            "1.0.31": {
-                "en": "removed port number constraint to allow port 80 for CMI",
-                "de": "entfernte Portnummer constraint, um Port 80 für CMI zu ermöglichen",
-                "ru": "удаленное ограничение номера порта, чтобы разрешить порт 80 для CMI",
-                "pt": "restrições de número de porta removida para permitir a porta 80 para CMI",
-                "nl": "poortnummerbeperking verwijderd om poort 80 voor CMI mogelijk te maken",
-                "fr": "suppression de la contrainte du numéro de port pour permettre le port 80 pour CMI",
-                "it": "vincolo del numero di porta rimosso per consentire la porta 80 per CMI",
-                "es": "límite de puerto eliminado para permitir el puerto 80 para CMI",
-                "pl": "usunięte ograniczenie liczby portów, aby umożliwić port 80 dla CMI",
-                "uk": "видалити номер порту обмеження, щоб дозволити порту 80 для CMI",
-                "zh-cn": "取消端口号码限制, 允许端口 80 用于 CMI"
-            },
-            "1.0.30": {
-                "en": "added eslint9 config, removed eslint8 config",
-                "de": "hinzugefügt eslint9 config, entfernt eslint8 config",
-                "ru": "добавлена конфигурация eslint9, удалена конфигурация eslint8",
-                "pt": "adicionado eslint9 config, removido eslint8 config",
-                "nl": "eslint9 config toegevoegd, eslint8 config verwijderd",
-                "fr": "ajouté eslint9 config, supprimé eslint8 config",
-                "it": "aggiunto eslint9 config, rimosso eslint8 config",
-                "es": "añadido eslint9 config, eliminado eslint8 config",
-                "pl": "dodany plik konfiguracyjny eslint9, usunięty plik konfiguracyjny eslint8",
-                "uk": "додано eslint9 config, вилучений eslint8 config",
-                "zh-cn": "添加 eslint9 配置, 删除 eslint8 配置"
-            },
-            "1.0.29": {
-                "en": "added translation and documentation to data object config",
-                "de": "übersetzung und dokumentation zum datenobjekt config",
-                "ru": "добавлен перевод и документация к конфигурации объекта данных",
-                "pt": "adicionado tradução e documentação para configuração de objeto de dados",
-                "nl": "vertaling en documentatie toegevoegd aan data object config",
-                "fr": "traduction et documentation ajoutées à la configuration de l'objet de données",
-                "it": "traduzione e documentazione aggiuntiva alla configurazione degli oggetti di dati",
-                "es": "traducción agregada y documentación a los datos objeto config",
-                "pl": "dodane tłumaczenie i dokumentacja do konfiguracji obiektu danych",
-                "uk": "додано переклад та документацію на налаштування об’єкта даних",
-                "zh-cn": "在数据对象配置中添加翻译和文档"
-            }
-        },
-        "titleLang": {
-            "en": "TA BL-NET",
-            "de": "TA BL-NET",
-            "ru": "ТА BL-NET",
-            "pt": "TA BL-NET",
-            "nl": "TA BL-NET",
-            "fr": "TA BL-NET",
-            "it": "TA BL-NET",
-            "es": "TA BL-NET",
-            "pl": "TA BL-NET",
-            "uk": "TA BL-NET",
-            "zh-cn": "TA BL-NET"
-        },
-        "desc": {
-            "en": "This adapter is reading inputs and outputs of the climate controllers from Technische Alternative using BL-NET and CMI.",
-            "de": "Dieser Adapter liest Eingänge und Ausgänge der Klimaregler von Technische Alternative über BL-NET und CMI aus.",
-            "ru": "Этот адаптер считывает входы и выходы климатических контроллеров от Technische Alternative с использованием BL-NET и CMI.",
-            "pt": "Este adaptador lê entradas e saídas dos controladores de clima da Technische Alternative usando BL-NET e CMI.",
-            "nl": "Deze adapter leest de ingangen en uitgangen van de klimaatregelaars van Technische Alternative uit met behulp van BL-NET en CMI.",
-            "fr": "Cet adaptateur lit les entrées et sorties des contrôleurs de climat de Technische Alternative via BL-NET et CMI.",
-            "it": "Questo adattatore legge gli ingressi e le uscite dei controller climatici di Technische Alternative tramite BL-NET e CMI.",
-            "es": "Este adaptador lee las entradas y salidas de los controladores climáticos de Technische Alternative utilizando BL-NET y CMI.",
-            "pl": "Ten adapter odczytuje wejścia i wyjścia sterowników klimatycznych firmy Technische Alternative za pomocą BL-NET i CMI.",
-            "uk": "Цей адаптер зчитує входи та виходи кліматичних контролерів від Technische Alternative за допомогою BL-NET і CMI.",
-            "zh-cn": "该适配器通过 BL-NET 和 CMI 读取 Technische Alternative 的气候控制器的输入和输出。"
-        },
-        "authors": [
-            "Klaus Weber <klausatweberesprit@gmail.com>"
-        ],
-        "keywords": [
-            "BL-NET",
-            "UVR1611",
-            "UVR16x2",
-            "solar",
-            "BUSO",
-            "Technische",
-            "Alternative"
-        ],
-        "licenseInformation": {
-            "type": "free",
-            "license": "MIT"
-        },
-        "platform": "Javascript/Node.js",
-        "icon": "ta-blnet.png",
-        "enabled": true,
-        "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
-        "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
-        "loglevel": "info",
-        "tier": 3,
-        "mode": "daemon",
-        "type": "climate-control",
-        "compact": true,
-        "connectionType": "local",
-        "dataSource": "poll",
-        "adminUI": {
-            "config": "json"
-        },
-        "supportCustoms": false,
-        "eraseOnUpload": true,
-        "dependencies": [
-            {
-                "js-controller": ">=6.0.11"
-            }
-        ],
-        "globalDependencies": [
-            {
-                "admin": ">=7.0.23"
-            }
-        ]
+  "common": {
+    "name": "ta-blnet",
+    "version": "1.0.36",
+    "messagebox": true,
+    "news": {
+      "1.0.36": {
+        "en": "added CMI support to adapters summary description",
+        "de": "cMI-Unterstützung zu Adaptern Zusammenfassung Beschreibung",
+        "ru": "добавлена поддержка CMI для краткого описания адаптеров",
+        "pt": "adicionado suporte CMI para adaptadores descrição sumária",
+        "nl": "cMI ondersteuning toegevoegd aan adapters samenvatting beschrijving",
+        "fr": "ajout du support CMI à la description sommaire des adaptateurs",
+        "it": "supporto CMI aggiunto alla descrizione sommaria degli adattatori",
+        "es": "añadido soporte CMI para adaptadores",
+        "pl": "dodane wsparcie CMI dla adapterów streszczenie opis",
+        "uk": "додано підтримку CMI до адаптерів загальний опис",
+        "zh-cn": "在适配器中添加 CMI 支持概要描述"
+      },
+      "1.0.35": {
+        "en": "port number is taken from config for communication with CMI",
+        "de": "portnummer wird von config für die Kommunikation mit CMI genommen",
+        "ru": "номер порта взят из конфигурации для связи с CMI",
+        "pt": "número da porta é retirado de configuração para comunicação com CMI",
+        "nl": "poortnummer is afkomstig van configuratie voor communicatie met CMI",
+        "fr": "numéro de port est pris de config pour la communication avec CMI",
+        "it": "il numero di porta è preso da config per la comunicazione con CMI",
+        "es": "port number is taken from config for communication with CMI",
+        "pl": "numer portu jest pobierany z konfigu do komunikacji z CMI",
+        "uk": "номер порту взято з конфігурації для спілкування з CMI",
+        "zh-cn": "端口号码取自配置, 用于与 CMI 通信"
+      },
+      "1.0.34": {
+        "en": "improved retry logic for requests to CMI",
+        "de": "verbesserte Retry-Logik für Anfragen an CMI",
+        "ru": "улучшенная логика ретрита для запросов в CMI",
+        "pt": "melhorou a lógica de retificação para pedidos de CMI",
+        "nl": "verbeterde retry logica voor verzoeken aan CMI",
+        "fr": "une meilleure logique de ré-essai pour les demandes à CMI",
+        "it": "migliore logica di riprova per richieste a CMI",
+        "es": "mejora de la lógica de retry para las solicitudes a CMI",
+        "pl": "ulepszona logika ponownego rozpatrywania wniosków o CMI",
+        "uk": "вдосконалена логіка для запитів до CMI",
+        "zh-cn": "改进对 CMI 请求的重试逻辑"
+      },
+      "1.0.33": {
+        "en": "Improved error handling for calls to CMI JSON API",
+        "de": "Verbesserte Fehlerbehandlung für Aufrufe der CMI JSON API",
+        "ru": "Улучшена обработка ошибок для вызовов CMI JSON API",
+        "pt": "Melhorado o tratamento de erros para chamadas à API JSON do CMI",
+        "nl": "Verbeterde foutafhandeling voor oproepen naar de CMI JSON API",
+        "fr": "Amélioration de la gestion des erreurs pour les appels à l'API JSON de CMI",
+        "it": "Migliorata la gestione degli errori per le chiamate all'API JSON di CMI",
+        "es": "Mejora del manejo de errores para llamadas a la API JSON de CMI",
+        "pl": "Ulepszono obsługę błędów dla wywołań do API JSON CMI",
+        "zh-cn": "改进了对CMI JSON API调用的错误处理",
+        "uk": "Покращена обробка помилок для викликів CMI JSON API"
+      },
+      "1.0.32": {
+        "en": "introduced increasing wait time between successive CMI request attempts",
+        "de": "einführung zunehmender Wartezeit zwischen aufeinanderfolgenden CMI-Anforderungsversuchen",
+        "ru": "ввели увеличение времени ожидания между последовательными запросами CMI",
+        "pt": "aumento do tempo de espera entre tentativas sucessivas de solicitação do CMI",
+        "nl": "verhoogde wachttijd tussen opeenvolgende CMI-verzoekpogingen",
+        "fr": "introduit un temps d'attente croissant entre les tentatives successives de demande CMI",
+        "it": "introdotto crescente tempo di attesa tra i successivi tentativi di richiesta CMI",
+        "es": "tiempo de espera cada vez mayor entre intentos sucesivos de solicitud del CMI",
+        "pl": "wprowadzono zwiększenie czasu oczekiwania pomiędzy kolejnymi próbami CMI",
+        "uk": "запроваджено збільшення часу очікування між спробами запиту CMI",
+        "zh-cn": "在连续的海事委员会请求之间增加等待时间"
+      },
+      "1.0.31": {
+        "en": "removed port number constraint to allow port 80 for CMI",
+        "de": "entfernte Portnummer constraint, um Port 80 für CMI zu ermöglichen",
+        "ru": "удаленное ограничение номера порта, чтобы разрешить порт 80 для CMI",
+        "pt": "restrições de número de porta removida para permitir a porta 80 para CMI",
+        "nl": "poortnummerbeperking verwijderd om poort 80 voor CMI mogelijk te maken",
+        "fr": "suppression de la contrainte du numéro de port pour permettre le port 80 pour CMI",
+        "it": "vincolo del numero di porta rimosso per consentire la porta 80 per CMI",
+        "es": "límite de puerto eliminado para permitir el puerto 80 para CMI",
+        "pl": "usunięte ograniczenie liczby portów, aby umożliwić port 80 dla CMI",
+        "uk": "видалити номер порту обмеження, щоб дозволити порту 80 для CMI",
+        "zh-cn": "取消端口号码限制, 允许端口 80 用于 CMI"
+      },
+      "1.0.30": {
+        "en": "added eslint9 config, removed eslint8 config",
+        "de": "hinzugefügt eslint9 config, entfernt eslint8 config",
+        "ru": "добавлена конфигурация eslint9, удалена конфигурация eslint8",
+        "pt": "adicionado eslint9 config, removido eslint8 config",
+        "nl": "eslint9 config toegevoegd, eslint8 config verwijderd",
+        "fr": "ajouté eslint9 config, supprimé eslint8 config",
+        "it": "aggiunto eslint9 config, rimosso eslint8 config",
+        "es": "añadido eslint9 config, eliminado eslint8 config",
+        "pl": "dodany plik konfiguracyjny eslint9, usunięty plik konfiguracyjny eslint8",
+        "uk": "додано eslint9 config, вилучений eslint8 config",
+        "zh-cn": "添加 eslint9 配置, 删除 eslint8 配置"
+      }
     },
-    "native": {
-        "selected_ta_logger": "BL-NET",
-        "ip_address": "192.168.2.77",
-        "port": 40000,
-        "poll_interval": 30,
-        "expert_password": "password",
-        "expert_username": "expert",
-        "json": "{\n\t\"requests\": [\n\t\t{\n\t\t\t\"can_node_number\": 7,\n\t\t\t\"data_objects\": \"La,Ld,I,O,Na,Nd,D\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 11,\n\t\t\t\"data_objects\": \"I,O\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 45,\n\t\t\t\"data_objects\": \"I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld\"\n\t\t}\n\t]\n}"
+    "titleLang": {
+      "en": "TA BL-NET",
+      "de": "TA BL-NET",
+      "ru": "ТА BL-NET",
+      "pt": "TA BL-NET",
+      "nl": "TA BL-NET",
+      "fr": "TA BL-NET",
+      "it": "TA BL-NET",
+      "es": "TA BL-NET",
+      "pl": "TA BL-NET",
+      "uk": "TA BL-NET",
+      "zh-cn": "TA BL-NET"
     },
-    "objects": [],
-    "instanceObjects": [
-        {
-            "_id": "info",
-            "type": "folder",
-            "common": {
-                "name": "Information",
-                "role": "meta"
-            },
-            "native": {}
-        },
-        {
-            "_id": "info.connection",
-            "type": "state",
-            "common": {
-                "role": "indicator.connected",
-                "name": "Device or service connected",
-                "type": "boolean",
-                "read": true,
-                "write": false,
-                "def": false
-            },
-            "native": {}
-        }
+    "desc": {
+      "en": "This adapter is reading inputs and outputs of the climate controllers from Technische Alternative using BL-NET and CMI.",
+      "de": "Dieser Adapter liest Eingänge und Ausgänge der Klimaregler von Technische Alternative über BL-NET und CMI aus.",
+      "ru": "Этот адаптер считывает входы и выходы климатических контроллеров от Technische Alternative с использованием BL-NET и CMI.",
+      "pt": "Este adaptador lê entradas e saídas dos controladores de clima da Technische Alternative usando BL-NET e CMI.",
+      "nl": "Deze adapter leest de ingangen en uitgangen van de klimaatregelaars van Technische Alternative uit met behulp van BL-NET en CMI.",
+      "fr": "Cet adaptateur lit les entrées et sorties des contrôleurs de climat de Technische Alternative via BL-NET et CMI.",
+      "it": "Questo adattatore legge gli ingressi e le uscite dei controller climatici di Technische Alternative tramite BL-NET e CMI.",
+      "es": "Este adaptador lee las entradas y salidas de los controladores climáticos de Technische Alternative utilizando BL-NET y CMI.",
+      "pl": "Ten adapter odczytuje wejścia i wyjścia sterowników klimatycznych firmy Technische Alternative za pomocą BL-NET i CMI.",
+      "uk": "Цей адаптер зчитує входи та виходи кліматичних контролерів від Technische Alternative за допомогою BL-NET і CMI.",
+      "zh-cn": "该适配器通过 BL-NET 和 CMI 读取 Technische Alternative 的气候控制器的输入和输出。"
+    },
+    "authors": [
+      "Klaus Weber <klausatweberesprit@gmail.com>"
+    ],
+    "keywords": [
+      "BL-NET",
+      "UVR1611",
+      "UVR16x2",
+      "solar",
+      "BUSO",
+      "Technische",
+      "Alternative"
+    ],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "ta-blnet.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/weberk/ioBroker.ta-blnet/main/admin/ta-blnet.png",
+    "readme": "https://github.com/weberk/ioBroker.ta-blnet/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "climate-control",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "supportCustoms": false,
+    "eraseOnUpload": true,
+    "dependencies": [
+      {
+        "js-controller": ">=6.0.11"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.0.23"
+      }
     ]
+  },
+  "native": {
+    "selected_ta_logger": "BL-NET",
+    "ip_address": "192.168.2.77",
+    "port": 40000,
+    "poll_interval": 30,
+    "expert_password": "password",
+    "expert_username": "expert",
+    "json": "{\n\t\"requests\": [\n\t\t{\n\t\t\t\"can_node_number\": 7,\n\t\t\t\"data_objects\": \"La,Ld,I,O,Na,Nd,D\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 11,\n\t\t\t\"data_objects\": \"I,O\"\n\t\t},\n\t\t{\n\t\t\t\"can_node_number\": 45,\n\t\t\t\"data_objects\": \"I,O,D,Sg,Sd,St,Ss,Sp,Na,Nd,M,AM,AK,La,Ld\"\n\t\t}\n\t]\n}"
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "folder",
+      "common": {
+        "name": "Information",
+        "role": "meta"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Device or service connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
 }
