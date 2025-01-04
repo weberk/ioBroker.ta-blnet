@@ -17,7 +17,7 @@ An ioBroker adapter for reading data from one or up to eight climate controllers
 
 After installation, you need to create an instance and configure custom values i.e. for the IP address, port number, and update interval that the instance should use.
 
-Please ensure that you own the BL-NET device or the newer CMI product. 
+Please ensure that you own the BL-NET device or the newer CMI product.
 
 BL-NET device looks like this:
 ![BL-NET](doc/BL-NET.png)
@@ -45,12 +45,17 @@ The installation can be done via:
     ```sh
     iobroker url iobroker.ta-blnet@latest
     ```
-  
+
 ## Changelog
 
 <!--
 Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
+
+### **WORK IN PROGRESS**
+
+- added CMI support to adapters summary description
+
 ### 1.0.35 (2024-12-22)
 
 - port number is taken from config for communication with CMI
