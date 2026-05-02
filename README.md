@@ -53,6 +53,7 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 -->
 
 ### **WORK IN PROGRESS**
+- (copilot) Adapter requires node.js >= 22 now
 
 - [W034] @iobroker/adapter-core 3.2.2 specified. 3.2.3 is recommended. Dependency updated
 - merge dependabot pull requests on several libs
