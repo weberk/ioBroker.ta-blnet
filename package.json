@@ -23,7 +23,7 @@
         "url": "git+https://github.com/weberk/ioBroker.ta-blnet.git"
     },
     "engines": {
-        "node": ">= 18"
+        "node": ">= 22"
     },
     "dependencies": {
         "@google-cloud/translate": "^8.5.0",
