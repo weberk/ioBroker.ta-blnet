@@ -218,6 +218,8 @@ Placeholder for next version:  ### **WORK IN PROGRESS**
 
 - initial working version
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 
 MIT License
